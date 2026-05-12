@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>01 TOP — 6タイプ即決 / 男のスキンケア モックアップ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/styles.css">
+<style>
+  .hero-block { padding: 24px 20px 8px; background: var(--surface); }
+  .hero-eyebrow { font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+  .hero-title { font-family: var(--font-serif); font-size: 28px; line-height: 1.18; letter-spacing: -0.015em; margin: 8px 0 6px; font-weight: 700; }
+  .hero-title em { font-style: normal; background: linear-gradient(180deg, transparent 65%, var(--accent-soft) 65%); padding: 0 3px; }
+  .hero-lede { font-size: 13px; color: var(--muted); margin: 0 0 12px; line-height: 1.7; }
+
+  .type-grid { padding: 16px 20px 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .type-card {
+    position: relative; display: flex; flex-direction: column;
+    border-radius: 14px; padding: 14px 12px 12px;
+    background: var(--surface); border: 1px solid var(--line-soft);
+    min-height: 168px; overflow: hidden; cursor: pointer;
+    transition: transform var(--d-fast) var(--ease), box-shadow var(--d-fast);
+  }
+  .type-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-card); }
+  .type-card .visual {
+    height: 56px; border-radius: 10px; margin-bottom: 10px;
+    background: var(--t1-bg); position: relative; overflow: hidden;
+  }
+  .type-card .visual::after {
+    content: ""; position: absolute; inset: 0;
+    background: radial-gradient(120% 80% at 80% 30%, rgba(255,255,255,0.55) 0%, transparent 60%),
+                radial-gradient(60% 60% at 20% 90%, rgba(0,0,0,0.06) 0%, transparent 60%);
+  }
+  .type-card .num {
+    position: absolute; top: 10px; right: 12px;
+    font-family: var(--font-serif); font-size: 11px;
+    color: var(--muted); letter-spacing: 0.05em;
+  }
+  .type-card h4 {
+    font-family: var(--font-serif); font-size: 14px; font-weight: 700;
+    line-height: 1.35; margin: 0 0 4px; letter-spacing: -0.005em;
+  }
+  .type-card p { font-size: 11px; color: var(--muted); margin: 0 0 8px; line-height: 1.5; }
+  .type-card .meta { margin-top: auto; display: flex; flex-wrap: wrap; gap: 4px; }
+  .type-card .meta .chip { font-size: 9px; padding: 2px 7px; }
+
+  .t1 .visual { background: linear-gradient(135deg, var(--t1-bg) 0%, #C4CDD8 100%); }
+  .t2 .visual { background: linear-gradient(135deg, var(--t2-bg) 0%, #E6CFA8 100%); }
+  .t3 .visual { background: linear-gradient(135deg, var(--t3-bg) 0%, #D9A085 100%); }
+  .t4 .visual { background: linear-gradient(135deg, var(--t4-bg) 0%, #BBC6B6 100%); }
+  .t5 .visual { background: linear-gradient(135deg, var(--t5-bg) 0%, #D2B8BF 100%); }
+  .t6 .visual { background: linear-gradient(135deg, var(--t6-bg) 0%, #E2C68A 100%); }
+
+  .t1 .num { color: var(--t1); }
+  .t2 .num { color: var(--t2); }
+  .t3 .num { color: var(--t3); }
+  .t4 .num { color: var(--t4); }
+  .t5 .num { color: var(--t5); }
+  .t6 .num { color: var(--t6); }
+
+  .multi-link {
+    position: absolute; bottom: 8px; right: 10px;
+    font-size: 9px; color: var(--muted);
+    text-decoration: underline; text-underline-offset: 2px;
+  }
+
+  .cta-strip { padding: 4px 20px 24px; }
+  .cta-strip .deep-cta {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 14px; padding: 16px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .cta-strip .deep-cta .icon-circle {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: var(--accent-soft); color: var(--accent-deep);
+    display: grid; place-items: center; flex-shrink: 0;
+  }
+  .cta-strip .deep-cta h5 { font-family: var(--font-serif); font-size: 14px; font-weight: 700; margin: 0 0 2px; }
+  .cta-strip .deep-cta p { font-size: 11px; color: var(--muted); margin: 0; line-height: 1.4; }
+  .cta-strip .deep-cta svg { color: var(--muted); flex-shrink: 0; }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <section class="page-meta">
+    <span class="meta-eyebrow">Screen 01 / TOP</span>
+    <h1 class="meta-title">6タイプ即決 UI<small>主訴で選ぶ — Garmin 風カードレイアウト</small></h1>
+    <p class="meta-lede">アプリ起動直後の画面。15〜49歳の幅広いユーザーに対応するため、最も気になる悩みを <strong>6 カードから直感で選ぶ</strong> 構造にしています。複数の悩みを持つ層には「もっと詳しく診断する」で 23 問の精密診断に誘導します。</p>
+
+    <div class="meta-section">
+      <div class="meta-label">— Spec</div>
+      <ul class="meta-list">
+        <li><span>URL</span><span>/</span></li>
+        <li><span>離脱率 KPI</span><span>≦ 30%</span></li>
+        <li><span>遷移先</span><span>カードクリック → /recommend/[type]</span></li>
+        <li><span>遷移先</span><span>詳細 CTA → /diagnosis</span></li>
+        <li><span>担当</span><span>村上（共有コンポーネント・UI トークン）</span></li>
+      </ul>
+    </div>
+
+    <div class="meta-section">
+      <div class="meta-label">— Design notes</div>
+      <ul class="meta-list">
+        <li><span>レイアウト</span><span>2列 × 3行のカードグリッド</span></li>
+        <li><span>カード内</span><span>視覚 / タイプ番号 / コピー / 一言 / タグ</span></li>
+        <li><span>色設計</span><span>6 タイプで色相を変えて識別性を確保</span></li>
+        <li><span>「複数気になる」</span><span>各カード右下の小さなテキストリンク</span></li>
+      </ul>
+    </div>
+
+    <nav class="meta-nav">
+      <a href="index.html">← Index</a>
+      <a href="01-top.html" class="current">01 TOP</a>
+      <a href="02-diagnosis.html">02 診断</a>
+      <a href="03-result.html">03 結果</a>
+      <a href="04-routine.html">04 ルーティン</a>
+      <a href="05-shave.html">05 髭剃り</a>
+    </nav>
+  </section>
+
+  <div class="phone-frame">
+    <div class="phone-statusbar">
+      <span class="num">9:41</span>
+      <span class="icons">
+        <svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor"><rect x="0" y="6" width="3" height="5" rx="1"/><rect x="4" y="4" width="3" height="7" rx="1"/><rect x="8" y="2" width="3" height="9" rx="1"/><rect x="12" y="0" width="3" height="11" rx="1"/></svg>
+        <svg width="22" height="10" viewBox="0 0 22 10" fill="none" stroke="currentColor" stroke-width="1"><rect x="0.5" y="0.5" width="18" height="9" rx="2"/><rect x="2" y="2" width="13" height="6" rx="1" fill="currentColor" stroke="none"/></svg>
+      </span>
+    </div>
+
+    <div class="phone-content">
+      <header class="app-header">
+        <div class="app-logo">男のスキンケア<em>.</em></div>
+        <button class="app-icon-btn" aria-label="メニュー">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="4" y1="6" x2="16" y2="6"/><line x1="4" y1="10" x2="16" y2="10"/><line x1="4" y1="14" x2="12" y2="14"/></svg>
+        </button>
+      </header>
+
+      <section class="hero-block">
+        <span class="hero-eyebrow">最初の1本を選ぶ</span>
+        <h1 class="hero-title">あなたの<br><em>気になる悩み</em>は？</h1>
+        <p class="hero-lede">6 つから最も気になるものを 1 つ。<br>選んだ瞬間に推薦が出ます。</p>
+      </section>
+
+      <div class="type-grid">
+
+        <div class="type-card t1">
+          <span class="num">01</span>
+          <div class="visual"></div>
+          <h4>テカリ・皮脂が<br>気になる</h4>
+          <p>脂性肌・若年層</p>
+          <div class="meta">
+            <span class="chip">〜3,000円</span>
+            <span class="chip">時短ケア</span>
+          </div>
+          <a href="#" class="multi-link">複数気になる →</a>
+        </div>
+
+        <div class="type-card t2">
+          <span class="num">02</span>
+          <div class="visual"></div>
+          <h4>乾燥・カサつきを<br>なんとかしたい</h4>
+          <p>乾燥肌</p>
+          <div class="meta">
+            <span class="chip">高保湿</span>
+            <span class="chip">敏感肌対応</span>
+          </div>
+          <a href="#" class="multi-link">複数気になる →</a>
+        </div>
+
+        <div class="type-card t3">
+          <span class="num">03</span>
+          <div class="visual"></div>
+          <h4>ひげ剃り後の<br>荒れを防ぎたい</h4>
+          <p>髭剃り負担に悩む層</p>
+          <div class="meta">
+            <span class="chip accent">髭剃りケア直結</span>
+          </div>
+          <a href="#" class="multi-link">複数気になる →</a>
+        </div>
+
+        <div class="type-card t4">
+          <span class="num">04</span>
+          <div class="visual"></div>
+          <h4>毛穴の見え方が<br>気になる</h4>
+          <p>黒ずみ・開き</p>
+          <div class="meta">
+            <span class="chip">汚れケア</span>
+          </div>
+          <a href="#" class="multi-link">複数気になる →</a>
+        </div>
+
+        <div class="type-card t5">
+          <span class="num">05</span>
+          <div class="visual"></div>
+          <h4>年齢に合わせた<br>ケアをしたい</h4>
+          <p>36〜49歳</p>
+          <div class="meta">
+            <span class="chip">エイジング配慮</span>
+          </div>
+          <a href="#" class="multi-link">複数気になる →</a>
+        </div>
+
+        <div class="type-card t6">
+          <span class="num">06</span>
+          <div class="visual"></div>
+          <h4>何もわからない、<br>とにかく始めたい</h4>
+          <p>完全初心者</p>
+          <div class="meta">
+            <span class="chip accent">迷ったらこれ</span>
+          </div>
+          <a href="#" class="multi-link">複数気になる →</a>
+        </div>
+
+      </div>
+
+      <div class="cta-strip">
+        <a href="02-diagnosis.html" class="deep-cta" style="text-decoration:none;color:inherit;">
+          <div class="icon-circle">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><line x1="12.5" y1="12.5" x2="16" y2="16"/></svg>
+          </div>
+          <div style="flex:1;">
+            <h5>もっと詳しく診断する</h5>
+            <p>23 問・約 3 分。複数悩みもまとめて分析。</p>
+          </div>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="5,2 11,7 5,12"/></svg>
+        </a>
+      </div>
+
+      <nav class="tabbar">
+        <a class="active">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 11 L12 4 L21 11 L21 20 L14 20 L14 14 L10 14 L10 20 L3 20 Z"/></svg>
+          ホーム
+        </a>
+        <a>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 4 L19 4 L19 20 L12 17 L5 20 Z"/></svg>
+          ルーティン
+        </a>
+        <a>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="6"/><line x1="15.5" y1="15.5" x2="20" y2="20"/></svg>
+          再診断
+        </a>
+        <a>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20 C 4 15, 8 14, 12 14 C 16 14, 20 15, 20 20"/></svg>
+          自分
+        </a>
+      </nav>
+    </div>
+  </div>
+</div>
+</body>
+</html>

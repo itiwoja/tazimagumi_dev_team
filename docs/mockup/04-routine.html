@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>04 ROUTINE — 朝・夜ステップ / 男のスキンケア モックアップ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/styles.css">
+<style>
+  .time-tabs { display: flex; padding: 16px 20px 0; gap: 6px; }
+  .time-tab {
+    flex: 1; text-align: center; padding: 10px 12px;
+    border-radius: 10px;
+    background: var(--surface); border: 1px solid var(--line-soft);
+    font-size: 13px; font-weight: 600; color: var(--muted);
+    cursor: pointer; transition: all var(--d-fast);
+  }
+  .time-tab.active { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+  .time-tab .em { display: block; font-size: 10px; font-weight: 400; opacity: 0.7; margin-top: 1px; letter-spacing: 0.05em; }
+
+  .section-head { padding: 24px 20px 4px; }
+  .section-head h2 { font-family: var(--font-serif); font-size: 22px; line-height: 1.3; margin: 4px 0 4px; font-weight: 700; letter-spacing: -0.005em; }
+  .section-head .eye { font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+  .section-head p { font-size: 12px; color: var(--muted); margin: 0 0 8px; line-height: 1.6; }
+  .section-head .meta { font-size: 11px; color: var(--muted); display: flex; gap: 12px; }
+  .section-head .meta strong { color: var(--ink); font-weight: 700; }
+
+  .steps { padding: 16px 20px; position: relative; }
+  .step {
+    position: relative;
+    background: var(--surface); border: 1px solid var(--line-soft);
+    border-radius: 14px;
+    padding: 14px 14px 14px 56px;
+    margin-bottom: 10px;
+  }
+  .step .num {
+    position: absolute; top: 14px; left: 14px;
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--ink); color: var(--surface);
+    font-family: var(--font-serif); font-weight: 700; font-size: 14px;
+    display: grid; place-items: center;
+  }
+  .step .label {
+    font-size: 10px; letter-spacing: 0.15em;
+    text-transform: uppercase; color: var(--accent);
+    font-weight: 600; margin-bottom: 2px;
+  }
+  .step h4 {
+    font-family: var(--font-serif); font-size: 16px;
+    margin: 0 0 4px; font-weight: 700; letter-spacing: -0.005em;
+  }
+  .step p { font-size: 12px; color: var(--muted); margin: 0 0 8px; line-height: 1.55; }
+  .step .product-tag {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 10px; background: var(--paper-2);
+    border-radius: 6px; font-size: 11px; color: var(--ink-2);
+  }
+  .step .product-tag::before {
+    content: ""; width: 6px; height: 6px;
+    border-radius: 50%; background: var(--accent);
+  }
+
+  .step::after {
+    content: ""; position: absolute;
+    left: 28px; top: 100%;
+    width: 1px; height: 10px;
+    background: var(--line);
+  }
+  .step:last-of-type::after { display: none; }
+
+  .own-products-block {
+    margin: 20px; padding: 16px;
+    border-radius: 14px;
+    background: var(--surface); border: 1px dashed var(--line);
+  }
+  .own-products-block h5 { font-family: var(--font-serif); font-size: 15px; margin: 0 0 4px; font-weight: 700; }
+  .own-products-block p { font-size: 11px; color: var(--muted); margin: 0 0 10px; line-height: 1.5; }
+  .own-products-block .btn { width: 100%; padding: 10px; font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <section class="page-meta">
+    <span class="meta-eyebrow">Screen 04 / ROUTINE</span>
+    <h1 class="meta-title">朝・夜ステップ可視化<small>「いつ・何を・なぜ」を 1 画面で</small></h1>
+    <p class="meta-lede">男性スキンケアの最大の壁は <strong>「順番が分からない」</strong> こと。朝 3 ステップ・夜 4 ステップを 1 画面で図解し、各ステップで何を使い、なぜそれを使うのかを一言で示します。持っている商品を登録すると、自分専用のルーティンに置き換わります。</p>
+
+    <div class="meta-section">
+      <div class="meta-label">— Spec</div>
+      <ul class="meta-list">
+        <li><span>URL</span><span>/routine</span></li>
+        <li><span>朝ステップ</span><span>3 (洗顔 / 化粧水 / 乳液+UV)</span></li>
+        <li><span>夜ステップ</span><span>4 (洗顔 / 化粧水 / 美容液 / 乳液)</span></li>
+        <li><span>マイ商品</span><span>登録で専用ルーティン自動生成</span></li>
+      </ul>
+    </div>
+
+    <div class="meta-section">
+      <div class="meta-label">— Design notes</div>
+      <ul class="meta-list">
+        <li><span>切替</span><span>「朝 / 夜」タブで瞬時に切替</span></li>
+        <li><span>ステップ</span><span>番号付きカード、縦の連結線</span></li>
+        <li><span>理由</span><span>各ステップに 1 文の説明（56 効能準拠）</span></li>
+        <li><span>登録</span><span>マイ商品登録 CTA を最下部に</span></li>
+      </ul>
+    </div>
+
+    <nav class="meta-nav">
+      <a href="index.html">← Index</a>
+      <a href="01-top.html">01 TOP</a>
+      <a href="02-diagnosis.html">02 診断</a>
+      <a href="03-result.html">03 結果</a>
+      <a href="04-routine.html" class="current">04 ルーティン</a>
+      <a href="05-shave.html">05 髭剃り</a>
+    </nav>
+  </section>
+
+  <div class="phone-frame">
+    <div class="phone-statusbar">
+      <span class="num">9:48</span>
+      <span class="icons">
+        <svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor"><rect x="0" y="6" width="3" height="5" rx="1"/><rect x="4" y="4" width="3" height="7" rx="1"/><rect x="8" y="2" width="3" height="9" rx="1"/><rect x="12" y="0" width="3" height="11" rx="1"/></svg>
+        <svg width="22" height="10" viewBox="0 0 22 10" fill="none" stroke="currentColor" stroke-width="1"><rect x="0.5" y="0.5" width="18" height="9" rx="2"/><rect x="2" y="2" width="13" height="6" rx="1" fill="currentColor" stroke="none"/></svg>
+      </span>
+    </div>
+
+    <div class="phone-content">
+      <header class="app-header">
+        <button class="app-back">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="9,2 3,7 9,12"/></svg>
+          戻る
+        </button>
+        <span class="app-logo" style="font-size:13px;">毎日のケア</span>
+        <button class="app-icon-btn" aria-label="共有">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="13" cy="4" r="2"/><circle cx="5" cy="9" r="2"/><circle cx="13" cy="14" r="2"/><line x1="7" y1="8" x2="11" y2="5"/><line x1="7" y1="10" x2="11" y2="13"/></svg>
+        </button>
+      </header>
+
+      <div class="time-tabs">
+        <div class="time-tab active">朝<span class="em">3 STEPS</span></div>
+        <div class="time-tab">夜<span class="em">4 STEPS</span></div>
+      </div>
+
+      <section class="section-head">
+        <span class="eye">Morning Routine</span>
+        <h2>朝のケア、3 ステップ</h2>
+        <p>所要時間 約 2 分。ひげ剃り後は刺激の少ない順番が大切。</p>
+        <div class="meta"><span><strong>00:02:00</strong> 所要</span><span><strong>連続 12 日</strong> 達成中</span></div>
+      </section>
+
+      <div class="steps">
+
+        <div class="step">
+          <div class="num">1</div>
+          <div class="label">洗う</div>
+          <h4>洗顔</h4>
+          <p>ぬるま湯で予洗いし、よく泡立ててから優しく洗います。ひげ剃り後は強くこすらないこと。</p>
+          <span class="product-tag">低刺激 洗顔フォーム</span>
+        </div>
+
+        <div class="step">
+          <div class="num">2</div>
+          <div class="label">整える</div>
+          <h4>化粧水</h4>
+          <p>手のひらで温めてから、押し当てるように。水分と油分のバランスを整え、肌をすこやかに保ちます。</p>
+          <span class="product-tag">うるおい化粧水</span>
+        </div>
+
+        <div class="step">
+          <div class="num">3</div>
+          <div class="label">守る</div>
+          <h4>乳液 + 日焼け止め</h4>
+          <p>軽やかな乳液で水分を閉じ込め、最後に SPF30 以上の日焼け止めを薄く塗ります。</p>
+          <span class="product-tag">軽やか乳液</span>
+          <span class="product-tag" style="margin-left:6px;">SPF30 UV</span>
+        </div>
+
+      </div>
+
+      <aside class="own-products-block">
+        <h5>持っている商品を登録</h5>
+        <p>登録した商品が、このルーティンに自動で組み込まれます。</p>
+        <button class="btn secondary">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="7" y1="2" x2="7" y2="12"/><line x1="2" y1="7" x2="12" y2="7"/></svg>
+          マイ商品を追加する
+        </button>
+      </aside>
+
+      <nav class="tabbar">
+        <a>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 11 L12 4 L21 11 L21 20 L14 20 L14 14 L10 14 L10 20 L3 20 Z"/></svg>
+          ホーム
+        </a>
+        <a class="active">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 4 L19 4 L19 20 L12 17 L5 20 Z"/></svg>
+          ルーティン
+        </a>
+        <a>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="6"/><line x1="15.5" y1="15.5" x2="20" y2="20"/></svg>
+          再診断
+        </a>
+        <a>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20 C 4 15, 8 14, 12 14 C 16 14, 20 15, 20 20"/></svg>
+          自分
+        </a>
+      </nav>
+    </div>
+  </div>
+</div>
+</body>
+</html>

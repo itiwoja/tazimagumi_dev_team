@@ -52,7 +52,7 @@
             chatOptions.style.display = 'none';
             appendMessage('msg-user', data.user);
             setTimeout(() => {
-                const botHtml = `${data.bot}<div class="bot-product-card"><img src="${data.img}"><div style="font-size: 14px; font-weight:bold;">${data.name}</div></div>`;
+                const botHtml = `${data.bot}<div class="bot-product-card"><img src="${data.img}" alt=""><div class="bot-product-name">${data.name}</div></div>`;
                 appendMessage('msg-bot', botHtml);
                 showResetButton();
             }, 800);

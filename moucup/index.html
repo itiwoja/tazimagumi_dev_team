@@ -2,8 +2,9 @@
 <html lang="ja" data-theme="light">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>田島組 | 漢の極上品 斡旋所</title>
-    <link href="https://fonts.googleapis.com/css2?family=Yuji+Syuku&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Yuji+Syuku&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <script src="app.js" defer></script>
 
@@ -16,26 +17,46 @@
     <div class="slash-effect" id="slash"></div>
 
     <header>
-        <button class="theme-toggle" onclick="toggleTheme()">昼夜反転（斬る）</button>
-        <div class="brand-logo">田島組</div>
-        <div class="brand-sub">漢のツラと覚悟を磨く、極上品斡旋所</div>
+        <div class="header-inner">
+            <div>
+                <div class="brand-logo">田島組</div>
+                <div class="brand-sub">漢のツラと覚悟を磨く、極上品斡旋所</div>
+            </div>
+            <nav class="site-nav" aria-label="主要カテゴリ">
+                <a href="#daily-record">修練録</a>
+                <a href="#catalog">品揃え</a>
+                <a href="#advisor">相談役</a>
+            </nav>
+            <button class="theme-toggle" onclick="toggleTheme()">昼夜反転</button>
+        </div>
         <div class="dosu-divider"></div>
     </header>
 
     <section class="hero">
         <div class="hero-content">
+            <p class="hero-kicker">Premium grooming selector</p>
             <h1 class="hero-title">潔く、誇り高く。<br>漢を完成させる<span>覚悟</span>。</h1>
             <p class="hero-desc">田島組の看板を背負う男の姿。お前も、その覚悟を纏え。</p>
+            <div class="hero-actions">
+                <a class="primary-link" href="#catalog">品を選ぶ</a>
+                <a class="secondary-link" href="#advisor">相談する</a>
+            </div>
+            <div class="hero-stats" aria-label="サービスの特徴">
+                <div><strong>5</strong><span>カテゴリ</span></div>
+                <div><strong>毎日</strong><span>記録管理</span></div>
+                <div><strong>即答</strong><span>相談役</span></div>
+            </div>
         </div>
         <div class="hero-image">
             <img src="https://images.unsplash.com/photo-1512484776495-a09d22599065?auto=format&fit=crop&w=800&q=80" alt="田島組の男">
+            <div class="hero-seal">極上品<br>斡旋</div>
         </div>
     </section>
 
-    <div class="main-container">
+    <div class="main-container" id="catalog">
         <div class="left-content">
             
-            <div class="management-board">
+            <div class="management-board" id="daily-record">
                 <h2 class="board-title">【録】 本日の修練（進捗記録）</h2>
                 <ul class="task-list">
                     <li class="task-item"><input type="checkbox" id="task1" onchange="saveTasks()"><label for="task1">壱. 泥炭でツラの汚れを落とし、潤いを叩き込んだ</label></li>
@@ -54,6 +75,7 @@
                         <div class="product-img-box"><img src="https://images.unsplash.com/photo-1556228578-0d85b1a4d571?auto=format&fit=crop&w=200&q=80" alt="洗顔・保湿"></div>
                         <div class="product-info">
                             <div><h3 class="product-name">某社 泥炭濃密泡洗顔 / 保湿液</h3>
+                            <div class="product-tags"><span>洗顔</span><span>保湿</span><span>朝夜</span></div>
                             <p class="product-desc">毛穴の汚れを削ぎ落とし、一本で潤いを叩き込む。</p></div>
                             <a href="#" class="external-link-btn">購入サイトへ</a>
                         </div>
@@ -68,6 +90,7 @@
                         <div class="product-img-box"><img src="https://images.unsplash.com/photo-1526947425960-945c6e72858f?auto=format&fit=crop&w=200&q=80" alt="日焼け止め"></div>
                         <div class="product-info">
                             <div><h3 class="product-name">某社 鋼鉄UVシールド</h3>
+                            <div class="product-tags"><span>UV</span><span>外出前</span><span>軽量</span></div>
                             <p class="product-desc">日差しでツラが老け込むのを防ぐ、白浮きしない男の盾。</p></div>
                             <a href="#" class="external-link-btn">購入サイトへ</a>
                         </div>
@@ -82,6 +105,7 @@
                         <div class="product-img-box"><img src="https://images.unsplash.com/photo-1585232004423-244e0e6904e3?auto=format&fit=crop&w=200&q=80" alt="ポマード"></div>
                         <div class="product-info">
                             <div><h3 class="product-name">某社 極艶ハードポマード</h3>
+                            <div class="product-tags"><span>整髪</span><span>艶</span><span>強固定</span></div>
                             <p class="product-desc">オールバックから七三まで、強烈な艶とホールド力でキメる。</p></div>
                             <a href="#" class="external-link-btn">購入サイトへ</a>
                         </div>
@@ -90,6 +114,7 @@
                         <div class="product-img-box"><img src="https://images.unsplash.com/photo-1620916297397-a4a5402a3c6c?auto=format&fit=crop&w=200&q=80" alt="マットワックス"></div>
                         <div class="product-info">
                             <div><h3 class="product-name">某社 無骨クレイマットワックス</h3>
+                            <div class="product-tags"><span>整髪</span><span>マット</span><span>無造作</span></div>
                             <p class="product-desc">艶を消し、無造作に立ち上げる。激しいシノギでも崩れねぇタフな相棒だ。</p></div>
                             <a href="#" class="external-link-btn">購入サイトへ</a>
                         </div>
@@ -104,6 +129,7 @@
                         <div class="product-img-box"><img src="https://images.unsplash.com/photo-1512803875880-b2861e604017?auto=format&fit=crop&w=200&q=80" alt="剃刀"></div>
                         <div class="product-info">
                             <div><h3 class="product-name">某社 業物五枚刃カミソリ</h3>
+                            <div class="product-tags"><span>髭剃り</span><span>深剃り</span><span>朝</span></div>
                             <p class="product-desc">ドスより鋭い五枚刃が、どんな剛毛も根本から刈り取る。</p></div>
                             <a href="#" class="external-link-btn">購入サイトへ</a>
                         </div>
@@ -112,6 +138,7 @@
                         <div class="product-img-box"><img src="https://images.unsplash.com/photo-1621607512214-68297480165e?auto=format&fit=crop&w=200&q=80" alt="アフターシェーブ"></div>
                         <div class="product-info">
                             <div><h3 class="product-name">某社 鎮痛アフターシェーブ</h3>
+                            <div class="product-tags"><span>髭剃り後</span><span>冷感</span><span>整肌</span></div>
                             <p class="product-desc">刃物を当てた後のヒリつくツラに、氷のような冷却と静寂をもたらす。</p></div>
                             <a href="#" class="external-link-btn">購入サイトへ</a>
                         </div>
@@ -126,6 +153,7 @@
                         <div class="product-img-box"><img src="https://images.unsplash.com/photo-1583947581924-860bda6a5a0d?auto=format&fit=crop&w=200&q=80" alt="性処理筒"></div>
                         <div class="product-info">
                             <div><h3 class="product-name">某社 殿方慰み極上筒</h3>
+                            <div class="product-tags"><span>夜用</span><span>個室</span><span>任意</span></div>
                             <p class="product-desc">外の店でトラブルを起こすくらいなら、部屋で賢く抜いとけ。</p></div>
                             <a href="#" class="external-link-btn">密かに手に入れる</a>
                         </div>
@@ -134,6 +162,7 @@
                         <div class="product-img-box"><img src="https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&w=200&q=80" alt="マッサージローション"></div>
                         <div class="product-info">
                             <div><h3 class="product-name">某社 極潤・夜の秘伝油</h3>
+                            <div class="product-tags"><span>夜用</span><span>潤滑</span><span>低摩擦</span></div>
                             <p class="product-desc">強引な摩擦は肌を傷つけるだけだ。極上の滑りで、独りの夜を底無し沼に変える。</p></div>
                             <a href="#" class="external-link-btn">密かに手に入れる</a>
                         </div>
@@ -143,7 +172,7 @@
 
         </div>
 
-        <div class="right-content">
+        <div class="right-content" id="advisor">
             <div class="chat-header">田島組 美容相談役 控室</div>
             <div class="chat-body" id="chat-body">
                 <div class="chat-msg msg-bot">

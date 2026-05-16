@@ -1,4 +1,4 @@
-// --- ダークモード＆刀アクション ---
+// --- テーマ切り替え ---
         function toggleTheme() {
             const slash = document.getElementById('slash');
             slash.classList.remove('slash-active');
@@ -17,22 +17,22 @@
 
         // --- 管理システム ---
         document.addEventListener('DOMContentLoaded', () => {
-            for(let i=1; i<=5; i++) {
+            for(let i=1; i<=4; i++) {
                 const checked = localStorage.getItem(`task${i}`);
                 if(checked === 'true') document.getElementById(`task${i}`).checked = true;
             }
         });
         function saveTasks() {
-            for(let i=1; i<=5; i++) {
+            for(let i=1; i<=4; i++) {
                 localStorage.setItem(`task${i}`, document.getElementById(`task${i}`).checked);
             }
         }
         function resetTasks() {
-            for(let i=1; i<=5; i++) {
+            for(let i=1; i<=4; i++) {
                 document.getElementById(`task${i}`).checked = false;
                 localStorage.removeItem(`task${i}`);
             }
-            alert("記録を白紙に戻した。明日も気合入れろ。");
+            alert("記録をリセットしました。");
         }
 
         // --- チャットシステム ---
@@ -40,11 +40,10 @@
         const chatOptions = document.getElementById('chat-options');
 
         const botData = {
-            'skin': { user: "アブラと乾燥でツラが汚ねぇ。", bot: "『泥炭濃密泡洗顔』で汚れを落とし、保湿液を叩き込め。", img: "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?auto=format&fit=crop&w=100&q=80", name: "泥炭洗顔＆保湿" },
-            'sun': { user: "日差しで老け込みそうだ。", bot: "無防備すぎるぞ。『鋼鉄UVシールド』で盾を張れ。", img: "https://images.unsplash.com/photo-1526947425960-945c6e72858f?auto=format&fit=crop&w=100&q=80", name: "鋼鉄UVシールド" },
-            'hair': { user: "威圧感のある髪型にキメてぇ。", bot: "『極艶ポマード』か、新しく入れた『マットワックス』を使え。狂犬みたいなオーラが出るぜ。", img: "https://images.unsplash.com/photo-1620916297397-a4a5402a3c6c?auto=format&fit=crop&w=100&q=80", name: "無骨クレイマットワックス" },
-            'shave': { user: "髭剃り負けで血を見るんです。", bot: "『五枚刃』で剃った後、追加した『アフターシェーブ』で冷却しろ。ヒリつきが引くぞ。", img: "https://images.unsplash.com/photo-1621607512214-68297480165e?auto=format&fit=crop&w=100&q=80", name: "鎮痛アフターシェーブ" },
-            'adult': { user: "下半身が暴走しそうです。", bot: "外でヘタ打つな。『殿方慰み極上筒』と『極潤・秘伝油』で、部屋で静かにケジメをつけろ。", img: "https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&w=100&q=80", name: "極潤・夜の秘伝油" }
+            'skin': { user: "皮脂と乾燥が気になる", bot: "洗顔で肌を清潔にし、保湿液でうるおいを与える流れから確認しましょう。", img: "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?auto=format&fit=crop&w=100&q=80", name: "泡洗顔＆保湿液" },
+            'sun': { user: "日差し対策を始めたい", bot: "外出前に使いやすい軽い使用感の日焼け止め候補を確認しましょう。", img: "https://images.unsplash.com/photo-1526947425960-945c6e72858f?auto=format&fit=crop&w=100&q=80", name: "軽量UVジェル" },
+            'hair': { user: "髪型を整えたい", bot: "ツヤを出すポマードか、自然に仕上げるマットワックスから比較しましょう。", img: "https://images.unsplash.com/photo-1620916297397-a4a5402a3c6c?auto=format&fit=crop&w=100&q=80", name: "クレイマットワックス" },
+            'shave': { user: "髭剃り後のケアを見直したい", bot: "髭剃り後に使う候補と、タイミングを選ぶ成分の有無を確認しましょう。", img: "https://images.unsplash.com/photo-1621607512214-68297480165e?auto=format&fit=crop&w=100&q=80", name: "アフターシェーブローション" }
         };
 
         function selectOption(key) {
@@ -64,12 +63,12 @@
         }
         function showResetButton() {
             const btn = document.createElement('button');
-            btn.className = 'btn-option'; btn.style.textAlign = 'center'; btn.innerText = '他の悩みも相談する';
-            btn.onclick = () => { btn.remove(); chatOptions.style.display = 'flex'; appendMessage('msg-bot', '他に吐きたいことはあるか？'); };
+            btn.className = 'btn-option'; btn.style.textAlign = 'center'; btn.innerText = '他の悩みも見る';
+            btn.onclick = () => { btn.remove(); chatOptions.style.display = 'flex'; appendMessage('msg-bot', '他にも整理したい悩みはありますか？'); };
             chatBody.appendChild(btn); chatBody.scrollTop = chatBody.scrollHeight;
         }
 
-        // --- 横殴りの桜アニメーション ---
+        // --- 背景アニメーション ---
         const sakuraContainer = document.getElementById('sakura-container');
         const createPetal = () => {
             const petal = document.createElement('div');
@@ -84,6 +83,6 @@
             sakuraContainer.appendChild(petal);
             setTimeout(() => { petal.remove(); }, duration * 1000);
         };
-        for(let i=0; i<40; i++) { createPetal(); }
+        for(let i=0; i<24; i++) { createPetal(); }
         setInterval(createPetal, 150);
 

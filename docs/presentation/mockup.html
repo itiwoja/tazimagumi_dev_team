@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>男の身だしなみ診断 — 田島組 デモ</title>
+<style>
+  :root {
+    --navy: #0f1f2e;
+    --navy-mid: #162840;
+    --teal: #00b4a0;
+    --teal-light: #00d4bc;
+    --amber: #f59e0b;
+    --text: #e8f0f7;
+    --text-muted: #8aa0b8;
+    --card: #1a2f45;
+    --card2: #203650;
+    --radius: 14px;
+    --radius-sm: 8px;
+    --shadow: 0 8px 32px rgba(0,0,0,0.35);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Hiragino Sans', 'Noto Sans JP', 'Yu Gothic UI', sans-serif;
+    background: #070f17;
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ─── スマホ枠 ─── */
+  .phone-frame {
+    width: 390px;
+    min-height: 844px;
+    background: var(--navy);
+    border-radius: 44px;
+    box-shadow: 0 0 0 10px #1a1a1a, 0 0 0 12px #2a2a2a, 0 40px 80px rgba(0,0,0,0.7);
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ノッチ */
+  .notch {
+    position: absolute;
+    top: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 120px; height: 28px;
+    background: #1a1a1a;
+    border-radius: 0 0 18px 18px;
+    z-index: 50;
+  }
+
+  /* ステータスバー */
+  .statusbar {
+    display: flex;
+    justify-content: space-between;
+    padding: 14px 24px 4px;
+    font-size: 12px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+    padding-top: 36px;
+  }
+
+  /* スクロール可能エリア */
+  .app-scroll {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .app-scroll::-webkit-scrollbar { display: none; }
+
+  /* ─── 各画面 ─── */
+  .screen { display: none; flex-direction: column; }
+  .screen.active { display: flex; }
+
+  /* ─── SCREEN 0: スプラッシュ ─── */
+  #s0 {
+    background: linear-gradient(160deg, var(--navy) 0%, var(--navy-mid) 100%);
+    align-items: center;
+    padding: 32px 24px 40px;
+    gap: 20px;
+    text-align: center;
+    min-height: 760px;
+    justify-content: center;
+  }
+  .logo-icon {
+    width: 76px; height: 76px;
+    background: linear-gradient(135deg, var(--teal), var(--teal-light));
+    border-radius: 22px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 34px;
+    box-shadow: 0 12px 40px rgba(0,180,160,0.4);
+  }
+  .app-name { font-size: 24px; font-weight: 700; letter-spacing: 0.02em; }
+  .tagline { font-size: 13px; color: var(--text-muted); line-height: 1.7; }
+  .entry-section { width: 100%; }
+  .entry-label {
+    font-size: 11px; color: var(--teal); font-weight: 600;
+    letter-spacing: 0.06em; margin-bottom: 10px;
+    text-transform: uppercase;
+  }
+  .entry-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 8px; margin-bottom: 16px;
+  }
+  .entry-btn {
+    background: var(--card);
+    border: 1.5px solid rgba(0,180,160,0.2);
+    border-radius: var(--radius-sm);
+    padding: 13px 8px;
+    cursor: pointer;
+    transition: all .18s;
+    text-align: center;
+  }
+  .entry-btn:hover, .entry-btn:active {
+    border-color: var(--teal);
+    background: var(--card2);
+    transform: translateY(-2px);
+  }
+  .entry-btn .icon { font-size: 20px; margin-bottom: 3px; }
+  .entry-btn .label { font-size: 11px; color: var(--text-muted); }
+  .cta-btn {
+    width: 100%;
+    background: linear-gradient(90deg, var(--teal), var(--teal-light));
+    color: var(--navy);
+    font-weight: 700;
+    font-size: 15px;
+    border: none;
+    border-radius: var(--radius);
+    padding: 16px;
+    cursor: pointer;
+    letter-spacing: 0.03em;
+    box-shadow: 0 6px 24px rgba(0,180,160,0.35);
+    transition: transform .15s, box-shadow .15s;
+  }
+  .cta-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 32px rgba(0,180,160,0.45); }
+  .sub-link {
+    margin-top: 12px;
+    font-size: 12px;
+    color: var(--text-muted);
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .sub-link:hover { color: var(--teal); }
+  .team-badge { font-size: 10px; color: rgba(138,160,184,0.4); }
+
+  /* ─── SCREEN 1: 質問 ─── */
+  #s1 { padding: 20px; gap: 14px; min-height: 760px; }
+  .progress-header { display: flex; justify-content: space-between; align-items: center; }
+  .progress-label { font-size: 12px; color: var(--text-muted); }
+  .progress-num { font-size: 12px; color: var(--teal); font-weight: 600; }
+  .progress-bar { height: 4px; background: rgba(255,255,255,0.07); border-radius: 99px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--teal), var(--teal-light)); border-radius: 99px; transition: width .4s ease; }
+  .section-tag {
+    display: inline-block;
+    background: rgba(0,180,160,0.12);
+    color: var(--teal);
+    font-size: 10px; font-weight: 600; letter-spacing: 0.05em;
+    padding: 3px 9px; border-radius: 99px;
+  }
+  .question-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: var(--shadow);
+  }
+  .question-num { font-size: 11px; color: var(--text-muted); margin-bottom: 6px; }
+  .question-text { font-size: 15px; font-weight: 600; line-height: 1.55; }
+  .choices { display: flex; flex-direction: column; gap: 9px; }
+  .choice {
+    background: var(--card2);
+    border: 1.5px solid rgba(255,255,255,0.07);
+    border-radius: var(--radius-sm);
+    padding: 13px 15px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all .15s;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .choice:hover, .choice:active { border-color: var(--teal); background: rgba(0,180,160,0.1); transform: translateX(3px); }
+  .choice.selected { border-color: var(--teal); background: rgba(0,180,160,0.15); }
+  .choice-dot {
+    width: 17px; height: 17px; border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.2); flex-shrink: 0; transition: all .15s;
+  }
+  .choice.selected .choice-dot { background: var(--teal); border-color: var(--teal); }
+  .nav-row { display: flex; gap: 10px; margin-top: auto; padding-top: 8px; }
+  .btn-back {
+    background: var(--card2);
+    border: 1.5px solid rgba(255,255,255,0.08);
+    color: var(--text-muted);
+    border-radius: var(--radius);
+    padding: 13px 20px;
+    font-size: 13px; cursor: pointer; transition: all .15s;
+  }
+  .btn-back:hover { border-color: rgba(255,255,255,0.2); color: var(--text); }
+  .btn-next {
+    flex: 1;
+    background: linear-gradient(90deg, var(--teal), var(--teal-light));
+    color: var(--navy); border: none;
+    border-radius: var(--radius);
+    padding: 13px; font-size: 14px; font-weight: 700;
+    cursor: pointer; opacity: 0.4; pointer-events: none; transition: all .2s;
+  }
+  .btn-next.enabled { opacity: 1; pointer-events: all; }
+  .btn-next.enabled:hover { filter: brightness(1.08); }
+
+  /* ─── SCREEN 2: 判定中 ─── */
+  #s2 {
+    align-items: center; justify-content: center;
+    gap: 20px; padding: 40px 24px; text-align: center;
+    min-height: 760px;
+  }
+  .analyzing-ring {
+    width: 90px; height: 90px; border-radius: 50%;
+    border: 3.5px solid rgba(0,180,160,0.15);
+    border-top-color: var(--teal);
+    animation: spin 1s linear infinite;
+    position: relative;
+  }
+  .analyzing-ring::after {
+    content: '🔍';
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%,-50%);
+    font-size: 26px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .score-bars { width: 100%; }
+  .score-row { display: flex; align-items: center; gap: 8px; margin-bottom: 9px; }
+  .score-name { font-size: 11px; color: var(--text-muted); width: 70px; text-align: right; flex-shrink: 0; }
+  .score-track { flex: 1; height: 6px; background: rgba(255,255,255,0.07); border-radius: 99px; overflow: hidden; }
+  .score-fill { height: 100%; border-radius: 99px; width: 0; transition: width 1.2s cubic-bezier(.4,0,.2,1); }
+  .score-val { font-size: 11px; color: var(--teal); font-weight: 600; width: 28px; }
+
+  /* ─── SCREEN 3: 結果 ─── */
+  #s3 { padding: 18px; gap: 16px; }
+  .result-hero {
+    background: linear-gradient(135deg, var(--card), var(--card2));
+    border: 1.5px solid rgba(0,180,160,0.3);
+    border-radius: var(--radius); padding: 22px 18px;
+    text-align: center; box-shadow: var(--shadow);
+  }
+  .result-type-badge {
+    display: inline-block;
+    background: rgba(0,180,160,0.15); color: var(--teal);
+    font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+    padding: 4px 12px; border-radius: 99px; margin-bottom: 9px;
+  }
+  .result-type-name { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+  .result-type-sub { font-size: 12px; color: var(--text-muted); line-height: 1.6; }
+  .disclaimer { font-size: 9px; color: rgba(138,160,184,0.45); margin-top: 8px; }
+  .section-title {
+    font-size: 12px; font-weight: 700; color: var(--teal);
+    letter-spacing: 0.05em; margin-bottom: 8px; text-transform: uppercase;
+  }
+
+  /* ロードマップ */
+  .roadmap { display: flex; flex-direction: column; }
+  .roadmap-item { display: flex; gap: 12px; align-items: flex-start; padding-bottom: 14px; }
+  .roadmap-item:last-child { padding-bottom: 0; }
+  .roadmap-left { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
+  .roadmap-step {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--teal), var(--teal-light));
+    color: var(--navy); font-size: 12px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .roadmap-line { width: 2px; flex: 1; min-height: 20px; background: linear-gradient(to bottom, var(--teal) 0%, rgba(0,180,160,0.08) 100%); margin: 2px 0; }
+  .roadmap-item:last-child .roadmap-line { display: none; }
+  .roadmap-content { flex: 1; padding-top: 4px; }
+  .roadmap-time { font-size: 10px; color: var(--amber); font-weight: 600; letter-spacing: 0.04em; margin-bottom: 2px; }
+  .roadmap-action { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+  .roadmap-desc { font-size: 11px; color: var(--text-muted); line-height: 1.5; }
+
+  /* 商品カード */
+  .products { display: flex; flex-direction: column; gap: 9px; }
+  .product-card {
+    background: var(--card);
+    border: 1.5px solid rgba(255,255,255,0.07);
+    border-radius: var(--radius-sm); padding: 12px 14px;
+    display: flex; align-items: center; gap: 12px;
+    cursor: pointer; transition: all .15s;
+  }
+  .product-card:hover { border-color: var(--teal); background: var(--card2); }
+  .product-rank { width: 24px; height: 24px; border-radius: 50%; background: rgba(0,180,160,0.15); color: var(--teal); font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .product-rank.gold { background: rgba(245,158,11,0.15); color: var(--amber); }
+  .product-emoji { font-size: 26px; flex-shrink: 0; }
+  .product-info { flex: 1; }
+  .product-name { font-size: 12px; font-weight: 600; margin-bottom: 2px; }
+  .product-desc { font-size: 10px; color: var(--text-muted); }
+  .product-price { font-size: 12px; font-weight: 600; color: var(--teal); flex-shrink: 0; }
+
+  /* 髭剃りタイムライン */
+  .shave-timeline { background: var(--card); border-radius: var(--radius-sm); padding: 14px; }
+  .shave-row { display: flex; align-items: center; gap: 8px; padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+  .shave-row:last-child { border-bottom: none; }
+  .shave-icon { font-size: 18px; width: 26px; text-align: center; flex-shrink: 0; }
+  .shave-label { font-size: 12px; flex: 1; }
+  .shave-tip { font-size: 10px; color: var(--amber); font-weight: 600; text-align: right; max-width: 110px; line-height: 1.3; }
+
+  /* ボトムナビ */
+  .bottom-nav {
+    display: flex; justify-content: space-around;
+    padding: 12px 0 28px;
+    background: rgba(15,31,46,0.95);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid rgba(255,255,255,0.06);
+    flex-shrink: 0;
+  }
+  .nav-item { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 9px; color: var(--text-muted); cursor: pointer; transition: color .15s; padding: 0 10px; }
+  .nav-item.active { color: var(--teal); }
+  .nav-item .nav-icon { font-size: 18px; }
+
+  /* アニメーション */
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+  .fade-up { animation: fadeUp .38s ease both; }
+
+  /* プレゼン説明 */
+  .outer-ui {
+    display: flex; align-items: flex-start; gap: 32px;
+    padding: 32px 24px;
+    max-width: 900px; width: 100%;
+  }
+  .slide-notes {
+    flex: 1; color: rgba(232,240,247,0.7);
+    font-size: 14px; line-height: 1.8;
+  }
+  .slide-notes h2 { font-size: 18px; font-weight: 700; color: var(--teal); margin-bottom: 12px; }
+  .slide-notes ul { padding-left: 18px; }
+  .slide-notes li { margin-bottom: 8px; }
+  .slide-notes .highlight { color: var(--amber); font-weight: 600; }
+</style>
+</head>
+<body>
+
+<div class="outer-ui">
+
+  <!-- ===== スマホフレーム ===== -->
+  <div class="phone-frame">
+    <div class="notch"></div>
+    <div class="statusbar">
+      <span>9:41</span>
+      <span>●●● 🔋</span>
+    </div>
+
+    <div class="app-scroll" id="app-scroll">
+
+      <!-- SCREEN 0: スプラッシュ -->
+      <div class="screen active" id="s0">
+        <div class="logo-icon">💆</div>
+        <div>
+          <div class="app-name">男の身だしなみ診断</div>
+          <div style="font-size:10px;color:var(--teal);margin-top:3px;font-weight:600;">by 田島組</div>
+        </div>
+        <div class="tagline">
+          3分で「今日買う1本」と<br>「今夜やる順番」が決まる<br>メンズスキンケア・ソムリエ
+        </div>
+
+        <div class="entry-section">
+          <div class="entry-label">あなたの悩みから入る</div>
+          <div class="entry-grid">
+            <div class="entry-btn" onclick="quickStart('oily')">
+              <div class="icon">😓</div>
+              <div class="label">テカリ・皮脂</div>
+            </div>
+            <div class="entry-btn" onclick="quickStart('dry')">
+              <div class="icon">🍂</div>
+              <div class="label">乾燥・カサつき</div>
+            </div>
+            <div class="entry-btn" onclick="quickStart('acne')">
+              <div class="icon">🔴</div>
+              <div class="label">ニキビ・肌荒れ</div>
+            </div>
+            <div class="entry-btn" onclick="quickStart('shave')">
+              <div class="icon">🪒</div>
+              <div class="label">髭剃り後の荒れ</div>
+            </div>
+            <div class="entry-btn" onclick="quickStart('aging')">
+              <div class="icon">✨</div>
+              <div class="label">くすみ・エイジング</div>
+            </div>
+            <div class="entry-btn" onclick="quickStart('beginner')">
+              <div class="icon">🤷</div>
+              <div class="label">何も分からない</div>
+            </div>
+          </div>
+          <button class="cta-btn" onclick="startDiagnosis()">23問チェックで詳しく診断する →</button>
+          <div class="sub-link" onclick="startDiagnosis()">詳しく自分の肌を知りたい</div>
+        </div>
+        <div class="team-badge">田島組 卒業制作 MVP デモ v0.1</div>
+      </div>
+
+      <!-- SCREEN 1: 質問 -->
+      <div class="screen" id="s1">
+        <div class="progress-header">
+          <span class="progress-label" id="section-name">基本情報</span>
+          <span class="progress-num" id="progress-text">1 / 6</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progress-fill" style="width:16%"></div>
+        </div>
+        <div class="section-tag" id="section-tag">セクション 1/4</div>
+
+        <div class="question-card fade-up" id="question-card">
+          <div class="question-num" id="q-num">Q1</div>
+          <div class="question-text" id="q-text">現在の年齢を教えてください</div>
+        </div>
+
+        <div class="choices" id="choices"></div>
+
+        <div class="nav-row">
+          <button class="btn-back" id="btn-back" onclick="prevQ()">← 戻る</button>
+          <button class="btn-next" id="btn-next" onclick="nextQ()">次へ →</button>
+        </div>
+      </div>
+
+      <!-- SCREEN 2: 判定中 -->
+      <div class="screen" id="s2">
+        <div class="analyzing-ring"></div>
+        <div>
+          <div style="font-size:17px;font-weight:700;margin-bottom:6px;">あなたの肌を分析中…</div>
+          <div style="font-size:12px;color:var(--text-muted);">6軸スコアを計算しています</div>
+        </div>
+        <div class="score-bars" id="score-bars"></div>
+      </div>
+
+      <!-- SCREEN 3: 結果 -->
+      <div class="screen" id="s3">
+        <div class="result-hero fade-up">
+          <div class="result-type-badge" id="type-badge">あなたのタイプ</div>
+          <div class="result-type-name" id="type-name">皮脂・テカリタイプ</div>
+          <div class="result-type-sub" id="type-sub">…</div>
+          <div class="disclaimer">※ 自己申告に基づくレコメンドです。医療的診断ではありません。</div>
+        </div>
+
+        <div>
+          <div class="section-title">🗺️ あなた専用 身だしなみロードマップ</div>
+          <div class="roadmap" id="roadmap"></div>
+        </div>
+
+        <div>
+          <div class="section-title">🛒 今日買う3点（中立的推薦）</div>
+          <div style="font-size:9px;color:var(--text-muted);margin-bottom:8px;">
+            楽天市場メンズスキンケア部門ランキング（<span id="rank-month"></span>）上位より、あなたのタイプに推奨される成分を含む商品を表示
+          </div>
+          <div class="products" id="products"></div>
+        </div>
+
+        <div>
+          <div class="section-title">🪒 髭剃り前後のタイミング</div>
+          <div class="shave-timeline" id="shave-timeline"></div>
+        </div>
+
+        <button class="cta-btn" onclick="goHome()" style="margin-top:4px;margin-bottom:16px;">
+          🔄 もう一度診断する
+        </button>
+      </div>
+
+    </div><!-- /app-scroll -->
+
+    <!-- ボトムナビ（結果画面のみ表示） -->
+    <div class="bottom-nav" id="bottom-nav" style="display:none;">
+      <div class="nav-item active"><span class="nav-icon">🏠</span>ホーム</div>
+      <div class="nav-item"><span class="nav-icon">📋</span>マイケア</div>
+      <div class="nav-item"><span class="nav-icon">🛒</span>商品</div>
+      <div class="nav-item"><span class="nav-icon">❓</span>FAQ</div>
+    </div>
+
+  </div><!-- /phone-frame -->
+
+  <!-- ===== スライド説明欄 ===== -->
+  <div class="slide-notes">
+    <h2>📱 システム案 — デモ</h2>
+    <ul>
+      <li><span class="highlight">6タイプ入口</span>：悩みをタップすると即座に結果へジャンプ</li>
+      <li><span class="highlight">23問チェック</span>：詳しく知りたい人向けの全問診断（6問に短縮したデモ版）</li>
+      <li><span class="highlight">6軸スコア判定</span>：皮脂・乾燥・炎症・髭剃り・加齢・初心者度</li>
+      <li><span class="highlight">身だしなみロードマップ</span>：朝・夜・週次の行動ステップを自動生成</li>
+      <li><span class="highlight">今日買う3点</span>：楽天ランキング上位＋タイプ別推奨成分で中立的に提示</li>
+      <li><span class="highlight">髭剃り前後タイミング</span>：男性特有のケアを独立表示</li>
+    </ul>
+    <br>
+    <p style="font-size:12px;color:rgba(138,160,184,0.5);">
+      ← 実際に操作できます。<br>悩みのボタンを押すか「23問チェック」でデモ体験を。
+    </p>
+  </div>
+
+</div><!-- /outer-ui -->
+
+<script>
+// ===== 質問データ（デモ用6問）=====
+const questions = [
+  {
+    num:'Q1', section:'基本情報', tag:'セクション 1/4',
+    text:'現在の年齢を教えてください',
+    choices:['19歳以下','20〜24歳','25〜34歳','35歳以上'],
+    scores:[{S_beginner:5},{S_beginner:3},{S_aging:5},{S_aging:15}]
+  },
+  {
+    num:'Q2', section:'基本情報', tag:'セクション 1/4',
+    text:'顔の洗顔は1日に何回していますか？',
+    choices:['していない','1回（朝か夜のみ）','2回（朝と夜）','3回以上'],
+    scores:[{S_beginner:15},{S_beginner:5},{},{S_oily:5}]
+  },
+  {
+    num:'Q3', section:'基本情報', tag:'セクション 1/4',
+    text:'髭剃りの頻度はどのくらいですか？',
+    choices:['ほぼ毎日','週3〜5回','週1〜2回','ほぼ剃らない'],
+    scores:[{S_shave:20},{S_shave:12},{S_shave:5},{}]
+  },
+  {
+    num:'Q4', section:'肌タイプ判定', tag:'セクション 2/4',
+    text:'洗顔後、何もつけずにいると肌はどうなりますか？',
+    choices:['すぐにテカる','突っ張る感じがする','部分的にテカり、部分的に突っ張る','特に何も感じない'],
+    scores:[{S_oily:20},{S_dry:20},{S_oily:10,S_dry:10},{S_beginner:5}]
+  },
+  {
+    num:'Q5', section:'肌タイプ判定', tag:'セクション 2/4',
+    text:'昼ごろの顔のテカリが気になることはありますか？',
+    choices:['かなり気になる','少し気になる','あまり気にならない','全く気にならない'],
+    scores:[{S_oily:20},{S_oily:10},{},{S_dry:5}]
+  },
+  {
+    num:'Q6', section:'悩み深堀り', tag:'セクション 3/4',
+    text:'肌についていちばん気になることは？（最も近いもの1つ）',
+    choices:['テカリ・毛穴の目立ち','乾燥・カサつき・かゆみ','ニキビ・肌荒れ・赤み','髭剃り後の刺激・赤み'],
+    scores:[{S_oily:25},{S_dry:25},{S_inflam:25},{S_shave:25}]
+  },
+];
+
+// ===== タイプ別コンテンツ =====
+const typeData = {
+  oily: {
+    badge:'① 皮脂タイプ', name:'テカリ・皮脂タイプ',
+    sub:'皮脂分泌が多く、午後のテカリが気になる傾向。まず皮脂コントロールと保湿のバランスを整えることが大切です。',
+    roadmap:[
+      {time:'朝', action:'泡洗顔 30秒', desc:'皮脂を適度に落とす。洗いすぎると逆に皮脂が増えるので注意。'},
+      {time:'朝', action:'さっぱり化粧水 → 乳液（少量）', desc:'乳液は米粒1〜2個分だけ。うるおい成分：セラミド・ヒアルロン酸を含むものを推奨。'},
+      {time:'夜', action:'ダブル洗顔 → 保湿ケア', desc:'帰宅後はメイク・皮脂汚れをしっかり落とす。'},
+      {time:'週2〜3回', action:'収れん化粧水でTゾーンケア', desc:'テカリが気になる部分に。過剰ケアは厳禁。'},
+    ],
+    products:[
+      {rank:'1',emoji:'🧴',name:'バルクオム THE TONER',desc:'さっぱり系水分補給。皮脂タイプ推奨成分含有',price:'¥2,480'},
+      {rank:'2',emoji:'🧼',name:'UNO フェイスカラークリエイター',desc:'洗顔後の皮脂コントロール。楽天ランキング上位',price:'¥1,280'},
+      {rank:'3',emoji:'🪥',name:'ルシードEX ブラックモイスチャー化粧水',desc:'メンズ保湿・毛穴ケア成分配合',price:'¥980'},
+    ],
+    shave:[
+      {icon:'🪒',label:'髭剃り前',tip:'洗顔で肌を柔らかくしてから'},
+      {icon:'💦',label:'髭剃り中',tip:'シェービングジェルで摩擦を減らす'},
+      {icon:'❄️',label:'髭剃り直後（重要）',tip:'化粧水で即保湿。アルコール不使用を選ぶ'},
+      {icon:'🧴',label:'10分後',tip:'乳液 or クリームで蓋をする'},
+    ]
+  },
+  dry: {
+    badge:'② 乾燥タイプ', name:'乾燥・カサつきタイプ',
+    sub:'水分が不足しがちな乾燥肌。洗いすぎに注意し、たっぷりの保湿が最優先です。',
+    roadmap:[
+      {time:'朝', action:'ミルク洗顔 or ぬるま湯のみ', desc:'洗いすぎを防ぐ。乾燥がひどい日はぬるま湯だけでもOK。'},
+      {time:'朝', action:'高保湿化粧水 → 乳液 → クリーム', desc:'うるおい成分：ヒアルロン酸・セラミド・コラーゲンを含むもの推奨。'},
+      {time:'夜', action:'保湿パックまたは濃厚クリーム', desc:'夜は修復タイム。睡眠中の乾燥から肌を守る。'},
+    ],
+    products:[
+      {rank:'1',emoji:'🧴',name:'ニベアメン モイスチャーミルク',desc:'高保湿成分配合。乾燥タイプに推奨',price:'¥890'},
+      {rank:'2',emoji:'🧴',name:'バルクオム THE CREAM',desc:'メンズ向け濃厚保湿クリーム',price:'¥3,980'},
+      {rank:'3',emoji:'💊',name:'カウブランド 保湿化粧水',desc:'低刺激・高保湿。楽天ランキング上位',price:'¥1,100'},
+    ],
+    shave:[
+      {icon:'🌡️',label:'髭剃り前',tip:'温タオルで肌を柔らかく'},
+      {icon:'💦',label:'髭剃り中',tip:'保湿成分入りシェービングクリームを使う'},
+      {icon:'🧴',label:'髭剃り後すぐ（最重要）',tip:'高保湿化粧水で即補水。乾燥肌はここが命'},
+      {icon:'🛡️',label:'乾燥がひどい時',tip:'ワセリンやクリームで皮膜を作る'},
+    ]
+  },
+  acne: {
+    badge:'③ ニキビタイプ', name:'ニキビ・肌荒れタイプ',
+    sub:'炎症が起きやすい肌。刺激を避け、低刺激・鎮静ケアが基本です。触りすぎも禁物。',
+    roadmap:[
+      {time:'朝', action:'低刺激洗顔（泡立て必須）', desc:'擦らず優しく。爪を立てない。'},
+      {time:'朝', action:'ノンコメドジェニック化粧水', desc:'毛穴を詰まらせない成分を選ぶ。アルコール・油分は控えめに。'},
+      {time:'夜', action:'ピーリング（週1〜2回のみ）', desc:'使いすぎるとバリアを壊す。週1〜2回が上限。'},
+    ],
+    products:[
+      {rank:'1',emoji:'🧴',name:'ラロッシュポゼ 効果乳液(EF)',desc:'低刺激・敏感肌向け。ニキビ系に推奨',price:'¥3,200'},
+      {rank:'2',emoji:'🧼',name:'ビオレ洗顔料（さっぱり）',desc:'ノンコメドジェニックテスト済',price:'¥680'},
+      {rank:'3',emoji:'💊',name:'ビタミンC誘導体配合美容液',desc:'肌荒れケア成分・楽天ランキング上位',price:'¥2,800'},
+    ],
+    shave:[
+      {icon:'🌡️',label:'ニキビがある時の髭剃り',tip:'患部をできるだけ避ける'},
+      {icon:'🪒',label:'電気シェーバー推奨',tip:'肌への刺激がT字カミソリより少ない'},
+      {icon:'❄️',label:'髭剃り後',tip:'アルコールフリーの低刺激化粧水のみ'},
+      {icon:'⚠️',label:'NG行為',tip:'患部を触る・つぶす・強くこする'},
+    ]
+  },
+  shave: {
+    badge:'④ 髭剃りタイプ', name:'髭剃り後ケアタイプ',
+    sub:'髭剃りによる肌への刺激が蓄積しています。毎日のアフターシェーブケアが最優先事項です。',
+    roadmap:[
+      {time:'朝（髭剃り前）', action:'洗顔 → 温タオル1分', desc:'これをやるだけで剃り後の赤みが激減する。'},
+      {time:'髭剃り中', action:'シェービングジェルを必ず使う', desc:'石鹸や水だけは摩擦が強すぎる。'},
+      {time:'髭剃り直後', action:'アフターシェーブローション（アルコールフリー）', desc:'炎症を鎮める成分：アラントイン・パンテノール・グリチルリチン酸2K。'},
+      {time:'10〜15分後', action:'保湿クリーム or 乳液で仕上げ', desc:'バリアを修復して一日乗り切る。'},
+    ],
+    products:[
+      {rank:'1',emoji:'🧴',name:'ビーチウッド アフターシェーブバーム',desc:'アルコールフリー・鎮静成分配合',price:'¥1,980'},
+      {rank:'2',emoji:'🪒',name:'フィリップス ワンブレード',desc:'電気シェーバー。肌負担を大幅に軽減',price:'¥4,980'},
+      {rank:'3',emoji:'🧴',name:'バルクオム THE SHAVING GEL',desc:'低刺激シェービングジェル',price:'¥2,480'},
+    ],
+    shave:[
+      {icon:'🌡️',label:'Step1：洗顔後、温タオル1分',tip:'毛穴が開き、剃りやすくなる'},
+      {icon:'🧴',label:'Step2：シェービングジェル塗布',tip:'肌とカミソリの間にクッションを作る'},
+      {icon:'🪒',label:'Step3：毛流れに沿って剃る',tip:'逆剃りは赤みの原因。焦らない'},
+      {icon:'❄️',label:'Step4：冷水で毛穴を引き締め',tip:'15秒だけ。その後すぐ保湿へ'},
+      {icon:'🛡️',label:'Step5：アフターシェーブ→保湿クリーム',tip:'この2工程が翌日の肌の差になる'},
+    ]
+  },
+  aging: {
+    badge:'⑤ エイジングタイプ', name:'くすみ・エイジングタイプ',
+    sub:'年齢に伴う肌変化が始まっています。抗酸化・保湿・日焼け止めの3点が土台になります。',
+    roadmap:[
+      {time:'朝', action:'洗顔 → 抗酸化化粧水', desc:'ビタミンC誘導体・ナイアシンアミドを含む化粧水で明るさをキープ。'},
+      {time:'朝（重要）', action:'日焼け止め SPF30以上', desc:'くすみ・エイジングの最大原因は紫外線。毎日必須。沖縄は特に強い。'},
+      {time:'夜', action:'高保湿美容液 → クリーム', desc:'肌の修復が進む夜に集中ケア。'},
+    ],
+    products:[
+      {rank:'1',emoji:'☀️',name:'アネッサ パーフェクトUV スキンケアミルク',desc:'SPF50+・毎日の紫外線対策に最重要',price:'¥2,640'},
+      {rank:'2',emoji:'✨',name:'オルビスユー ホワイト ローション',desc:'ビタミンC誘導体配合・くすみ対策',price:'¥3,400'},
+      {rank:'3',emoji:'🧴',name:'ニベアメン エイジングケアクリーム',desc:'保湿＋ハリケア成分配合',price:'¥1,480'},
+    ],
+    shave:[
+      {icon:'🌡️',label:'髭剃りと肌老化の関係',tip:'毎日の摩擦がダメージを蓄積させる'},
+      {icon:'🛡️',label:'エイジングタイプの髭剃り',tip:'電気シェーバー推奨。T字より肌負担が少ない'},
+      {icon:'☀️',label:'髭剃り後の日焼け止め（必須）',tip:'剃り跡はバリアが弱い。紫外線ダメージが最も出やすい'},
+      {icon:'🌙',label:'夜は修復ケアに集中',tip:'美容液→クリームで睡眠中の修復をサポート'},
+    ]
+  },
+  beginner: {
+    badge:'⑥ 入門タイプ', name:'まず始めるタイプ',
+    sub:'スキンケア初心者の入口へようこそ。難しいことはなし。まず1本で習慣を作りましょう。',
+    roadmap:[
+      {time:'Step 1（今日から）', action:'洗顔料を買う（泡タイプ推奨）', desc:'今使っている石鹸でも最初はOK。まず習慣にすることが最優先。'},
+      {time:'Step 2（1週間後）', action:'化粧水を1本追加', desc:'洗顔後すぐ化粧水。オールインワンでも可。'},
+      {time:'Step 3（1か月後）', action:'朝と夜の2回ルーティン確立', desc:'ここまで来たら一人前。詳細診断にチャレンジしよう！'},
+    ],
+    products:[
+      {rank:'1',emoji:'🌟',name:'ルシード オールインワン化粧水',desc:'洗顔後これ1本で完結。初心者に最推薦',price:'¥980'},
+      {rank:'2',emoji:'🧼',name:'ビオレメン 泡洗顔料（さっぱり）',desc:'ポンプ型で泡立て不要。続けやすい',price:'¥780'},
+      {rank:'3',emoji:'💊',name:'メンズビオレ UV乳液',desc:'日焼け止め＋保湿の1本。朝これだけでもOK',price:'¥980'},
+    ],
+    shave:[
+      {icon:'🪒',label:'初心者の髭剃りケア（超シンプル）',tip:'これだけでOK'},
+      {icon:'1️⃣',label:'剃る前に洗顔する',tip:'これだけで剃り後の肌が全然違う'},
+      {icon:'2️⃣',label:'剃った後に化粧水をつける',tip:'手のひらでやさしくパタパタ'},
+      {icon:'✅',label:'まずこの2ステップだけ',tip:'慣れたら少しずつ増やしていく'},
+    ]
+  },
+};
+
+// ===== ロジック =====
+let currentQ = 0;
+let answers = [];
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.getElementById('bottom-nav').style.display = (id === 's3') ? 'flex' : 'none';
+  document.getElementById('app-scroll').scrollTop = 0;
+}
+
+function quickStart(type) { showResult(type); }
+
+function startDiagnosis() {
+  currentQ = 0;
+  answers = [];
+  renderQ();
+  showScreen('s1');
+}
+
+function renderQ() {
+  const q = questions[currentQ];
+  document.getElementById('section-name').textContent = q.section;
+  document.getElementById('progress-text').textContent = `${currentQ+1} / ${questions.length}`;
+  document.getElementById('progress-fill').style.width = `${((currentQ+1)/questions.length)*100}%`;
+  document.getElementById('section-tag').textContent = q.tag;
+  document.getElementById('q-num').textContent = q.num;
+  document.getElementById('q-text').textContent = q.text;
+
+  const container = document.getElementById('choices');
+  container.innerHTML = '';
+  q.choices.forEach((c, i) => {
+    const el = document.createElement('div');
+    el.className = 'choice' + (answers[currentQ] === i ? ' selected' : '');
+    el.innerHTML = `<div class="choice-dot"></div><span>${c}</span>`;
+    el.onclick = () => selectChoice(i);
+    container.appendChild(el);
+  });
+
+  document.getElementById('btn-back').style.display = currentQ === 0 ? 'none' : '';
+  const nextBtn = document.getElementById('btn-next');
+  if (answers[currentQ] !== undefined) {
+    nextBtn.classList.add('enabled');
+    nextBtn.textContent = currentQ === questions.length - 1 ? '診断結果を見る ✓' : '次へ →';
+  } else {
+    nextBtn.classList.remove('enabled');
+    nextBtn.textContent = '次へ →';
+  }
+
+  const card = document.getElementById('question-card');
+  card.classList.remove('fade-up');
+  void card.offsetWidth;
+  card.classList.add('fade-up');
+}
+
+function selectChoice(i) {
+  answers[currentQ] = i;
+  document.querySelectorAll('.choice').forEach((el, idx) => {
+    el.classList.toggle('selected', idx === i);
+  });
+  const nextBtn = document.getElementById('btn-next');
+  nextBtn.classList.add('enabled');
+  nextBtn.textContent = currentQ === questions.length - 1 ? '診断結果を見る ✓' : '次へ →';
+}
+
+function nextQ() {
+  if (answers[currentQ] === undefined) return;
+  if (currentQ < questions.length - 1) { currentQ++; renderQ(); }
+  else { runAnalysis(); }
+}
+
+function prevQ() {
+  if (currentQ > 0) { currentQ--; renderQ(); }
+}
+
+function runAnalysis() {
+  showScreen('s2');
+
+  const scores = {S_oily:0, S_dry:0, S_inflam:0, S_shave:0, S_aging:0, S_beginner:0};
+  questions.forEach((q, qi) => {
+    const ans = answers[qi];
+    if (ans !== undefined && q.scores[ans]) {
+      Object.entries(q.scores[ans]).forEach(([k,v]) => { scores[k] = Math.min(100, (scores[k]||0)+v); });
+    }
+  });
+
+  const labels = {S_oily:'皮脂', S_dry:'乾燥', S_inflam:'炎症', S_shave:'髭剃り', S_aging:'加齢', S_beginner:'初心者度'};
+  const colors = {S_oily:'#f59e0b', S_dry:'#60a5fa', S_inflam:'#f87171', S_shave:'#a78bfa', S_aging:'#34d399', S_beginner:'#00b4a0'};
+  const bars = document.getElementById('score-bars');
+  bars.innerHTML = '';
+  Object.entries(scores).forEach(([k, v]) => {
+    bars.innerHTML += `
+      <div class="score-row">
+        <div class="score-name">${labels[k]}</div>
+        <div class="score-track"><div class="score-fill" id="sf-${k}" style="background:${colors[k]};width:0"></div></div>
+        <div class="score-val">${v}</div>
+      </div>`;
+  });
+  setTimeout(() => {
+    Object.entries(scores).forEach(([k,v]) => {
+      const el = document.getElementById('sf-'+k);
+      if (el) el.style.width = v + '%';
+    });
+  }, 300);
+
+  // タイプ判定
+  let type = 'beginner';
+  if (scores.S_beginner >= 60) {
+    type = 'beginner';
+  } else {
+    const priority = ['S_shave','S_inflam','S_oily','S_dry','S_aging','S_beginner'];
+    const typeMap = {S_shave:'shave', S_inflam:'acne', S_oily:'oily', S_dry:'dry', S_aging:'aging', S_beginner:'beginner'};
+    let maxScore = 0;
+    priority.forEach(k => {
+      if (scores[k] > maxScore) { maxScore = scores[k]; type = typeMap[k]; }
+    });
+    if (maxScore < 30) type = 'beginner';
+  }
+
+  setTimeout(() => showResult(type), 2200);
+}
+
+function showResult(type) {
+  const d = typeData[type];
+  const month = (new Date().getMonth()+1) + '月';
+
+  document.getElementById('type-badge').textContent = d.badge;
+  document.getElementById('type-name').textContent = d.name;
+  document.getElementById('type-sub').textContent = d.sub;
+  document.getElementById('rank-month').textContent = month;
+
+  document.getElementById('roadmap').innerHTML = d.roadmap.map(r => `
+    <div class="roadmap-item">
+      <div class="roadmap-left">
+        <div class="roadmap-step">✓</div>
+        <div class="roadmap-line"></div>
+      </div>
+      <div class="roadmap-content">
+        <div class="roadmap-time">${r.time}</div>
+        <div class="roadmap-action">${r.action}</div>
+        <div class="roadmap-desc">${r.desc}</div>
+      </div>
+    </div>`).join('');
+
+  document.getElementById('products').innerHTML = d.products.map((p,i) => `
+    <div class="product-card">
+      <div class="product-rank ${i===0?'gold':''}">${i===0?'🥇':i+1}</div>
+      <div class="product-emoji">${p.emoji}</div>
+      <div class="product-info">
+        <div class="product-name">${p.name}</div>
+        <div class="product-desc">${p.desc}</div>
+      </div>
+      <div class="product-price">${p.price}</div>
+    </div>`).join('');
+
+  document.getElementById('shave-timeline').innerHTML = d.shave.map(s => `
+    <div class="shave-row">
+      <div class="shave-icon">${s.icon}</div>
+      <div class="shave-label">${s.label}</div>
+      <div class="shave-tip">${s.tip}</div>
+    </div>`).join('');
+
+  showScreen('s3');
+}
+
+function goHome() { showScreen('s0'); }
+</script>
+</body>
+</html>

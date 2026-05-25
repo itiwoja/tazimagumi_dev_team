@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>田島組 | メンズ身だしなみロードマップ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Yuji+Syuku&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="app.js" defer></script>
+
+</head>
+<body>
+
+    <div class="bamboo-decor bamboo-left"></div>
+    <div class="bamboo-decor bamboo-right"></div>
+    <div class="sakura-container" id="sakura-container"></div>
+    <div class="slash-effect" id="slash"></div>
+
+    <header>
+        <div class="header-inner">
+            <div>
+                <div class="brand-logo">田島組</div>
+                <div class="brand-sub">最初の候補と使う順番を整理する</div>
+            </div>
+            <nav class="site-nav" aria-label="主要カテゴリ">
+                <a href="#daily-record">記録</a>
+                <a href="#catalog">候補</a>
+                <a href="#advisor">相談メモ</a>
+            </nav>
+            <button class="theme-toggle" onclick="toggleTheme()">斬って昼夜逆転</button>
+        </div>
+        <div class="dosu-divider"></div>
+    </header>
+
+    <section class="hero">
+        <div class="hero-content">
+            <p class="hero-kicker">Grooming roadmap</p>
+            <h1 class="hero-title">迷わず、今日から始める。<br>身だしなみの<span>順番</span>。</h1>
+            <p class="hero-desc">肌・髭剃り・髪の悩みを整理し、最初に検討する候補と使う順番をまとめます。</p>
+            <div class="hero-actions">
+                <a class="primary-link" href="#catalog">候補を見る</a>
+                <a class="secondary-link" href="#advisor">悩みを整理する</a>
+            </div>
+            <div class="hero-stats" aria-label="サービスの特徴">
+                <div><strong>4</strong><span>カテゴリ</span></div>
+                <div><strong>毎日</strong><span>記録管理</span></div>
+                <div><strong>即答</strong><span>相談メモ</span></div>
+            </div>
+        </div>
+        <div class="hero-image">
+            <img src="https://images.unsplash.com/photo-1512484776495-a09d22599065?auto=format&fit=crop&w=800&q=80" alt="田島組の男">
+            <div class="hero-seal">3分で<br>整理</div>
+        </div>
+    </section>
+
+    <div class="main-container" id="catalog">
+        <div class="left-content">
+            
+            <div class="management-board" id="daily-record">
+                <h2 class="board-title">本日のケア記録</h2>
+                <ul class="task-list">
+                    <li class="task-item"><input type="checkbox" id="task1" onchange="saveTasks()"><label for="task1">1. 洗顔と保湿を行った</label></li>
+                    <li class="task-item"><input type="checkbox" id="task2" onchange="saveTasks()"><label for="task2">2. 外出前に日焼け止めを使った</label></li>
+                    <li class="task-item"><input type="checkbox" id="task3" onchange="saveTasks()"><label for="task3">3. 髪型を整えた</label></li>
+                    <li class="task-item"><input type="checkbox" id="task4" onchange="saveTasks()"><label for="task4">4. 髭剃り前後のケアを確認した</label></li>
+                </ul>
+                <button class="reset-record-btn" onclick="resetTasks()">記録をリセット</button>
+            </div>
+
+            <div class="category-section">
+                <h2 class="category-title">洗顔・保湿</h2>
+                <div class="product-list">
+                    <div class="product-card">
+                        <div class="product-img-box"><img src="https://images.unsplash.com/photo-1556228578-0d85b1a4d571?auto=format&fit=crop&w=200&q=80" alt="洗顔・保湿"></div>
+                        <div class="product-info">
+                            <div><h3 class="product-name">某社 泡洗顔 / 保湿液</h3>
+                            <div class="product-tags"><span>洗顔</span><span>保湿</span><span>朝夜</span></div>
+                            <p class="product-desc">洗顔後の肌を清潔にし、うるおいを与える候補です。</p></div>
+                            <a href="#" class="external-link-btn">候補を確認</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="category-section">
+                <h2 class="category-title">日焼け止め</h2>
+                <div class="product-list">
+                    <div class="product-card">
+                        <div class="product-img-box"><img src="https://images.unsplash.com/photo-1526947425960-945c6e72858f?auto=format&fit=crop&w=200&q=80" alt="日焼け止め"></div>
+                        <div class="product-info">
+                            <div><h3 class="product-name">某社 軽量UVジェル</h3>
+                            <div class="product-tags"><span>UV</span><span>外出前</span><span>軽量</span></div>
+                            <p class="product-desc">外出前に使いやすい、軽い使用感の日焼け止め候補です。</p></div>
+                            <a href="#" class="external-link-btn">候補を確認</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="category-section">
+                <h2 class="category-title">ヘアスタイリング</h2>
+                <div class="product-list">
+                    <div class="product-card">
+                        <div class="product-img-box"><img src="https://images.unsplash.com/photo-1585232004423-244e0e6904e3?auto=format&fit=crop&w=200&q=80" alt="ポマード"></div>
+                        <div class="product-info">
+                            <div><h3 class="product-name">某社 ツヤ系ポマード</h3>
+                            <div class="product-tags"><span>整髪</span><span>艶</span><span>強固定</span></div>
+                            <p class="product-desc">ツヤ感を出したい髪型向けのスタイリング候補です。</p></div>
+                            <a href="#" class="external-link-btn">候補を確認</a>
+                        </div>
+                    </div>
+                    <div class="product-card">
+                        <div class="product-img-box"><img src="https://images.unsplash.com/photo-1620916297397-a4a5402a3c6c?auto=format&fit=crop&w=200&q=80" alt="マットワックス"></div>
+                        <div class="product-info">
+                            <div><h3 class="product-name">某社 クレイマットワックス</h3>
+                            <div class="product-tags"><span>整髪</span><span>マット</span><span>無造作</span></div>
+                            <p class="product-desc">自然な束感やマットな仕上がりを出したい方向けの候補です。</p></div>
+                            <a href="#" class="external-link-btn">候補を確認</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="category-section">
+                <h2 class="category-title">髭剃り・ケア</h2>
+                <div class="product-list">
+                    <div class="product-card">
+                        <div class="product-img-box"><img src="https://images.unsplash.com/photo-1512803875880-b2861e604017?auto=format&fit=crop&w=200&q=80" alt="剃刀"></div>
+                        <div class="product-info">
+                            <div><h3 class="product-name">某社 五枚刃カミソリ</h3>
+                            <div class="product-tags"><span>髭剃り</span><span>深剃り</span><span>朝</span></div>
+                            <p class="product-desc">毎日の髭剃りに使う基本アイテムの候補です。</p></div>
+                            <a href="#" class="external-link-btn">候補を確認</a>
+                        </div>
+                    </div>
+                    <div class="product-card">
+                        <div class="product-img-box"><img src="https://images.unsplash.com/photo-1621607512214-68297480165e?auto=format&fit=crop&w=200&q=80" alt="アフターシェーブ"></div>
+                        <div class="product-info">
+                            <div><h3 class="product-name">某社 アフターシェーブローション</h3>
+                            <div class="product-tags"><span>髭剃り後</span><span>冷感</span><span>整肌</span></div>
+                            <p class="product-desc">髭剃り後のタイミングで使用を検討するケア候補です。</p></div>
+                            <a href="#" class="external-link-btn">候補を確認</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="right-content" id="advisor">
+            <div class="chat-header">身だしなみ相談メモ</div>
+            <div class="chat-body" id="chat-body">
+                <div class="chat-msg msg-bot">
+                    気になる悩みを選ぶと、最初に検討する候補と使う順番を整理します。<br>医療的な診断ではなく、日常ケアの候補提示です。
+                </div>
+                <div class="chat-options" id="chat-options">
+                    <button class="btn-option" onclick="selectOption('skin')">皮脂と乾燥が気になる</button>
+                    <button class="btn-option" onclick="selectOption('sun')">日差し対策を始めたい</button>
+                    <button class="btn-option" onclick="selectOption('hair')">髪型を整えたい</button>
+                    <button class="btn-option" onclick="selectOption('shave')">髭剃り後のケアを見直したい</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

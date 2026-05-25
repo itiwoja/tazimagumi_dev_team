@@ -8,11 +8,12 @@
 
 | レイヤ | 採用技術 |
 |---|---|
-| フロントエンド | React (Vite + TypeScript) + UIライブラリ |
-| バックエンド | Java + Spring Boot |
-| データベース | 後日確定（MySQL or PostgreSQL） |
-| AI/データ処理 | Python（必要になったら追加） |
-| デプロイ | AWS（将来） |
+| フロントエンド | React + Vite + TypeScript |
+| UI | Tailwind CSS + shadcn/ui |
+| BaaS / DB | Supabase（Postgres / Auth / Storage） |
+| バックエンド | Spring Boot は不採用。MVP は React + Supabase で構成 |
+| データ運用 | MVP は Supabase の手動商品マスター。楽天API / OCR は拡張 |
+| デプロイ | Vercel / Netlify など（予定） |
 | バージョン管理 | Git / GitHub |
 | タスク管理 | GitHub Issue |
 
@@ -24,7 +25,7 @@
 tazimagumi_dev_team/
 ├── .github/         GitHub の Issue / PR テンプレ
 ├── frontend/        React のプロジェクト（後で配置）
-├── backend/         Spring Boot のプロジェクト（後で配置）
+├── supabase/        Supabase のSQL・型定義・運用メモ（後で配置）
 ├── docs/            設計書・議事録・ヒアリング記録
 ├── .gitignore       Git で管理しないファイルの一覧
 ├── README.md        このファイル

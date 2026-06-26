@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>男の身だしなみアプリ｜基盤アプリ（MVP）</title>
 <meta name="description" content="身だしなみ初心者向けアプリ MVP の基盤（初回チェック→ロードマップ→商品比較→継続記録）。バニラJS・ビルド不要。">
-<meta name="theme-color" content="#FFF7EE">
+<meta name="theme-color" content="#ffffff">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Inter:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=Inter:wght@500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 <!-- 読み込み順（基盤の約束）: data → state → screens → main。各scriptはdeferで順序保持 -->
 <script src="data/products.js" defer></script>
@@ -20,19 +20,17 @@
 
 <div class="stage">
   <header class="stage__head">
-    <p class="stage__eyebrow">田島組 卒業制作 ｜ MVP 基盤アプリ</p>
-    <h1 class="stage__title">男の身だしなみ、<span class="clip-text">最初の一歩。</span></h1>
-    <p class="stage__lead">迷って止まる瞬間を3分で抜ける。4画面フロー（初回チェック→ロードマップ→商品比較→継続記録）の基盤です。</p>
+    <p class="stage__eyebrow">田島組 卒業制作 ｜ MVP 基盤アプリ（ワイヤーフレーム）</p>
+    <h1 class="stage__title">男の身だしなみアプリ <span class="clip-text">基盤</span></h1>
+    <p class="stage__lead">4画面フロー（初回チェック→ロードマップ→商品比較→継続記録）の最小ワイヤーフレーム。デザインは後で載せます。</p>
   </header>
 
   <!-- ===== Phone shell ===== -->
   <div class="phone" role="group" aria-label="身だしなみアプリ">
-    <div class="phone__notch" aria-hidden="true"></div>
 
     <!-- App bar: brand + step tabs + progress -->
     <div class="appbar">
       <div class="appbar__brand">
-        <span class="appbar__mark" aria-hidden="true">🪞</span>
         <span class="appbar__name">みだしなみ</span>
         <span class="appbar__step" id="stepLabel" aria-live="polite">はじめる</span>
       </div>
@@ -61,7 +59,7 @@
     <main class="screen-wrap" id="screenWrap">
 
       <!-- ================= S1 初回チェック（F-01 / REQ-01） ================= -->
-      <!-- ※ 最小版の5問。本実装は診断ロジック設計書 v1.1 の23問へ拡張する（feature/sc01-check-ui / feature/diagnosis-logic） -->
+      <!-- ※ 最小版の5問。本実装は診断ロジック設計書 v1.1 の23問へ拡張（feature/sc01-check-ui / feature/diagnosis-logic） -->
       <section class="screen is-active" id="s1" aria-label="初回チェック">
         <div class="s1-head">
           <p class="s1-value">3分で、あなたに合う<b>始め方</b>が見つかります</p>
@@ -75,10 +73,10 @@
             <h2 class="qtitle">鏡を見て、肌で気になるのは？</h2>
             <p class="qhint">近いものを選ぶだけ。あとで変えられます</p>
             <div class="chips" role="group" aria-label="肌の状態">
-              <button class="chip" aria-checked="false" data-pick><span class="chip__emo" aria-hidden="true">💧</span><span class="chip__body"><span class="chip__label">テカリ・ベタつき</span><span class="chip__hint">昼にかけて顔が脂っぽい</span></span></button>
-              <button class="chip" aria-checked="false" data-pick><span class="chip__emo" aria-hidden="true">🍂</span><span class="chip__body"><span class="chip__label">乾燥・つっぱり</span><span class="chip__hint">洗ったあとカサつく</span></span></button>
-              <button class="chip" aria-checked="false" data-pick><span class="chip__emo" aria-hidden="true">🔴</span><span class="chip__body"><span class="chip__label">ニキビ・赤み</span><span class="chip__hint">ポツポツが気になる</span></span></button>
-              <button class="chip chip--neutral" aria-checked="false" data-pick data-neutral><span class="chip__emo" aria-hidden="true">🤔</span><span class="chip__body"><span class="chip__label">まだわからない</span><span class="chip__hint">選んでも先に進めます</span></span></button>
+              <button class="chip" aria-checked="false" data-pick><span class="chip__body"><span class="chip__label">テカリ・ベタつき</span><span class="chip__hint">昼にかけて顔が脂っぽい</span></span></button>
+              <button class="chip" aria-checked="false" data-pick><span class="chip__body"><span class="chip__label">乾燥・つっぱり</span><span class="chip__hint">洗ったあとカサつく</span></span></button>
+              <button class="chip" aria-checked="false" data-pick><span class="chip__body"><span class="chip__label">ニキビ・赤み</span><span class="chip__hint">ポツポツが気になる</span></span></button>
+              <button class="chip chip--neutral" aria-checked="false" data-pick data-neutral><span class="chip__body"><span class="chip__label">まだわからない</span><span class="chip__hint">選んでも先に進めます</span></span></button>
             </div>
           </article>
 
@@ -87,10 +85,10 @@
             <h2 class="qtitle">髭剃りのあと、肌は？</h2>
             <p class="qhint">毎日の小さな悩みも整理します</p>
             <div class="chips" role="group" aria-label="髭剃り後">
-              <button class="chip" aria-checked="false" data-pick><span class="chip__emo" aria-hidden="true">⚡</span><span class="chip__body"><span class="chip__label">ヒリヒリ・赤くなる</span><span class="chip__hint">剃ったあとしみる</span></span></button>
-              <button class="chip" aria-checked="false" data-pick><span class="chip__emo" aria-hidden="true">🙆</span><span class="chip__body"><span class="chip__label">とくに問題ない</span><span class="chip__hint">いまのところ平気</span></span></button>
-              <button class="chip" aria-checked="false" data-pick><span class="chip__emo" aria-hidden="true">🚫</span><span class="chip__body"><span class="chip__label">あまり剃らない</span><span class="chip__hint">髭はほぼ気にしない</span></span></button>
-              <button class="chip chip--neutral" aria-checked="false" data-pick data-neutral><span class="chip__emo" aria-hidden="true">🤔</span><span class="chip__body"><span class="chip__label">まだわからない</span><span class="chip__hint">選んでも先に進めます</span></span></button>
+              <button class="chip" aria-checked="false" data-pick><span class="chip__body"><span class="chip__label">ヒリヒリ・赤くなる</span><span class="chip__hint">剃ったあとしみる</span></span></button>
+              <button class="chip" aria-checked="false" data-pick><span class="chip__body"><span class="chip__label">とくに問題ない</span><span class="chip__hint">いまのところ平気</span></span></button>
+              <button class="chip" aria-checked="false" data-pick><span class="chip__body"><span class="chip__label">あまり剃らない</span><span class="chip__hint">髭はほぼ気にしない</span></span></button>
+              <button class="chip chip--neutral" aria-checked="false" data-pick data-neutral><span class="chip__body"><span class="chip__label">まだわからない</span><span class="chip__hint">選んでも先に進めます</span></span></button>
             </div>
           </article>
 
@@ -99,10 +97,10 @@
             <h2 class="qtitle">髪のことで近いのは？</h2>
             <p class="qhint">当てはまらなければ「とくにない」でOK</p>
             <div class="chips" role="group" aria-label="髪の悩み">
-              <button class="chip" aria-checked="false" data-pick><span class="chip__emo" aria-hidden="true">🫠</span><span class="chip__body"><span class="chip__label">ペタッとする</span><span class="chip__hint">夕方にボリュームが落ちる</span></span></button>
-              <button class="chip" aria-checked="false" data-pick><span class="chip__emo" aria-hidden="true">🌾</span><span class="chip__body"><span class="chip__label">パサつく・広がる</span><span class="chip__hint">まとまりにくい</span></span></button>
-              <button class="chip" aria-checked="false" data-pick><span class="chip__emo" aria-hidden="true">🙆</span><span class="chip__body"><span class="chip__label">とくにない</span><span class="chip__hint">髪は今は気にしない</span></span></button>
-              <button class="chip chip--neutral" aria-checked="false" data-pick data-neutral><span class="chip__emo" aria-hidden="true">🤔</span><span class="chip__body"><span class="chip__label">まだわからない</span><span class="chip__hint">選んでも先に進めます</span></span></button>
+              <button class="chip" aria-checked="false" data-pick><span class="chip__body"><span class="chip__label">ペタッとする</span><span class="chip__hint">夕方にボリュームが落ちる</span></span></button>
+              <button class="chip" aria-checked="false" data-pick><span class="chip__body"><span class="chip__label">パサつく・広がる</span><span class="chip__hint">まとまりにくい</span></span></button>
+              <button class="chip" aria-checked="false" data-pick><span class="chip__body"><span class="chip__label">とくにない</span><span class="chip__hint">髪は今は気にしない</span></span></button>
+              <button class="chip chip--neutral" aria-checked="false" data-pick data-neutral><span class="chip__body"><span class="chip__label">まだわからない</span><span class="chip__hint">選んでも先に進めます</span></span></button>
             </div>
           </article>
 
@@ -111,9 +109,9 @@
             <h2 class="qtitle">最初にかけられる予算は？</h2>
             <p class="qhint">高い物は必要ありません。あとで変えられます</p>
             <div class="chips" role="group" aria-label="予算">
-              <button class="chip" aria-checked="false" data-pick><span class="chip__emo" aria-hidden="true">🪙</span><span class="chip__body"><span class="chip__label">〜1,500円</span><span class="chip__hint">ドラッグストアの基本から</span></span></button>
-              <button class="chip" aria-checked="false" data-pick><span class="chip__emo" aria-hidden="true">💴</span><span class="chip__body"><span class="chip__label">〜5,000円</span><span class="chip__hint">3点セットで揃えたい</span></span></button>
-              <button class="chip chip--neutral" aria-checked="false" data-pick data-neutral><span class="chip__emo" aria-hidden="true">🤷</span><span class="chip__body"><span class="chip__label">まだ決めてない</span><span class="chip__hint">あとで調整できます</span></span></button>
+              <button class="chip" aria-checked="false" data-pick><span class="chip__body"><span class="chip__label">〜1,500円</span><span class="chip__hint">ドラッグストアの基本から</span></span></button>
+              <button class="chip" aria-checked="false" data-pick><span class="chip__body"><span class="chip__label">〜5,000円</span><span class="chip__hint">3点セットで揃えたい</span></span></button>
+              <button class="chip chip--neutral" aria-checked="false" data-pick data-neutral><span class="chip__body"><span class="chip__label">まだ決めてない</span><span class="chip__hint">あとで調整できます</span></span></button>
             </div>
           </article>
 
@@ -122,10 +120,10 @@
             <h2 class="qtitle">続けるなら、どれが無理ない？</h2>
             <p class="qhint">最後の質問です</p>
             <div class="chips" role="group" aria-label="続けやすさ">
-              <button class="chip" aria-checked="false" data-pick><span class="chip__emo" aria-hidden="true">🌅</span><span class="chip__body"><span class="chip__label">朝だけ</span><span class="chip__hint">出かける前の30秒</span></span></button>
-              <button class="chip" aria-checked="false" data-pick><span class="chip__emo" aria-hidden="true">🌙</span><span class="chip__body"><span class="chip__label">夜だけ</span><span class="chip__hint">お風呂あがりの30秒</span></span></button>
-              <button class="chip" aria-checked="false" data-pick><span class="chip__emo" aria-hidden="true">🔁</span><span class="chip__body"><span class="chip__label">朝も夜もいける</span><span class="chip__hint">習慣にしたい</span></span></button>
-              <button class="chip chip--neutral" aria-checked="false" data-pick data-neutral><span class="chip__emo" aria-hidden="true">🤔</span><span class="chip__body"><span class="chip__label">自信がない</span><span class="chip__hint">まずは小さく始める</span></span></button>
+              <button class="chip" aria-checked="false" data-pick><span class="chip__body"><span class="chip__label">朝だけ</span><span class="chip__hint">出かける前の30秒</span></span></button>
+              <button class="chip" aria-checked="false" data-pick><span class="chip__body"><span class="chip__label">夜だけ</span><span class="chip__hint">お風呂あがりの30秒</span></span></button>
+              <button class="chip" aria-checked="false" data-pick><span class="chip__body"><span class="chip__label">朝も夜もいける</span><span class="chip__hint">習慣にしたい</span></span></button>
+              <button class="chip chip--neutral" aria-checked="false" data-pick data-neutral><span class="chip__body"><span class="chip__label">自信がない</span><span class="chip__hint">まずは小さく始める</span></span></button>
             </div>
           </article>
         </div>
@@ -135,7 +133,6 @@
       <!-- ※ 空ハコ。診断結果に応じた動的生成は feature/roadmap-logic / feature/sc02-roadmap-ui で実装 -->
       <section class="screen" id="s2" aria-label="ロードマップ" hidden>
         <div class="done-head">
-          <span class="done-mark" aria-hidden="true">✓</span>
           <h2 class="done-title">お疲れさまでした</h2>
           <p class="done-sub">あなた専用の<b>3ステップ</b>ができました</p>
         </div>
@@ -149,26 +146,26 @@
 
         <ol class="road">
           <li class="card road__item">
-            <span class="step-badge step-badge--done" aria-hidden="true">1</span>
+            <span class="step-badge" aria-hidden="true">1</span>
             <div class="road__body">
-              <div class="road__row"><h3 class="road__t">今日そろえる候補</h3><span class="pill pill--buy">買う</span></div>
-              <p class="road__flow">汚れ落とし <span aria-hidden="true">→</span> 化粧水 <span aria-hidden="true">→</span> 乳液</p>
+              <div class="road__row"><h3 class="road__t">今日そろえる候補</h3><span class="pill">買う</span></div>
+              <p class="road__flow">汚れ落とし → 化粧水 → 乳液</p>
               <p class="road__desc">「洗う・うるおす・ふたをする」の3つだけ。<button class="term" data-term="化粧水">化粧水ってなに？</button></p>
             </div>
           </li>
           <li class="card road__item">
-            <span class="step-badge step-badge--done" aria-hidden="true">2</span>
+            <span class="step-badge" aria-hidden="true">2</span>
             <div class="road__body">
-              <div class="road__row"><h3 class="road__t">今夜やること</h3><span class="pill pill--night">夜</span></div>
-              <p class="road__flow">お風呂で洗顔 <span aria-hidden="true">→</span> 化粧水</p>
+              <div class="road__row"><h3 class="road__t">今夜やること</h3><span class="pill">夜</span></div>
+              <p class="road__flow">お風呂で洗顔 → 化粧水</p>
               <p class="road__desc">30秒でOK。こすらず、やさしく。</p>
             </div>
           </li>
           <li class="card road__item">
-            <span class="step-badge step-badge--done" aria-hidden="true">3</span>
+            <span class="step-badge" aria-hidden="true">3</span>
             <div class="road__body">
-              <div class="road__row"><h3 class="road__t">明日の朝やること</h3><span class="pill pill--morning">朝</span></div>
-              <p class="road__flow">化粧水 <span aria-hidden="true">→</span> 日焼け止め</p>
+              <div class="road__row"><h3 class="road__t">明日の朝やること</h3><span class="pill">朝</span></div>
+              <p class="road__flow">化粧水 → 日焼け止め</p>
               <p class="road__desc">外に出る日は、最後に日焼け止めを。</p>
             </div>
           </li>
@@ -190,9 +187,8 @@
 
         <ul class="cand">
           <li class="card cand__item">
-            <span class="medal" aria-label="いちばん上の候補">いちばん上の候補</span>
+            <span class="medal">いちばん上の候補</span>
             <div class="cand__top">
-              <span class="cand__thumb" aria-hidden="true">🧴</span>
               <div class="cand__info">
                 <h3 class="cand__name">さっぱり化粧水 ベーシック</h3>
                 <p class="cand__price"><span class="num">¥1,320</span> <span class="cand__vol">／ 200mL</span></p>
@@ -207,7 +203,7 @@
           </li>
         </ul>
 
-        <p class="sec-label">2つをくらべる <span class="sec-note">※ちがう所だけ <span class="diff-key">緑のしるし</span></span></p>
+        <p class="sec-label">2つをくらべる <span class="sec-note">※ちがう所だけ <span class="diff-key">左の線</span></span></p>
         <div class="compare" role="table" aria-label="商品の比較">
           <div class="compare__row compare__row--head" role="row">
             <span class="compare__lab" role="columnheader">項目</span>
@@ -239,12 +235,10 @@
         <p class="sec-label">今日はこれだけ <span class="sec-note">※朝と夜、30秒ずつでOK</span></p>
         <div class="routine">
           <div class="card routine__card">
-            <span class="routine__emo" aria-hidden="true">🌅</span>
             <p class="routine__t">朝</p>
             <p class="routine__d">化粧水 → 日焼け止め</p>
           </div>
           <div class="card routine__card">
-            <span class="routine__emo" aria-hidden="true">🌙</span>
             <p class="routine__t">夜</p>
             <p class="routine__d">洗顔 → 化粧水</p>
           </div>
@@ -268,19 +262,19 @@
 
         <p class="sec-label">今週の調子は？</p>
         <div class="rating" role="group" aria-label="今週の自己評価">
-          <button class="rate" aria-pressed="false"><span aria-hidden="true">😀</span>いい感じ</button>
-          <button class="rate" aria-pressed="false"><span aria-hidden="true">😐</span>ふつう</button>
-          <button class="rate" aria-pressed="false"><span aria-hidden="true">🌀</span>ちょっと荒れた</button>
+          <button class="rate" aria-pressed="false">いい感じ</button>
+          <button class="rate" aria-pressed="false">ふつう</button>
+          <button class="rate" aria-pressed="false">ちょっと荒れた</button>
         </div>
 
-        <p class="reminder"><span aria-hidden="true">🔔</span> リマインドは1日1回まで・いつでもオフにできます</p>
+        <p class="reminder">リマインドは1日1回まで・いつでもオフにできます</p>
       </section>
 
     </main>
 
     <!-- Bottom CTA（画面ごとにラベルが変わる）+ 設定ボタン -->
     <div class="dock">
-      <button class="settings-btn" id="settingsBtn" type="button" aria-label="設定">⚙</button>
+      <button class="settings-btn" id="settingsBtn" type="button" aria-label="設定">設定</button>
       <button class="cta" id="cta" type="button">次へ</button>
     </div>
 
@@ -299,7 +293,7 @@
   </div>
 
   <footer class="stage__foot">
-    <p>基盤アプリ（HTML/CSS/バニラJS・ビルド不要・外部API非依存）。各機能は feature ブランチで追加します。Webフォント読込のためネット接続が必要です。</p>
+    <p>基盤アプリ（HTML/CSS/バニラJS・ビルド不要・外部API非依存）。最小ワイヤーフレーム。各機能は feature ブランチで追加します。</p>
   </footer>
 </div>
 

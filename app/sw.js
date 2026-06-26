@@ -1,7 +1,7 @@
 /* global self, caches, fetch */
 "use strict";
 
-var CACHE_NAME = "tazimagumi-app-v1";
+var CACHE_NAME = "tazimagumi-app-v2";
 var APP_SHELL = [
   "./",
   "./index.html",

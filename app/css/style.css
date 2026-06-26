@@ -239,19 +239,37 @@ b{font-weight:700}
 
 /* ===================== responsive ===================== */
 @media (max-width:430px){
-  .stage{padding:16px 0 28px}
-  .stage__head{padding:0 16px}
-  .phone{width:100%;height:100svh;min-height:560px;border-left:0;border-right:0}
-  .stage__foot{padding:0 16px}
-  .dock{position:sticky;bottom:0}
+  body{height:100svh;overflow:hidden}
+  .stage{width:100%;height:100svh;padding:0;overflow:hidden}
+  .stage__head,.stage__foot{display:none}
+  .phone{width:100%;height:100svh;min-height:0;border:0}
+  .appbar{padding:10px 12px 8px}
+  .appbar__brand{margin-bottom:8px}
+  .tabs{gap:2px}
+  .tab{min-height:42px;padding:5px 1px 7px}
+  .progress{margin-top:6px}
+  .screen{padding:12px 12px calc(76px + env(safe-area-inset-bottom))}
+  .s1-head{margin:0 2px 10px}
+  .s1-value{font-size:14px}
+  .qcard{padding:12px}
+  .qtitle{font-size:17px}
+  .qhint{margin-bottom:10px}
+  .chips{gap:6px}
+  .chip{min-height:46px;padding:8px 10px}
+  .chip__label{font-size:14px}
+  .chip__hint{font-size:11px}
+  .dock{position:absolute;padding:10px 12px calc(10px + env(safe-area-inset-bottom));gap:8px}
+  .cta,.settings-btn,.cta-back{height:44px}
+  .settings-btn{min-width:54px;padding:0 10px}
+  .cta-back{width:44px}
 }
 @media (max-width:360px){
   .compare__row{grid-template-columns:74px 1fr 1fr}
-  .qtitle{font-size:17px}
+  .qtitle{font-size:16px}
   .tab__txt{font-size:10px}
   .dock{padding-left:12px;padding-right:12px}
-  .settings-btn{min-width:54px;padding:0 10px}
-  .cta-back{width:44px}
+  .settings-btn{min-width:50px;padding:0 8px}
+  .cta-back{width:42px}
   .cta{font-size:14px}
 }
 

@@ -6,16 +6,19 @@
 <title>男の身だしなみアプリ｜基盤アプリ（MVP）</title>
 <meta name="description" content="身だしなみ初心者向けアプリ MVP の基盤（初回チェック→ロードマップ→商品比較→継続記録）。バニラJS・ビルド不要。">
 <meta name="theme-color" content="#ffffff">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icons/icon-192.png" sizes="192x192" type="image/png">
+<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=Inter:wght@500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="./css/style.css">
 <!-- 読み込み順（基盤の約束）: data → state → contracts → screens → main。各scriptはdeferで順序保持 -->
-<script src="data/products.js" defer></script>
-<script src="js/state.js" defer></script>
-<script src="js/contracts.js" defer></script>
-<script src="js/screens.js" defer></script>
-<script src="js/main.js" defer></script>
+<script src="./data/products.js" defer></script>
+<script src="./js/state.js" defer></script>
+<script src="./js/contracts.js" defer></script>
+<script src="./js/screens.js" defer></script>
+<script src="./js/main.js" defer></script>
 </head>
 <body>
 
@@ -298,5 +301,22 @@
   </footer>
 </div>
 
+<script>
+  (function () {
+    "use strict";
+
+    var canUseServiceWorker =
+      "serviceWorker" in navigator &&
+      (location.protocol === "http:" || location.protocol === "https:");
+
+    if (!canUseServiceWorker) return;
+
+    window.addEventListener("load", function () {
+      navigator.serviceWorker.register("./sw.js").catch(function (error) {
+        console.info("Service Worker registration skipped:", error);
+      });
+    });
+  })();
+</script>
 </body>
 </html>

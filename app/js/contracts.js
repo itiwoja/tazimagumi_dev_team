@@ -122,19 +122,201 @@
    * @param {Answers} answers
    * @returns {Diagnosis}
    */
-  App.diagnose = notImplemented(
-    "App.diagnose", "ひろと", "#33", "docs/specs/診断ロジック設計書_v1.1.md §4"
-  );
+  App.diagnose = function(answers) {
+  // --- Step 1: 6軸のスコアを初期化して集計 ---
+  var scores = {
+    oily: 0,
+    dry: 0,
+    inflam: 0,
+    shave: 0,
+    aging: 0,
+    beginner: 0
+  };
+
+  // 💡 [補足] 設計書§4の具体的な配点表（例: 問1のAならoily+20等）が判明したら
+  // answers.forEach 内に `if (index === 0 && ans === 'A') scores.oily += 20;` のように記述します。
+  if (Array.isArray(answers)) {
+    answers.forEach(function(ans, index) {
+      if (ans === null || ans === undefined) return;
+      // ここに質問ごとの配点ロジックを追記
+    });
+  }
+
+  // --- Step 2: 各軸のスコアを 0〜100 にクリップ ---
+  Object.keys(scores).forEach(function(key) {
+    scores[key] = Math.max(0, Math.min(100, scores[key]));
+  });
+
+  // 初期値のセット
+  var primaryType = "type6";
+  var secondaryType = null;
+  var isComposite = false;
+
+  // 軸名から SkinType（型定義）へのマッピング
+  var axisToTypeMap = {
+    oily: "type1",
+    dry: "type2",
+    inflam: "type3",
+    shave: "type4",
+    aging: "type5",
+    beginner: "type6"
+  };
+
+  // Step 5: 同点時の優先順位リスト
+  var priorityOrder = ["shave", "inflam", "oily", "dry", "aging", "beginner"];
+  
+  // 全軸の中の最高スコアを算出
+  var maxScore = -1;
+  priorityOrder.forEach(function(axis) {
+    if (scores[axis] > maxScore) {
+      maxScore = scores[axis];
+    }
+  });
+
+  // --- Step 3: 例外ルールの最優先評価 ---
+  if (scores.beginner >= 60) {
+    // 3a. S_beginner >= 60 → タイプ⑥（初心者）に確定
+    primaryType = "type6";
+  } else if (maxScore < 30) {
+    // 3b. 全軸の最高スコアが 30 未満 → タイプ⑥（初心者）に強制振り分け
+    primaryType = "type6";
+  } else {
+    // --- Step 4 & 5: 最高スコアの軸 = 第一タイプ（同点は優先順位順） ---
+    var bestAxis = null;
+    var bestScore = -1;
+
+    priorityOrder.forEach(function(axis) {
+      var score = scores[axis];
+      // 「>」にすることで、同点の場合は先に評価された優先度の高い軸が残る
+      if (score > bestScore) {
+        bestScore = score;
+        bestAxis = axis;
+      }
+    });
+
+    primaryType = axisToTypeMap[bestAxis];
+
+    // --- Step 6: 第一タイプと第二タイプのスコア差が 10pt 以内 → 複合タイプ ---
+    var secondAxis = null;
+    var secondBestScore = -1;
+
+    priorityOrder.forEach(function(axis) {
+      if (axis === bestAxis) return; // 第一タイプは除外
+      var score = scores[axis];
+      if (score > secondBestScore) {
+        secondBestScore = score;
+        secondAxis = axis;
+      }
+    });
+
+    // 差が 10pt 以内であれば複合判定とする
+    if (secondAxis && (bestScore - secondBestScore) <= 10) {
+      isComposite = true;
+      secondaryType = axisToTypeMap[secondAxis];
+    }
+  }
+
+  // --- Step 7: 契約（型）に準拠した Diagnosis オブジェクトを返却 ---
+  return {
+    primaryType: primaryType,
+    secondaryType: secondaryType,
+    isComposite: isComposite,
+    scores: scores
+  };
+};
 
   /**
    * 診断結果 → 継続のロードマップ（数ステップ）。機能定義書 F-02。
+   * 断定表現は使わない（薬機法: docs/guidelines/薬機法準拠ガイドライン_v1.0.md）
    * 担当: ひろと / Issue #35 [p4g] ロードマップ生成ロジック
    * @param {Diagnosis} diagnosis
    * @returns {RoadmapStep[]}
    */
-  App.buildRoadmap = notImplemented(
-    "App.buildRoadmap", "ひろと", "#35", "docs/specs/診断ロジック設計書_v1.1.md"
-  );
+  App.buildRoadmap = function(diagnosis) {
+    var steps = [];
+    var primaryType = diagnosis.primaryType;
+    var isComposite = diagnosis.isComposite;
+    var secondaryType = diagnosis.secondaryType;
+
+    // タイプごとのステップ2の見出し・説明用文言マッピング
+    var typeDetails = {
+      type1: {
+        title: "過剰な皮脂のケアを意識する",
+        body: "ベタつきやテカリが気になる肌には、過剰な皮脂を吸着したり肌をひきしめたりする成分が含まれたケアを取り入れることが選択肢となります。水分と油分のバランスを整え、清潔な状態を維持することを目指します。"
+      },
+      type2: {
+        title: "角質層への水分補給を重視する",
+        body: "カサつきやつっぱり感が気になる肌には、ヒアルロン酸やセラミドなどうるおいを補給・保持する成分が含まれたケアが適している可能性があります。肌の乾燥を防ぎ、すこやかに保つことを意識します。"
+      },
+      type3: {
+        title: "肌をすこやかに保つケアを選ぶ",
+        body: "ニキビや肌荒れを防ぎたいデリケートな肌には、肌を整えるマイルドな使い心地の整肌・保湿成分が含まれたケアを取り入れることが検討されます。摩擦などの刺激を避け、丁寧になじませることが推奨されます。"
+      },
+      type4: {
+        title: "ひげ剃り後のデリケートな肌を保護する",
+        body: "ひげ剃り後のケアが必要な状態の肌は、カミソリによる摩擦で一時的にデリケートになりやすい傾向があります。剃った直後のデリケートな肌を優しく包み込み、うるおいを与えて保護するケアが役立つ可能性があります。"
+      },
+      type5: {
+        title: "年齢に応じたうるおい補給を行う",
+        body: "くすみやハリ不足などエイジングサインが気になる肌には、年齢に応じたエイジングケア成分を含む化粧品を取り入れることが選択肢となります。肌にじっくりとうるおいを与え、乾燥によるくすみを防ぐアプローチを意識します。"
+      },
+      type6: {
+        title: "まずは手軽な1本から始めてみる",
+        body: "スキンケアをこれから始める場合は、複数のステップを一度に取り入れるよりも、洗顔の後にオールインワンタイプなどの手軽な1本から継続して試すことが、習慣化へのステップとして適している可能性があります。"
+      }
+    };
+
+    // --- Step 1: 共通の基本ステップ（洗顔） ---
+    steps.push({
+      order: 1,
+      title: "やさしい洗顔で肌を清潔にする",
+      body: "すべてのケアの基本として、まずは肌の汚れや余分な皮脂を優しく洗い流すことから始めるのが望ましいとされています。ゴシゴシと擦らず、泡で包み込むように洗うことで肌への負担を抑えることが期待できます。",
+      term: "洗顔フォーム"
+    });
+
+    // --- Step 2: 第一タイプ（メイン悩み）に応じたステップ ---
+    var mainInfo = typeDetails[primaryType] || typeDetails["type6"];
+    steps.push({
+      order: 2,
+      title: mainInfo.title,
+      body: mainInfo.body,
+      term: primaryType === "type6" ? "オールインワン" : "化粧水"
+    });
+
+    // --- Step 3: 複合タイプ、または日常の継続ステップ ---
+    // タイプ⑥（初心者）が第二タイプに来た場合は、設計書§7の例外ルールに基づき複合表示にしない
+    if (isComposite && secondaryType && secondaryType !== "type6") {
+      var subInfo = typeDetails[secondaryType];
+      steps.push({
+        order: 3,
+        title: "あわせて「" + subInfo.title + "」も意識する",
+        body: "今回の回答からは、複数の肌の傾向が同時に見られる可能性があります。まずはメインのケアに慣れつつ、こちらの要素も含まれた成分やお手入れを段階的に組み合わせていくことが一つのアプローチとして考えられます。",
+        term: "乳液・クリーム"
+      });
+      
+      // 複合時の4ステップ目（習慣化）
+      steps.push({
+        order: 4,
+        title: "無理のない範囲で3週間継続してみる",
+        body: "複数の傾向が見られた場合、無理に最初からすべての製品を揃えて1セットに絞ろうとせず、まずは1〜2品を日々のルーティンとして定着させ、心地よく続けられるペースを探していくことがおすすめされています。"
+      });
+    } else {
+      // 単独タイプ時の3ステップ目（習慣化・アドバイス）
+      var step3Body = "スキンケアの効果を実感するまでには、肌のターンオーバー（約28日）程度の期間がかかる傾向があります。まずは約3週間、毎日の習慣として継続した後に、改めて肌の状態を確認しながら再診断してみることが推奨されます。";
+      
+      if (primaryType === "type6") {
+        step3Body = "まずは3週間続けてみることを目標にします。スキンケアの効果が馴染むまでには肌のサイクルに応じた期間が必要となる傾向があるため、焦らずに日々の洗顔と1本のケアを続けてみることが大切です。";
+      }
+
+      steps.push({
+        order: 3,
+        title: "日々のルーティンとして継続する",
+        body: step3Body
+      });
+    }
+
+    return steps;
+  };
 
   /**
    * 診断結果 ＋ 予算帯 → 商品候補（概念ごと／複合時はメイン＋サブ）。

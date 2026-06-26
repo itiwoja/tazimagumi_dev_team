@@ -110,6 +110,12 @@
     });
   });
 
+  /* ---- 設定ボタン（基盤・最小実装：詳細な設定画面は今後 feature で拡張） ---- */
+  var settingsBtn = $("settingsBtn");
+  if (settingsBtn) settingsBtn.addEventListener("click", function () {
+    App.toast("設定はこれから追加します");
+  });
+
   /* ---- init ---- */
   App.renderQuestion();
   App.updateProgress();

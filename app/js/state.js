@@ -26,6 +26,36 @@
     completed: false
   };
 
+  App.LOCAL_KEYS = {
+    answers: "diagnosis_answers",
+    result: "diagnosis_result",
+    continuity: "continuity_log",
+    prefs: "prefs"
+  };
+
+  App.prefs = {
+    reminderTime: ""
+  };
+
+  App.loadPrefs = function () {
+    try {
+      var raw = global.localStorage.getItem(App.LOCAL_KEYS.prefs);
+      if (!raw) return App.prefs;
+      var parsed = JSON.parse(raw);
+      return {
+        reminderTime: typeof parsed.reminderTime === "string" ? parsed.reminderTime : ""
+      };
+    } catch (error) {
+      return App.prefs;
+    }
+  };
+
+  App.syncPrefs = function () {
+    try {
+      global.localStorage.setItem(App.LOCAL_KEYS.prefs, JSON.stringify(App.prefs));
+    } catch (error) {}
+  };
+
   /* ---- DOM ヘルパ ---- */
   App.$ = function (id) { return document.getElementById(id); };
   App.qAll = function (sel, root) {

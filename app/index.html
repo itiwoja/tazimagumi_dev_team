@@ -272,6 +272,48 @@
     <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
   </div>
 
+  <!-- 設定シート -->
+  <div class="sheet settings-sheet" id="settingsSheet" hidden>
+    <div class="sheet__panel settings-sheet__panel" role="dialog" aria-modal="true" aria-labelledby="settingsTitle" aria-describedby="settingsDesc" tabindex="-1">
+      <div class="sheet__head">
+        <div>
+          <h3 class="sheet__t" id="settingsTitle">設定</h3>
+          <p class="settings-sheet__lead" id="settingsDesc">端末内だけに保存されます。通知は後で対応します。</p>
+        </div>
+        <button class="sheet__icon" id="settingsClose" type="button" aria-label="設定を閉じる">×</button>
+      </div>
+
+      <div class="settings-sheet__block">
+        <label class="settings-sheet__label" for="reminderTime">リマインド時刻</label>
+        <p class="settings-sheet__note">端末内だけに保存されます。通知は後で対応します。</p>
+        <div class="settings-sheet__field">
+          <input class="settings-sheet__time" id="reminderTime" name="reminderTime" type="time" autocomplete="off">
+          <button class="ghost-btn settings-sheet__save" id="reminderSaveBtn" type="button">保存する</button>
+        </div>
+      </div>
+
+      <div class="settings-sheet__block">
+        <h4 class="settings-sheet__label">診断をやり直す</h4>
+        <p class="settings-sheet__note">回答とロック状態を初期化して、最初の質問に戻ります。</p>
+        <button class="ghost-btn settings-sheet__action" id="resetDiagnosisBtn" type="button">S1からやり直す</button>
+      </div>
+
+      <div class="settings-sheet__block settings-sheet__block--danger">
+        <h4 class="settings-sheet__label">保存データを削除</h4>
+        <p class="settings-sheet__note">確認してから、端末内の保存データを消します。</p>
+        <div class="settings-sheet__confirm" id="clearConfirm" hidden>
+          <p class="settings-sheet__confirm-text">本当に削除しますか。削除すると戻せません。</p>
+          <div class="settings-sheet__confirm-actions">
+            <button class="ghost-btn settings-sheet__confirm-btn" id="clearCancelBtn" type="button">キャンセル</button>
+            <button class="ghost-btn settings-sheet__confirm-btn settings-sheet__confirm-btn--danger" id="clearConfirmBtn" type="button">削除する</button>
+          </div>
+        </div>
+        <button class="ghost-btn settings-sheet__action settings-sheet__action--danger" id="clearDataBtn" type="button">削除を開始する</button>
+      </div>
+    </div>
+    <button class="sheet__scrim" id="settingsScrim" aria-label="設定を閉じる"></button>
+  </div>
+
   <!-- 用語ヒントシート（S2の「○○ってなに？」） -->
   <div class="sheet" id="sheet" hidden>
     <div class="sheet__panel" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">

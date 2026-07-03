@@ -25,6 +25,71 @@
     backBtn.style.display = visible ? "block" : "none";
   };
 
+  /* ---- settings sheet ---- */
+  var settingsSheet = $("settingsSheet");
+  var settingsClose = $("settingsClose");
+  var settingsScrim = $("settingsScrim");
+  var settingsOpenBtn = $("settingsBtn");
+  var reminderTime = $("reminderTime");
+  var reminderSaveBtn = $("reminderSaveBtn");
+  var resetDiagnosisBtn = $("resetDiagnosisBtn");
+  var clearDataBtn = $("clearDataBtn");
+  var clearConfirm = $("clearConfirm");
+  var clearConfirmBtn = $("clearConfirmBtn");
+  var clearCancelBtn = $("clearCancelBtn");
+  var settingsLastFocus = null;
+  var settingsArmedClear = false;
+
+  function syncReminderField() {
+    if (reminderTime) reminderTime.value = App.prefs.reminderTime || "";
+  }
+
+  function closeClearConfirm() {
+    settingsArmedClear = false;
+    if (clearConfirm) clearConfirm.hidden = true;
+    if (clearDataBtn) clearDataBtn.disabled = false;
+  }
+
+  function openSettingsSheet() {
+    settingsLastFocus = document.activeElement;
+    syncReminderField();
+    closeClearConfirm();
+    if (settingsSheet) settingsSheet.hidden = false;
+    if (reminderTime) reminderTime.focus();
+  }
+
+  function closeSettingsSheet() {
+    if (settingsSheet) settingsSheet.hidden = true;
+    closeClearConfirm();
+    if (settingsLastFocus && typeof settingsLastFocus.focus === "function") settingsLastFocus.focus();
+  }
+
+  App.openSettingsSheet = openSettingsSheet;
+  App.closeSettingsSheet = closeSettingsSheet;
+
+  function handleSettingsKeydown(e) {
+    if (!settingsSheet || settingsSheet.hidden) return;
+    if (e.key === "Escape") {
+      e.preventDefault();
+      closeSettingsSheet();
+      return;
+    }
+    if (e.key !== "Tab") return;
+    var focusables = qAll("button, input", settingsSheet).filter(function (el) {
+      return !el.disabled && el.offsetParent !== null;
+    });
+    if (!focusables.length) return;
+    var first = focusables[0];
+    var last = focusables[focusables.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  }
+
   /* ---- CTA ---- */
   function ctaClick() {
     switch (state.current) {
@@ -107,13 +172,36 @@
     });
   });
 
-  /* ---- 設定ボタン（基盤・最小実装：詳細な設定画面は今後 feature で拡張） ---- */
-  var settingsBtn = $("settingsBtn");
-  if (settingsBtn) settingsBtn.addEventListener("click", function () {
-    App.toast("設定はこれから追加します");
+  if (settingsOpenBtn) settingsOpenBtn.addEventListener("click", openSettingsSheet);
+  if (settingsClose) settingsClose.addEventListener("click", closeSettingsSheet);
+  if (settingsScrim) settingsScrim.addEventListener("click", closeSettingsSheet);
+  if (reminderSaveBtn) reminderSaveBtn.addEventListener("click", function () {
+    App.saveReminderTime(reminderTime ? reminderTime.value : "");
   });
+  if (reminderTime) reminderTime.addEventListener("change", function () {
+    App.saveReminderTime(reminderTime.value);
+  });
+  if (resetDiagnosisBtn) resetDiagnosisBtn.addEventListener("click", function () {
+    App.resetS1();
+    App.showScreen("s1");
+    closeSettingsSheet();
+    App.toast("診断をS1からやり直しました");
+  });
+  if (clearDataBtn) clearDataBtn.addEventListener("click", function () {
+    settingsArmedClear = true;
+    if (clearConfirm) clearConfirm.hidden = false;
+    clearDataBtn.disabled = true;
+  });
+  if (clearCancelBtn) clearCancelBtn.addEventListener("click", closeClearConfirm);
+  if (clearConfirmBtn) clearConfirmBtn.addEventListener("click", function () {
+    if (!settingsArmedClear) return;
+    closeSettingsSheet();
+    App.clearLocalData();
+  });
+  document.addEventListener("keydown", handleSettingsKeydown);
 
   /* ---- init ---- */
+  syncReminderField();
   App.renderQuestion();
   App.updateProgress();
   App.updateBudgetCount("core");

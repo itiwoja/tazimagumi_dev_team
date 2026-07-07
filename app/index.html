@@ -13,9 +13,10 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=Inter:wght@500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="./css/style.css">
-<!-- 読み込み順（基盤の約束）: data → state → contracts → screens → main。各scriptはdeferで順序保持 -->
+<!-- 読み込み順（基盤の約束）: data → state → storage → contracts → screens → main。各scriptはdeferで順序保持 -->
 <script src="./data/products.js" defer></script>
 <script src="./js/state.js" defer></script>
+<script src="./js/storage.js" defer></script>
 <script src="./js/contracts.js" defer></script>
 <script src="./js/screens.js" defer></script>
 <script src="./js/main.js" defer></script>

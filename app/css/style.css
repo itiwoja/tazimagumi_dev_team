@@ -276,7 +276,10 @@ b{font-weight:700}
   .tab{min-height:36px;padding:3px 1px 5px;gap:3px}
   .step-badge{width:20px;height:20px;font-size:11px}
   .progress{height:5px;margin-top:5px}
-  .screen-wrap{overflow:hidden}
+  /* アプリシェルの chrome（appbar/dock）は固定のまま、内側だけスクロール可に。
+     S2/S3 は内容が縦に長く、末尾の SC-99 ディスクレーマー（薬機法・必須表示）が
+     切れるのを防ぐ。S1/S4 は収まるためスクロールは発生しない（#102）。 */
+  .screen-wrap{overflow-y:auto;overflow-x:clip;-webkit-overflow-scrolling:touch}
   .screen{padding:9px 10px calc(58px + env(safe-area-inset-bottom))}
   .sec-label{margin:8px 2px 5px;font-size:12px}
   .card{padding:9px}

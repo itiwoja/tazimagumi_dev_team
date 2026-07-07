@@ -9,7 +9,19 @@
    - 上半分の【型定義】は共有の約束。原則 変更しない（変えたい時は村上に相談）。
    - 下半分の【実装スタブ】は、自分の担当関数の中身だけ書き換える。
      未実装のまま呼ぶと throw して「誰の・どのIssueか」が分かるようにしてある。
-   - 読み込み順（index.html）: products → state → contracts → screens → main
+   - 読み込み順（index.html）: products → state → storage → contracts → disclaimer → screens → main
+
+   ■ 実装状況（2026-07 時点）
+   - App.diagnose      : 実装済み（本ファイル下部）。※ただし screens.js/main.js から未呼び出し（画面未結線）
+   - App.buildRoadmap  : 未実装スタブ（Issue #35 / PR #104 で対応中）
+   - App.recommend     : 未実装スタブ（Issue #37。前提: 商品 typeTags = Issue #54）
+   - App.buildCompareTable : 未実装スタブ（Issue #38）
+   - 既知の乖離: 現行UIは最小5問だが diagnose の pointTable は診断ロジック設計書の23問index前提。
+     5問UIへの結線／23問化の統合は別 feature ブランチで対応（下記「■ 未統合」）。
+
+   ■ 未統合（TODO・別ブランチ）
+   - diagnose を complete() に結線し、5問UIの回答→タイプ判定→S2/S3 に反映する統合が未実施。
+   - Diagnosis.topContributors（型定義・設計書§4 Step7）は現状 diagnose が返していない。
 
    ■ 根拠ドキュメント
    - 診断:  docs/specs/診断ロジック設計書_v1.1.md

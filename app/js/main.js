@@ -20,8 +20,8 @@
   backBtn.setAttribute("aria-label", "ひとつ前の質問にもどる");
   backBtn.textContent = "←";
   backBtn.style.cssText =
-    "flex:0 0 auto;width:52px;height:52px;border-radius:14px;border:1px solid var(--border);" +
-    "background:var(--surface);color:var(--text);font-size:20px;font-weight:700;cursor:pointer;display:none";
+    "flex:0 0 auto;width:52px;height:50px;border-radius:14px;border:1px solid var(--border);" +
+    "background:var(--surface);color:var(--text);font-size:20px;font-weight:700;cursor:pointer;display:none;touch-action:manipulation";
   dock.insertBefore(backBtn, cta);
 
   App.setBackVisible = function (visible) {

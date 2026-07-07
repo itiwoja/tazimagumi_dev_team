@@ -43,6 +43,9 @@ branch_rules:
     charset: "a-z 0-9 -"      # 小文字英数とハイフンのみ
     forbidden_in_name: [japanese, whitespace, uppercase, underscore]
     one_branch_one_task: true
+  # 担当領域ごとの「代表ブランチ（計画）」。one_branch_one_task のため実ブランチは
+  # タスク単位で都度作成し、マージ後は削除する（常設の固定ブランチではない）。
+  # 現在オープンな作業ブランチは GitHub を正とする（例: feature/settings-screen ほか）。
   feature_branches:
     - { branch: feature/sc01-check-ui,           owner: ren-1222 }
     - { branch: feature/sc02-roadmap-ui,         owner: ren-1222 }

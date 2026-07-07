@@ -3,7 +3,8 @@
    担当タスク: [CORE] アプリ基盤（基本このファイルは触らない）
    ---------------------------------------------------------------------
    読み込み順（index.html）:
-     1) data/products.js  2) js/state.js  3) js/screens.js  4) js/main.js
+     1) data/products.js  2) js/state.js  3) js/storage.js  4) js/contracts.js
+     5) js/disclaimer.js  6) js/screens.js  7) js/main.js
    ===================================================================== */
 (function (global) {
   "use strict";
@@ -56,7 +57,9 @@
     });
   });
 
-  /* ---- 用語シート（S2 の「○○ってなに？」） ---- */
+  /* ---- 用語シート（S2 の「○○ってなに？」） ----
+     ※現状 app/index.html の S2 には .term / data-term を持つトリガー要素が無く、
+       この配線は休眠状態（シートは開かない）。トリガー追加＋辞書拡充は Issue #70。 */
   var TERMS = {
     "化粧水": {
       t: "化粧水ってなに？",

@@ -38,7 +38,7 @@
     }
   }
   cta.addEventListener("click", ctaClick);
-  backBtn.addEventListener("click", App.prevQuestion);
+  backBtn.addEventListener("click", function () { App.prevQuestion(); });
 
   /* ---- chips（イベント委譲） ---- */
   $("qstack").addEventListener("click", function (e) {
@@ -94,19 +94,24 @@
     });
   });
 
-  /* ---- [F-06] 今日のドット ---- */
+  /* ---- [F-06] 今日のドット（state.records に保存） ---- */
   var dot = $("todayDot");
   if (dot) dot.addEventListener("click", function () {
     var on = dot.getAttribute("aria-pressed") === "true";
-    dot.setAttribute("aria-pressed", on ? "false" : "true");
-    if (!on) App.toast("今日ぶん、記録できました");
+    var next = !on;
+    dot.setAttribute("aria-pressed", next ? "true" : "false");
+    state.records.todayDone = next;
+    if (next) App.toast("今日ぶん、記録できました");
+    App.persist();
   });
 
-  /* ---- [F-06] 今週の自己評価（単一選択） ---- */
+  /* ---- [F-06] 今週の自己評価（単一選択・state.records に保存） ---- */
   qAll(".rate").forEach(function (r) {
     r.addEventListener("click", function () {
       qAll(".rate").forEach(function (x) { x.setAttribute("aria-pressed", "false"); });
       r.setAttribute("aria-pressed", "true");
+      state.records.weekRating = r.textContent.trim();
+      App.persist();
     });
   });
 
@@ -116,8 +121,73 @@
     App.toast("設定はこれから追加します");
   });
 
+  /* ===================================================================
+     永続化ブートストラップ（Issue #58 [提案-F1]）
+     - 状態を変える基盤関数を main 側でラップし、自動保存を差し込む。
+       → 画面担当の screens.js を書き換えずに済む（コンフリクト回避）。
+     =================================================================== */
+  function withAutosave(name) {
+    var orig = App[name];
+    if (typeof orig !== "function") return;
+    App[name] = function () {
+      var r = orig.apply(this, arguments);
+      App.persist();
+      return r;
+    };
+  }
+  ["pick", "nextQuestion", "prevQuestion", "complete", "showScreen", "resetS1"]
+    .forEach(withAutosave);
+
+  // リロード/離脱時に取りこぼしなく即時保存
+  global.addEventListener("pagehide", function () { App.persist(true); });
+  document.addEventListener("visibilitychange", function () {
+    if (document.visibilityState === "hidden") App.persist(true);
+  });
+
+  /* ---- 保存済み回答をチップ選択状態へ反映 ---- */
+  function restoreChips() {
+    qAll(".qcard", $("qstack")).forEach(function (card) {
+      var qi = Number(card.getAttribute("data-q"));
+      var answer = state.answers[qi];
+      if (answer == null) return;
+      qAll(".chip", card).forEach(function (chip) {
+        var label = chip.querySelector(".chip__label");
+        var picked = !!label && label.textContent.trim() === answer;
+        chip.setAttribute("aria-checked", picked ? "true" : "false");
+      });
+    });
+  }
+
+  /* ---- S4 の記録UIを保存値から復元 ---- */
+  function restoreRecords() {
+    if (dot) dot.setAttribute("aria-pressed", state.records.todayDone ? "true" : "false");
+    qAll(".rate").forEach(function (r) {
+      var on = r.textContent.trim() === state.records.weekRating;
+      r.setAttribute("aria-pressed", on ? "true" : "false");
+    });
+  }
+
   /* ---- init ---- */
-  App.renderQuestion();
+  var restored = App.restore();
+
+  if (restored) {
+    restoreChips();
+    restoreRecords();
+    if (state.completed) {
+      // 完了済み: タブ解放（App.complete と同等）＋保存画面を復元
+      qAll(".tab").forEach(function (t) {
+        t.classList.remove("is-locked");
+        t.removeAttribute("aria-disabled");
+        if (t.getAttribute("data-go") === "s1") t.classList.add("is-done");
+      });
+      App.showScreen(state.current);
+    } else {
+      App.renderQuestion();
+    }
+  } else {
+    App.renderQuestion();
+  }
+
   App.updateProgress();
   App.updateBudgetCount("core");
 })(window);

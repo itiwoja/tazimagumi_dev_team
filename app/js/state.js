@@ -23,7 +23,79 @@
     current: "s1",
     qIndex: 0,
     answers: new Array(App.S1_TOTAL).fill(null),
-    completed: false
+    completed: false,
+    // 継続記録(S4)の最小データ。本実装(feature/sc04-record-ui)で拡張予定。
+    records: { todayDone: false, weekRating: null }
+  };
+
+  /* =====================================================================
+     永続化（Issue #58 [提案-F1]）
+     - 保存は storage.js（localStorage ラッパ）に委譲。
+     - persist は連続呼び出しをまとめる（デバウンス）。確実に書きたい時は
+       persist(true) で即時フラッシュする（pagehide 等）。
+     ===================================================================== */
+  var persistTimer = null;
+
+  App.persist = function (immediate) {
+    if (!App.storage) return;
+    if (immediate) {
+      if (persistTimer) { clearTimeout(persistTimer); persistTimer = null; }
+      App.storage.save(App.state);
+      return;
+    }
+    if (persistTimer) clearTimeout(persistTimer);
+    persistTimer = setTimeout(function () {
+      persistTimer = null;
+      App.storage.save(App.state);
+    }, 150);
+  };
+
+  /** 保存を消して state を初期化（[提案-S2] 全削除の土台）。 */
+  App.clearSaved = function () {
+    if (App.storage) App.storage.clear();
+  };
+
+  /**
+   * 保存済み state を現在の state に安全にマージする。
+   * 形式が壊れている項目は無視して初期値のまま残す（前方互換）。
+   * @returns {boolean} 復元すべき保存データがあれば true
+   */
+  App.restore = function () {
+    if (!App.storage) return false;
+    var saved = App.storage.load();
+    if (!saved) return false;
+
+    var s = App.state;
+
+    // answers: 長さと要素型を検証（想定外データは捨てる）
+    if (Array.isArray(saved.answers) && saved.answers.length === App.S1_TOTAL) {
+      s.answers = saved.answers.map(function (a) {
+        return typeof a === "string" ? a : null;
+      });
+    }
+
+    if (typeof saved.qIndex === "number" &&
+        saved.qIndex >= 0 && saved.qIndex < App.S1_TOTAL) {
+      s.qIndex = saved.qIndex;
+    }
+
+    s.completed = saved.completed === true;
+
+    if (App.SCREENS.indexOf(saved.current) !== -1) {
+      s.current = saved.current;
+    }
+    // 未完了なのに s2〜s4 が保存されていたら s1 に戻す（不整合ガード）
+    if (!s.completed && s.current !== "s1") s.current = "s1";
+
+    if (saved.records && typeof saved.records === "object") {
+      s.records = {
+        todayDone: saved.records.todayDone === true,
+        weekRating: typeof saved.records.weekRating === "string"
+          ? saved.records.weekRating : null
+      };
+    }
+
+    return true;
   };
 
   /* ---- DOM ヘルパ ---- */

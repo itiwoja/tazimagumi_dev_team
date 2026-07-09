@@ -12,6 +12,23 @@
   var App = global.App;
   var $ = App.$, qAll = App.qAll, state = App.state;
 
+  /* ===================================================================
+     デバッグモード（Issue #76 [提案-M4]）
+     - ?debug=1 で診断を通さず全タブを解放する（開発・動作確認用）。
+     - 解放は「遷移の許可」と「見た目」だけで、state.completed は変更しない
+       （自動保存で完了扱いが永続化されるのを防ぐ。URLを外せば通常に戻る）。
+     - App.debugDump() で現在の状態・prefs・保存内容を確認できる。
+     =================================================================== */
+  App.isDebug = /[?&]debug=1(?:&|$)/.test(global.location.search);
+
+  App.debugDump = function () {
+    return {
+      state: JSON.parse(JSON.stringify(state)),
+      prefs: JSON.parse(JSON.stringify(App.prefs)),
+      saved: App.storage ? App.storage.load() : null
+    };
+  };
+
   /* ---- back ボタン（S1用・dock に差し込む） ---- */
   var dock = document.querySelector(".dock");
   var cta = $("cta");
@@ -117,7 +134,7 @@
     if (!t.hasAttribute("type")) t.setAttribute("type", "button");
     t.addEventListener("click", function () {
       var go = t.getAttribute("data-go");
-      if (go === "s1" || state.completed) { App.showScreen(go); }
+      if (go === "s1" || state.completed || App.isDebug) { App.showScreen(go); }
       else { App.toast("初回チェック（5問）を終えると開きます"); }
     });
   });
@@ -281,4 +298,13 @@
   }
   App.updateProgress();
   App.updateBudgetCount("core");
+
+  /* ---- デバッグモード: タブの見た目も解放（Issue #76） ---- */
+  if (App.isDebug) {
+    qAll(".tab").forEach(function (t) {
+      t.classList.remove("is-locked");
+      t.removeAttribute("aria-disabled");
+    });
+    App.toast("デバッグモード: 全画面を解放しました");
+  }
 })(window);

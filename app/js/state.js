@@ -98,11 +98,13 @@
     return true;
   };
 
+  // GitHub Pages は <user>.github.io 配下の全リポジトリで localStorage を
+  // 共有するため、実際に読み書きするキーは "midashinami:" で名前空間を切る
   App.LOCAL_KEYS = {
     answers: "diagnosis_answers",
     result: "diagnosis_result",
     continuity: "continuity_log",
-    prefs: "prefs"
+    prefs: "midashinami:prefs:v1"
   };
 
   App.prefs = {

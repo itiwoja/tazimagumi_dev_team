@@ -137,6 +137,10 @@
   };
 
   App.clearLocalData = function () {
+    // 本体の永続化データ（midashinami:v1）は storage 層の clear で消す。
+    // 直後の resetS1/showScreen の自動保存で初期状態が再保存されるが、
+    // 個人データは含まれない
+    if (App.storage) App.storage.clear();
     var keys = App.LOCAL_KEYS;
     [keys.answers, keys.result, keys.continuity, keys.prefs].forEach(function (key) {
       try { global.localStorage.removeItem(key); } catch (error) {}

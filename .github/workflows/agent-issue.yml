@@ -1,0 +1,129 @@
+name: ikki-claude Issue Agent
+
+# ikki-claude にアサイン + agent-ready ラベルが付いた Issue を検知し、
+# Claude Code（サブスクOAuthトークン）で自律実装 → develop 向けPR作成まで行う。
+#
+# 設計方針（起票時のIssue議論を参照）:
+#   - 発火条件はGitHubのWebhookイベントそのもの（issues: assigned/labeled）。
+#     ポーリングや「これはテストです」的な自己言及メッセージを使わないため、
+#     Claude自身が「検証されていない自動トリガー」として拒否する問題を回避できる。
+#   - マージは絶対にしない。PR作成までで必ず人間の承認待ちに戻す。
+#   - 実装できない/仕様が曖昧な場合は agent-blocked ラベルで人間にエスカレーションする。
+#     生成AIの当て推量でPRを作らない。
+#
+# 必要な repository secrets（GitHub側で人間が設定。値はこのファイルには書かない）:
+#   CLAUDE_CODE_OAUTH_TOKEN - `claude setup-token` で生成（Claude Pro/Maxサブスク認証）
+#   IKKI_CLAUDE_TOKEN       - ikki-claude アカウントの PAT（repo scope）
+#   IKKI_CLAUDE_EMAIL       - ikki-claude アカウントで verified な email（コミット帰属に必要）
+#   IKKI_CLAUDE_USER_ID     - `gh api users/ikki-claude --jq .id` の数値ID
+
+on:
+  issues:
+    types: [assigned, labeled]
+
+jobs:
+  implement:
+    # アサイン先が ikki-claude、かつ agent-ready ラベルが付いている場合のみ発火。
+    # assigned/labeled どちらのイベント順でも、両方揃った時点で必ず一度は評価される。
+    if: >
+      github.event.issue.assignee != null &&
+      github.event.issue.assignee.login == 'ikki-claude' &&
+      contains(github.event.issue.labels.*.name, 'agent-ready')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+
+    steps:
+      - name: 着手ロック（二重発火防止）
+        env:
+          GH_TOKEN: ${{ secrets.IKKI_CLAUDE_TOKEN }}
+        run: |
+          gh issue edit "${{ github.event.issue.number }}" \
+            --repo "${{ github.repository }}" \
+            --remove-label "agent-ready" \
+            --add-label "agent-in-progress"
+
+      - name: Claude Code 実行
+        id: claude
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ secrets.IKKI_CLAUDE_TOKEN }}
+          bot_name: "ikki-claude"
+          bot_id: ${{ secrets.IKKI_CLAUDE_USER_ID }}
+          base_branch: develop
+          branch_prefix: "feature/issue-"
+          prompt: |
+            あなたは itiwoja のチーム（田島組・卒業制作「男の身だしなみアプリ」）の
+            自律実装エージェント（GitHubアカウント: ikki-claude）です。
+            以下の Issue を実装し、develop 向けの Pull Request を作成してください。
+
+            リポジトリ: ${{ github.repository }}
+            Issue番号: #${{ github.event.issue.number }}
+            タイトル: ${{ github.event.issue.title }}
+            本文:
+            ${{ github.event.issue.body }}
+
+            ## 必ず守るルール（このリポジトリの CLAUDE.md / AGENTS.md より）
+            - ブランチは develop から切る（base_branch指定済み）。
+            - コミットメッセージは `<type>: <要約>`（feat|fix|docs|refactor|test|chore）。
+            - 実装は `app/`（ビルド不要のバニラJS）。既存の docs/specs 配下の仕様書を正とする。
+            - 共有ファイル（app/css/style.css・app/js/state.js・app/js/main.js）に触れる場合は
+              PR説明で明示すること（実装自体は通常通り行ってよい）。
+            - 変更した各JSファイルは `node --check <file>` で構文確認すること。
+            - 可能なら実際にアプリを起動して動作確認すること。ヘッドレス環境で不可能な場合は
+              PR説明にその旨明記すること。
+
+            ## 絶対にしてはいけないこと
+            - develop / main への直接push、PRの自己マージ
+            - Issue本文にない機能の追加（スコープ拡張はしない）
+            - 実装方針がIssueから一意に決まらない場合、推測で進めること
+
+            ## 完了条件
+            - 実装・確認ができたら、PRを作成し `Closes #${{ github.event.issue.number }}` を
+              本文に含めること。テスト内容・確認したことを具体的に書くこと。
+            - 実装を完了できない場合（仕様不明瞭・ブロッカーあり等）、PRは作らず、
+              何が問題かを明確にした上で status を "blocked" として報告すること。
+
+            最終応答は必ず下記スキーマに従う構造化出力にすること。
+          claude_args: |
+            --allowedTools "Bash,Read,Write,Edit,Grep,Glob"
+            --json-schema {"type":"object","properties":{"status":{"type":"string","enum":["pr_opened","blocked"]},"pr_url":{"type":"string"},"summary":{"type":"string"}},"required":["status","summary"]}
+
+      - name: 結果に応じてラベル・コメントを更新
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.IKKI_CLAUDE_TOKEN }}
+        run: |
+          STATUS=$(echo '${{ steps.claude.outputs.structured_output }}' | jq -r '.status // "blocked"')
+          SUMMARY=$(echo '${{ steps.claude.outputs.structured_output }}' | jq -r '.summary // "実行結果を取得できませんでした。"')
+          PR_URL=$(echo '${{ steps.claude.outputs.structured_output }}' | jq -r '.pr_url // ""')
+          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+          if [ "${{ steps.claude.outcome }}" != "success" ] || [ "$STATUS" != "pr_opened" ]; then
+            gh issue edit "${{ github.event.issue.number }}" --repo "${{ github.repository }}" \
+              --remove-label "agent-in-progress" --add-label "agent-blocked"
+            {
+              echo "自動実装が完了しませんでした。"
+              echo ""
+              echo "**状況**: $SUMMARY"
+              echo ""
+              echo "実行ログ: $RUN_URL"
+              echo ""
+              echo "人間の判断・修正をお願いします。再度自律着手させる場合は agent-blocked を外して agent-ready を付け直してください。"
+            } > /tmp/agent-comment.md
+            gh issue comment "${{ github.event.issue.number }}" --repo "${{ github.repository }}" --body-file /tmp/agent-comment.md
+          else
+            gh issue edit "${{ github.event.issue.number }}" --repo "${{ github.repository }}" \
+              --remove-label "agent-in-progress" --add-label "agent-review"
+            {
+              echo "実装しました。レビューをお願いします。"
+              echo ""
+              echo "**概要**: $SUMMARY"
+              echo ""
+              echo "PR: $PR_URL"
+            } > /tmp/agent-comment.md
+            gh issue comment "${{ github.event.issue.number }}" --repo "${{ github.repository }}" --body-file /tmp/agent-comment.md
+          fi

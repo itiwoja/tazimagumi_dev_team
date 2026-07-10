@@ -4,7 +4,7 @@
    ---------------------------------------------------------------------
    読み込み順（index.html）:
      1) data/products.js  2) js/state.js  3) js/storage.js  4) js/contracts.js
-     5) js/disclaimer.js  6) js/screens.js  7) js/main.js
+     5) js/disclaimer.js  6) js/screens.js  7) js/debug.js  8) js/main.js
    ===================================================================== */
 (function (global) {
   "use strict";

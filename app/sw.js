@@ -1,7 +1,7 @@
 /* global self, caches, fetch */
 "use strict";
 
-var CACHE_NAME = "tazimagumi-app-v4"; // index.html変更＋debug.js追加のため+1（Issue #113）
+var CACHE_NAME = "tazimagumi-app-v5"; // 設定シートにデータ書き出しを追加のため+1（Issue #85）
 var APP_SHELL = [
   "./",
   "./index.html",

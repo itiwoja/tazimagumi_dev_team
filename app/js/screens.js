@@ -136,6 +136,31 @@
     return App.prefs;
   };
 
+  /**
+   * 記録データを JSON ファイルとして書き出す（[提案-S2] エクスポート / Issue #85）。
+   * 保存層(storage.js)の生 state をそのまま出すので、将来インポートを作る際も復元互換。
+   */
+  App.exportData = function () {
+    var saved = (App.storage && App.storage.load) ? App.storage.load() : null;
+    var payload = { v: 1, exportedAt: Date.now(), state: saved || App.state };
+    var url = null;
+    try {
+      var blob = new global.Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+      url = global.URL.createObjectURL(blob);
+      var a = document.createElement("a");
+      a.href = url;
+      a.download = "midashinami-backup.json";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      App.toast("データを書き出しました");
+    } catch (error) {
+      App.toast("書き出しに失敗しました");
+    } finally {
+      if (url) setTimeout(function () { global.URL.revokeObjectURL(url); }, 0);
+    }
+  };
+
   App.clearLocalData = function () {
     // 本体の永続化データ（midashinami:v1）は storage 層の clear で消す。
     // 直後の resetS1/showScreen の自動保存で初期状態が再保存されるが、

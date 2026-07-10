@@ -1,7 +1,7 @@
 /* global self, caches, fetch */
 "use strict";
 
-var CACHE_NAME = "tazimagumi-app-v3";
+var CACHE_NAME = "tazimagumi-app-v4"; // index.html変更＋debug.js追加のため+1（Issue #113）
 var APP_SHELL = [
   "./",
   "./index.html",
@@ -10,6 +10,7 @@ var APP_SHELL = [
   "./js/state.js",
   "./js/contracts.js",
   "./js/screens.js",
+  "./js/debug.js",
   "./js/main.js",
   "./manifest.webmanifest",
   "./icons/icon-192.png",

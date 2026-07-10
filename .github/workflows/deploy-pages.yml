@@ -1,0 +1,42 @@
+name: Deploy to GitHub Pages
+
+# main ブランチへのマージをトリガーに、app/ 配下の静的ファイルを
+# GitHub Pages へ自動公開する（Issue #80 / 提案-Z1）。
+#
+# 公開対象は app/（ビルド不要の HTML + CSS + バニラJS）。
+# 相対パス（./）運用のためサブパス公開（/<repo>/）でもそのまま動く。
+#
+# 【人間が一度だけ行う手動設定（管理者のみ）】
+#   リポジトリ Settings → Pages → Build and deployment → Source を
+#   「GitHub Actions」に切り替える。これを行うまでデプロイは発火しない。
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# GITHUB_TOKEN に Pages デプロイ用の最小権限を付与
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 同時に走った場合は最新の1つだけを生かす（古いデプロイはキャンセル）
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: app
+      - id: deployment
+        uses: actions/deploy-pages@v4

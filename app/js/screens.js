@@ -146,6 +146,11 @@
       try { global.localStorage.removeItem(key); } catch (error) {}
     });
     App.prefs = { reminderTime: "" };
+    // メモリ上の記録も初期化してから resetS1/showScreen（autosaveラップ対象）を呼ぶ。
+    // 先に消さないと、直後の自動保存で records が midashinami:v1 に書き戻される（Issue #119）。
+    state.records.todayDone = false;
+    state.records.weekRating = null;
+    if (typeof App.repaintRecords === "function") App.repaintRecords();
     App.resetS1();
     App.showScreen("s1");
     App.toast("保存データを削除しました");

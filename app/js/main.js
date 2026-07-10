@@ -273,6 +273,8 @@
       r.setAttribute("aria-pressed", on ? "true" : "false");
     });
   }
+  // screens.js の clearLocalData から S4 記録UIを再描画するために公開（Issue #119）
+  App.repaintRecords = restoreRecords;
 
   /* ---- init ---- */
   syncReminderField();

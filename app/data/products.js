@@ -22,6 +22,11 @@
    * @property {string} feel         使用感（メーカー表記の事実: "さっぱり" など）
    * @property {string} scent        香り（"無香料" など事実）
    * @property {string[]} ingredients 配合成分タグ（有無の事実のみ）
+   * @property {string[]} typeTags    向く肌タイプ（type1〜type6・複数可）。
+   *                                   タイプ分類の事実のみ。効能/安全性の断定はしない。
+   *                                   契約: js/contracts.js の SkinType / App.TYPE_META と一致。
+   *                                   type1 皮脂 / type2 乾燥 / type3 炎症・肌荒れ /
+   *                                   type4 髭剃り後 / type5 加齢 / type6 入門
    */
 
   /** @type {Product[]} */
@@ -35,7 +40,9 @@
       budget: "sub",
       feel: "さっぱり",
       scent: "無香料",
-      ingredients: ["セラミド配合", "無香料", "アルコールフリー"]
+      ingredients: ["セラミド配合", "無香料", "アルコールフリー"],
+      // さっぱり=皮脂向け / アルコールフリー=髭剃り後も刺激少 / 無香料ベーシック=入門
+      typeTags: ["type1", "type4", "type6"]
     },
     {
       id: "lotion-moist",
@@ -46,7 +53,9 @@
       budget: "sub",
       feel: "しっとり",
       scent: "無香料",
-      ingredients: ["ヒアルロン酸配合", "グリセリン配合", "無香料", "弱酸性"]
+      ingredients: ["ヒアルロン酸配合", "グリセリン配合", "無香料", "弱酸性"],
+      // しっとり高保湿=乾燥/年齢肌向け / 弱酸性・無香料=低刺激で肌荒れ配慮
+      typeTags: ["type2", "type3", "type5"]
     },
     {
       id: "lotion-oilfree",
@@ -57,7 +66,9 @@
       budget: "sub",
       feel: "さっぱり",
       scent: "無香料",
-      ingredients: ["無香料", "オイルフリー"]
+      ingredients: ["無香料", "オイルフリー"],
+      // オイルフリー・さっぱり=皮脂向け / 無香料オイルフリー=ニキビ・肌荒れ配慮
+      typeTags: ["type1", "type3"]
     }
     // [DATA] ここに商品を追加していく（化粧水/洗顔/乳液/日焼け止め 等で30-50件）
   ];

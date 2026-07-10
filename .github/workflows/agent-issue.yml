@@ -45,11 +45,22 @@ jobs:
             --remove-label "agent-ready" \
             --add-label "agent-in-progress"
 
+      # claude-code-action はリポジトリを checkout しない前提の action。
+      # これが無いと git 設定が "fatal: not in a git directory" で失敗し、
+      # Claude Code プロセスが起動直後に exit 1 する（run 29067274885 で確認）。
+      # token に ikki-claude の PAT を使い、ブランチ push が ikki-claude 名義になるようにする。
+      - name: リポジトリを checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.IKKI_CLAUDE_TOKEN }}
+          fetch-depth: 0
+
       - name: Claude Code 実行
         id: claude
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          show_full_output: true  # 公開リポジトリだが、失敗時の原因調査を優先してログに全文出す
           github_token: ${{ secrets.IKKI_CLAUDE_TOKEN }}
           bot_name: "ikki-claude"
           bot_id: ${{ secrets.IKKI_CLAUDE_USER_ID }}

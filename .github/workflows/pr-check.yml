@@ -1,0 +1,56 @@
+name: PR Check
+
+# develop / main 向け PR の品質ゲート（Issue #81 / 提案-Z2）。
+# ビルドレス方針のため、初版は Node 標準機能の範囲で以下を検証する:
+#   1. JS 構文チェック（app/js/*.js + sw.js + data/*.js）
+#   2. 商品データ検証（scripts/validate-products.mjs / #73）
+#   3. Service Worker キャッシュ更新ガード（#107 運用ルール）
+# 依存追加なし・外部 action は公式 checkout / setup-node のみ。
+
+on:
+  pull_request:
+    branches: [develop, main]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # SW キャッシュガードで base との差分を取るため全履歴を取得
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: JS syntax check
+        run: |
+          fail=0
+          for f in app/js/*.js app/sw.js app/data/*.js; do
+            [ -f "$f" ] || continue
+            node --check "$f" || fail=1
+          done
+          exit $fail
+
+      - name: Product data validation (#73)
+        run: |
+          # #73 のスクリプトが未マージの間はスキップ（マージ後に自動で有効化）
+          if [ -f scripts/validate-products.mjs ]; then
+            node scripts/validate-products.mjs
+          else
+            echo "scripts/validate-products.mjs が未導入のためスキップ（#73 マージ後に有効化）"
+          fi
+
+      - name: SW cache bump guard (#107)
+        run: |
+          base="origin/${{ github.base_ref }}"
+          git fetch origin "${{ github.base_ref }}" --depth=1 || true
+          if git diff --name-only "$base"...HEAD | grep -qE '^app/(css|js|data|icons|index\.html|manifest)'; then
+            if ! git diff "$base"...HEAD -- app/sw.js | grep -q 'CACHE_NAME'; then
+              echo "::error::app/ を変更した PR は app/sw.js の CACHE_NAME を更新してください（#107）"
+              exit 1
+            fi
+          fi

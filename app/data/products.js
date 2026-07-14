@@ -35,8 +35,7 @@
       budget: "sub",
       feel: "さっぱり",
       scent: "無香料",
-      ingredients: ["セラミド配合", "無香料", "アルコールフリー"],
-      summary_one_liner: "さっぱりうるおう、ベタつかない定番"
+      ingredients: ["セラミド配合", "無香料", "アルコールフリー"]
     },
     {
       id: "lotion-moist",
@@ -47,8 +46,7 @@
       budget: "sub",
       feel: "しっとり",
       scent: "無香料",
-      ingredients: ["ヒアルロン酸配合", "グリセリン配合", "無香料", "弱酸性"],
-      summary_one_liner: "乾燥肌にしっとりなじむ高保湿処方"
+      ingredients: ["ヒアルロン酸配合", "グリセリン配合", "無香料", "弱酸性"]
     },
     {
       id: "lotion-oilfree",
@@ -59,8 +57,7 @@
       budget: "sub",
       feel: "さっぱり",
       scent: "無香料",
-      ingredients: ["無香料", "オイルフリー"],
-      summary_one_liner: "皮脂テカリを防ぐオイルフリー化粧水"
+      ingredients: ["無香料", "オイルフリー"]
     }
     // [DATA] ここに商品を追加していく（化粧水/洗顔/乳液/日焼け止め 等で30-50件）
   ];

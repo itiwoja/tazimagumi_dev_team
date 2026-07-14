@@ -176,7 +176,7 @@ b{font-weight:700}
 .ghost-btn:hover{background:var(--soft)}
 
 .compare{border:1px solid var(--line);border-radius:var(--r-card);overflow:hidden;background:#fff}
-.compare__row{display:grid;grid-template-columns:84px 1fr 1fr;align-items:stretch;border-top:1px solid var(--line-soft)}
+.compare__row{display:grid;grid-template-columns:84px repeat(var(--cols, 2), 1fr);align-items:stretch;border-top:1px solid var(--line-soft)}
 .compare__row:first-child{border-top:0}
 .compare__row--head{background:var(--soft)}
 .compare__lab,.compare__cell{padding:10px;font-size:13px;min-width:0}
@@ -338,7 +338,7 @@ b{font-weight:700}
   .cand__price{font-size:12px}
   .cand__vol{font-size:10px}
   .tags,.ghost-btn{display:none}
-  .compare__row{grid-template-columns:64px 1fr 1fr}
+  .compare__row{grid-template-columns:64px repeat(var(--cols, 2), 1fr)}
   .compare__lab,.compare__cell{padding:6px;font-size:11px}
   .compare__lab{font-size:10.5px}
   .factnote{margin:7px 2px 0;font-size:10.5px;line-height:1.35}
@@ -374,7 +374,7 @@ b{font-weight:700}
   .settings-sheet__time,.settings-sheet__action,.settings-sheet__save{min-height:40px}
 }
 @media (max-width:360px){
-  .compare__row{grid-template-columns:58px 1fr 1fr}
+  .compare__row{grid-template-columns:58px repeat(var(--cols, 2), 1fr)}
   .qtitle{font-size:15px}
   .tab__txt{font-size:10px}
   .dock{padding-left:8px;padding-right:8px}
@@ -387,4 +387,14 @@ b{font-weight:700}
 /* ===================== reduced motion ===================== */
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
+}
+
+/* S3 comparison selection styles */
+.cand__item{cursor:pointer;transition:border-color 160ms var(--ease),background 160ms var(--ease),transform 160ms var(--ease)}
+.cand__item:hover{border-color:var(--orange);transform:translateY(-1px)}
+.cand__item:active{transform:translateY(0)}
+.cand__item[aria-checked="true"]{border:2px solid var(--orange);background:#fff8f1}
+.cand__item[aria-checked="true"] .cand__checkbox-ui {
+  border-color: var(--orange) !important;
+  background: var(--orange) !important;
 }

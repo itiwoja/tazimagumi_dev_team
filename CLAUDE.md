@@ -94,4 +94,4 @@ branch_rules:
 - 実装は `app/`（`index.html` + `css/style.css` + `js/{state,screens,main}.js` + `data/products.js`）。**ビルド不要**、ブラウザで `app/index.html` を開けば動く。
 - 仕様・設計は `docs/`（`specs/` 確定仕様、`design/` 詳細設計、`guidelines/` 規約、`dev/` 実装方針、`schedule/` ガント）。
 - 設計の正：`docs/specs/基本設計書_v1.0.md`。コード規約：`docs/guidelines/コーディング規約_命名規則_v1.0.md`。
-- 近期の主目標：**2026-08-31 に最小機能アプリを GitHub Pages で Web公開**（`docs/schedule/ガントチャート_v2.0.md` の M-MVP）。
+- 近期の主目標：**2026-08-31 に最小機能アプリを GitHub Pages で Web公開**（`docs/schedule/ガントチャート_v2.2.md` の M-MVP）。

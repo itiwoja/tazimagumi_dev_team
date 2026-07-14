@@ -54,6 +54,7 @@
   var reminderTime = $("reminderTime");
   var reminderSaveBtn = $("reminderSaveBtn");
   var resetDiagnosisBtn = $("resetDiagnosisBtn");
+  var exportDataBtn = $("exportDataBtn");
   var clearDataBtn = $("clearDataBtn");
   var clearConfirm = $("clearConfirm");
   var clearConfirmBtn = $("clearConfirmBtn");
@@ -214,6 +215,9 @@
     App.showScreen("s1");
     closeSettingsSheet();
     App.toast("診断をS1からやり直しました");
+  });
+  if (exportDataBtn) exportDataBtn.addEventListener("click", function () {
+    if (typeof App.exportData === "function") App.exportData();
   });
   if (clearDataBtn) clearDataBtn.addEventListener("click", function () {
     settingsArmedClear = true;

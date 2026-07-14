@@ -186,7 +186,11 @@
   if (privacyClose) privacyClose.addEventListener("click", closePrivacy);
   if (privacyScrim) privacyScrim.addEventListener("click", closePrivacy);
   document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape" && privacySheet && !privacySheet.hidden) closePrivacy();
+    if (e.key === "Escape" && privacySheet && !privacySheet.hidden) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      closePrivacy();
+    }
   });
 
   /* ---- [F-03] 予算トグル（件数はデータ連動） ---- */

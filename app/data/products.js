@@ -215,19 +215,6 @@
       ingredients: ["セラミド", "無香料", "低刺激"]
     },
     {
-      id: "starter-kit",
-      category: "基礎ケアセット",
-      name: "はじめての基礎ケア3点",
-      price: 4980,
-      volume: 1,
-      budget: "core",
-      typeTags: ["type6", "type1", "type2"],
-      summary_one_liner: "洗顔・保湿をまとめて始めやすい",
-      feel: "バランス型",
-      scent: "無香料",
-      ingredients: ["洗浄成分", "保湿成分", "無香料"]
-    },
-    {
       id: "balanced-lotion",
       category: "化粧水",
       name: "バランス化粧水",

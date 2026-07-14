@@ -46,3 +46,13 @@ test("予算帯の上限を守る", () => {
     assert.ok(product.price <= limit, `${product.id}: ${product.budget} の上限 ${limit}円を超えています（${product.price}円）`);
   });
 });
+
+test("mL単位のProduct契約で扱えないセット商品を含めない", () => {
+  products.forEach((product) => {
+    assert.doesNotMatch(
+      `${product.category} ${product.name}`,
+      /セット/,
+      `${product.id}: セット商品にはmL以外を表せる単位モデルが必要です`
+    );
+  });
+});

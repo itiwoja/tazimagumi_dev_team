@@ -33,17 +33,19 @@ fix/login-error           ← バグ修正の作業ブランチ
   - ❌ 日本語・空白・大文字・`_`（アンダースコア）は使わない。
   - ✅ `feature/sc01-check-ui` ／ ❌ `feature/初回チェック` ／ ❌ `Feature/SC01`
 
-### 担当ブランチ（固定）
+### 担当領域と代表ブランチ（目安）
 
-| メンバー | GitHub | 作るブランチ |
+下表は **各メンバーの主担当領域と代表的なブランチ名の例**です。ブランチは「1タスク1ブランチ」で都度作成し、**マージ後は削除**します（固定の常設ブランチではありません）。**いま存在する作業ブランチは GitHub を正**として確認してください。
+
+| メンバー | GitHub | 主担当領域（代表ブランチ例） |
 | --- | --- | --- |
-| 村上壱基 | `itiwoja` | 基盤・共有部品 |
-| 新田漣 | `ren-1222` | `feature/sc01-check-ui`・`feature/sc02-roadmap-ui` |
-| 饒波廣翔 | `kuro1020` | `feature/diagnosis-logic`・`feature/roadmap-logic` |
-| 仲程天飛 | `takato9310` | `feature/recommend-logic`（＋データ整備） |
-| 田島優人 | `yourenputianjian-sketch` | `feature/sc03-product-compare-ui`・`feature/sc04-record-ui` |
+| 村上壱基 | `itiwoja` | 基盤・共有部品（`feature/base-*`・`chore/*` 等を都度作成） |
+| 新田漣 | `ren-1222` | 初回チェック/ロードマップUI（`feature/sc01-check-ui`・`feature/sc02-roadmap-ui`） |
+| 饒波廣翔 | `kuro1020` | 診断/ロードマップ ロジック（`feature/diagnosis-logic`・`feature/roadmap-logic`） |
+| 仲程天飛 | `takato9310` | 推薦ロジック・データ整備（`feature/recommend-logic`） |
+| 田島優人 | `yourenputianjian-sketch` | 商品比較/継続記録UI（`feature/sc03-product-compare-ui`・`feature/sc04-record-ui`） |
 
-> 新しい種類の作業は `feature/<内容>` で増やしてOK。
+> 新しい種類の作業は `feature/<内容>` で増やしてOK。命名は上の規則（半角英小文字・数字・ハイフンのみ）に従うこと。
 
 ---
 

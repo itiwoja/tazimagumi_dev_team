@@ -3,13 +3,31 @@
    担当タスク: [CORE] アプリ基盤（基本このファイルは触らない）
    ---------------------------------------------------------------------
    読み込み順（index.html）:
-     1) data/products.js  2) js/state.js  3) js/screens.js  4) js/main.js
+     1) data/products.js  2) js/state.js  3) js/storage.js  4) js/contracts.js
+     5) js/disclaimer.js  6) js/screens.js  7) js/debug.js  8) js/main.js
    ===================================================================== */
 (function (global) {
   "use strict";
 
   var App = global.App;
   var $ = App.$, qAll = App.qAll, state = App.state;
+
+  /* ===================================================================
+     デバッグモード（Issue #76 [提案-M4]）
+     - ?debug=1 で診断を通さず全タブを解放する（開発・動作確認用）。
+     - 解放は「遷移の許可」と「見た目」だけで、state.completed は変更しない
+       （自動保存で完了扱いが永続化されるのを防ぐ。URLを外せば通常に戻る）。
+     - App.debugDump() で現在の状態・prefs・保存内容を確認できる。
+     =================================================================== */
+  App.isDebug = /[?&]debug=1(?:&|$)/.test(global.location.search);
+
+  App.debugDump = function () {
+    return {
+      state: JSON.parse(JSON.stringify(state)),
+      prefs: JSON.parse(JSON.stringify(App.prefs)),
+      saved: App.storage ? App.storage.load() : null
+    };
+  };
 
   /* ---- back ボタン（S1用・dock に差し込む） ---- */
   var dock = document.querySelector(".dock");
@@ -19,11 +37,79 @@
   backBtn.className = "cta-back";
   backBtn.setAttribute("aria-label", "ひとつ前の質問にもどる");
   backBtn.textContent = "←";
+  backBtn.style.cssText =
+    "flex:0 0 auto;width:52px;height:50px;border-radius:14px;border:1px solid var(--border);" +
+    "background:var(--surface);color:var(--text);font-size:20px;font-weight:700;cursor:pointer;display:none;touch-action:manipulation";
   dock.insertBefore(backBtn, cta);
 
   App.setBackVisible = function (visible) {
     backBtn.style.display = visible ? "block" : "none";
   };
+
+  /* ---- settings sheet ---- */
+  var settingsSheet = $("settingsSheet");
+  var settingsClose = $("settingsClose");
+  var settingsScrim = $("settingsScrim");
+  var settingsOpenBtn = $("settingsBtn");
+  var reminderTime = $("reminderTime");
+  var reminderSaveBtn = $("reminderSaveBtn");
+  var resetDiagnosisBtn = $("resetDiagnosisBtn");
+  var clearDataBtn = $("clearDataBtn");
+  var clearConfirm = $("clearConfirm");
+  var clearConfirmBtn = $("clearConfirmBtn");
+  var clearCancelBtn = $("clearCancelBtn");
+  var settingsLastFocus = null;
+  var settingsArmedClear = false;
+
+  function syncReminderField() {
+    if (reminderTime) reminderTime.value = App.prefs.reminderTime || "";
+  }
+
+  function closeClearConfirm() {
+    settingsArmedClear = false;
+    if (clearConfirm) clearConfirm.hidden = true;
+    if (clearDataBtn) clearDataBtn.disabled = false;
+  }
+
+  function openSettingsSheet() {
+    settingsLastFocus = document.activeElement;
+    syncReminderField();
+    closeClearConfirm();
+    if (settingsSheet) settingsSheet.hidden = false;
+    if (reminderTime) reminderTime.focus();
+  }
+
+  function closeSettingsSheet() {
+    if (settingsSheet) settingsSheet.hidden = true;
+    closeClearConfirm();
+    if (settingsLastFocus && typeof settingsLastFocus.focus === "function") settingsLastFocus.focus();
+  }
+
+  App.openSettingsSheet = openSettingsSheet;
+  App.closeSettingsSheet = closeSettingsSheet;
+
+  function handleSettingsKeydown(e) {
+    if (!settingsSheet || settingsSheet.hidden) return;
+    if (e.key === "Escape") {
+      e.preventDefault();
+      closeSettingsSheet();
+      return;
+    }
+    if (e.key !== "Tab") return;
+    var focusables = qAll("button, input", settingsSheet).filter(function (el) {
+      return !el.disabled && el.offsetParent !== null;
+    });
+    if (!focusables.length) return;
+    var first = focusables[0];
+    var last = focusables[focusables.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  }
 
   /* ---- CTA ---- */
   function ctaClick() {
@@ -48,12 +134,14 @@
     if (!t.hasAttribute("type")) t.setAttribute("type", "button");
     t.addEventListener("click", function () {
       var go = t.getAttribute("data-go");
-      if (go === "s1" || state.completed) { App.showScreen(go); }
+      if (go === "s1" || state.completed || App.isDebug) { App.showScreen(go); }
       else { App.toast("初回チェック（5問）を終えると開きます"); }
     });
   });
 
-  /* ---- 用語シート（S2 の「○○ってなに？」） ---- */
+  /* ---- 用語シート（S2 の「○○ってなに？」） ----
+     ※現状 app/index.html の S2 には .term / data-term を持つトリガー要素が無く、
+       この配線は休眠状態（シートは開かない）。トリガー追加＋辞書拡充は Issue #70。 */
   var TERMS = {
     "化粧水": {
       t: "化粧水ってなに？",
@@ -112,11 +200,33 @@
     });
   });
 
-  /* ---- 設定ボタン（基盤・最小実装：詳細な設定画面は今後 feature で拡張） ---- */
-  var settingsBtn = $("settingsBtn");
-  if (settingsBtn) settingsBtn.addEventListener("click", function () {
-    App.toast("設定はこれから追加します");
+  if (settingsOpenBtn) settingsOpenBtn.addEventListener("click", openSettingsSheet);
+  if (settingsClose) settingsClose.addEventListener("click", closeSettingsSheet);
+  if (settingsScrim) settingsScrim.addEventListener("click", closeSettingsSheet);
+  if (reminderSaveBtn) reminderSaveBtn.addEventListener("click", function () {
+    App.saveReminderTime(reminderTime ? reminderTime.value : "");
   });
+  if (reminderTime) reminderTime.addEventListener("change", function () {
+    App.saveReminderTime(reminderTime.value);
+  });
+  if (resetDiagnosisBtn) resetDiagnosisBtn.addEventListener("click", function () {
+    App.resetS1();
+    App.showScreen("s1");
+    closeSettingsSheet();
+    App.toast("診断をS1からやり直しました");
+  });
+  if (clearDataBtn) clearDataBtn.addEventListener("click", function () {
+    settingsArmedClear = true;
+    if (clearConfirm) clearConfirm.hidden = false;
+    clearDataBtn.disabled = true;
+  });
+  if (clearCancelBtn) clearCancelBtn.addEventListener("click", closeClearConfirm);
+  if (clearConfirmBtn) clearConfirmBtn.addEventListener("click", function () {
+    if (!settingsArmedClear) return;
+    closeSettingsSheet();
+    App.clearLocalData();
+  });
+  document.addEventListener("keydown", handleSettingsKeydown);
 
   /* ===================================================================
      永続化ブートストラップ（Issue #58 [提案-F1]）
@@ -165,6 +275,8 @@
   }
 
   /* ---- init ---- */
+  syncReminderField();
+
   var restored = App.restore();
 
   if (restored) {
@@ -184,7 +296,15 @@
   } else {
     App.renderQuestion();
   }
-
   App.updateProgress();
   App.updateBudgetCount("core");
+
+  /* ---- デバッグモード: タブの見た目も解放（Issue #76） ---- */
+  if (App.isDebug) {
+    qAll(".tab").forEach(function (t) {
+      t.classList.remove("is-locked");
+      t.removeAttribute("aria-disabled");
+    });
+    App.toast("デバッグモード: 全画面を解放しました");
+  }
 })(window);

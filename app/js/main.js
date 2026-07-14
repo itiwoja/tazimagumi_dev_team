@@ -54,6 +54,7 @@
   var reminderTime = $("reminderTime");
   var reminderSaveBtn = $("reminderSaveBtn");
   var resetDiagnosisBtn = $("resetDiagnosisBtn");
+  var exportDataBtn = $("exportDataBtn");
   var clearDataBtn = $("clearDataBtn");
   var clearConfirm = $("clearConfirm");
   var clearConfirmBtn = $("clearConfirmBtn");
@@ -166,6 +167,28 @@
   $("sheetScrim").addEventListener("click", closeSheet);
   document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeSheet(); });
 
+  /* ---- プライバシーシート（Issue #84） ---- */
+  var privacyOpenBtn = $("privacyOpenBtn");
+  var privacySheet = $("privacySheet");
+  var privacyClose = $("privacyClose");
+  var privacyScrim = $("privacyScrim");
+  var privacyLastFocus = null;
+  function openPrivacy() {
+    privacyLastFocus = document.activeElement;
+    if (privacySheet) privacySheet.hidden = false;
+    if (privacyClose) privacyClose.focus();
+  }
+  function closePrivacy() {
+    if (privacySheet) privacySheet.hidden = true;
+    if (privacyLastFocus && typeof privacyLastFocus.focus === "function") privacyLastFocus.focus();
+  }
+  if (privacyOpenBtn) privacyOpenBtn.addEventListener("click", openPrivacy);
+  if (privacyClose) privacyClose.addEventListener("click", closePrivacy);
+  if (privacyScrim) privacyScrim.addEventListener("click", closePrivacy);
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && privacySheet && !privacySheet.hidden) closePrivacy();
+  });
+
   /* ---- [F-03] 予算トグル（件数はデータ連動） ---- */
   qAll(".budget__btn").forEach(function (b) {
     b.addEventListener("click", function () {
@@ -214,6 +237,9 @@
     App.showScreen("s1");
     closeSettingsSheet();
     App.toast("診断をS1からやり直しました");
+  });
+  if (exportDataBtn) exportDataBtn.addEventListener("click", function () {
+    if (typeof App.exportData === "function") App.exportData();
   });
   if (clearDataBtn) clearDataBtn.addEventListener("click", function () {
     settingsArmedClear = true;

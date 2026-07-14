@@ -1,0 +1,64 @@
+name: PR Check
+
+# develop / main 向け PR で、機械的に見られる品質ゲートを回す（Issue #81）。
+#   1) JS 構文チェック（node --check）
+#   2) 商品データ検証（#73 の scripts/validate-products.mjs があれば実行）
+#   3) SW キャッシュ更新もれガード（#107 の運用ルール）
+# ビルドレス方針のため lint は node --check に限定。HTML 厳密検証は将来拡張。
+
+on:
+  pull_request:
+    branches: [develop, main]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: JS syntax check (node --check)
+        run: |
+          fail=0
+          for f in app/js/*.js app/sw.js app/data/*.js; do
+            [ -e "$f" ] || continue
+            if node --check "$f"; then
+              echo "ok: $f"
+            else
+              echo "::error file=$f::構文エラー"
+              fail=1
+            fi
+          done
+          exit $fail
+
+      - name: Product data validation (#73)
+        run: |
+          if [ -f scripts/validate-products.mjs ]; then
+            node scripts/validate-products.mjs
+          else
+            echo "scripts/validate-products.mjs 未導入のためスキップ（#73 マージ後に有効化）。"
+          fi
+
+      - name: SW cache bump guard (#107)
+        run: |
+          base="origin/${{ github.base_ref }}"
+          changed=$(git diff --name-only "$base"...HEAD || true)
+          if echo "$changed" | grep -qE '^app/(css/|js/|data/|icons/|index\.html|manifest\.webmanifest)'; then
+            if ! git diff "$base"...HEAD -- app/sw.js | grep -q 'CACHE_NAME'; then
+              echo "::error::app/ を変更した PR は app/sw.js の CACHE_NAME を +1 してください（#107 のキャッシュ更新運用ルール）。"
+              exit 1
+            fi
+            echo "CACHE_NAME バンプを確認しました。"
+          else
+            echo "app/ 配下の公開アセット変更なし。CACHE_NAME バンプ不要。"
+          fi

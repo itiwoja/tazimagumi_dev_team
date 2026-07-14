@@ -41,8 +41,8 @@
       feel: "さっぱり",
       scent: "無香料",
       ingredients: ["セラミド配合", "無香料", "アルコールフリー"],
-      // さっぱり=皮脂向け / アルコールフリー=髭剃り後も刺激少 / 無香料ベーシック=入門
-      typeTags: ["type1", "type4", "type6"]
+      typeTags: ["type1", "type4", "type6"],
+      summary_one_liner: "さっぱりうるおう、ベタつかない定番"
     },
     {
       id: "lotion-moist",
@@ -54,8 +54,8 @@
       feel: "しっとり",
       scent: "無香料",
       ingredients: ["ヒアルロン酸配合", "グリセリン配合", "無香料", "弱酸性"],
-      // しっとり高保湿=乾燥/年齢肌向け / 弱酸性・無香料=低刺激で肌荒れ配慮
-      typeTags: ["type2", "type3", "type5"]
+      typeTags: ["type2", "type3", "type5"],
+      summary_one_liner: "乾燥肌にしっとりなじむ高保湿処方"
     },
     {
       id: "lotion-oilfree",
@@ -67,8 +67,8 @@
       feel: "さっぱり",
       scent: "無香料",
       ingredients: ["無香料", "オイルフリー"],
-      // オイルフリー・さっぱり=皮脂向け / 無香料オイルフリー=ニキビ・肌荒れ配慮
-      typeTags: ["type1", "type3"]
+      typeTags: ["type1", "type3"],
+      summary_one_liner: "皮脂テカリを防ぐオイルフリー化粧水"
     }
     // [DATA] ここに商品を追加していく（化粧水/洗顔/乳液/日焼け止め 等で30-50件）
   ];

@@ -1,14 +1,17 @@
 /* global self, caches, fetch */
 "use strict";
 
-var CACHE_NAME = "tazimagumi-app-v5"; // products.js に typeTags 追加のため+1（Issue #54）
+var CACHE_NAME = "tazimagumi-app-v6"; // products.js 更新に伴うキャッシュ更新（Issue #107）
+// index.html の読み込み順に合わせる: data → state → storage → contracts → disclaimer → screens → debug → main
 var APP_SHELL = [
   "./",
   "./index.html",
   "./css/style.css",
   "./data/products.js",
   "./js/state.js",
+  "./js/storage.js",
   "./js/contracts.js",
+  "./js/disclaimer.js",
   "./js/screens.js",
   "./js/debug.js",
   "./js/main.js",

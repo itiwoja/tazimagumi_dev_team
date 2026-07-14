@@ -1,14 +1,17 @@
 /* global self, caches, fetch */
 "use strict";
 
-var CACHE_NAME = "tazimagumi-app-v5"; // 全削除バグ修正で main.js/screens.js 変更のため+1（Issue #119）
+var CACHE_NAME = "tazimagumi-app-v6"; // appアセット更新のため+1（Issue #107）
+// index.html の読み込み順に合わせる: data → state → storage → contracts → disclaimer → screens → debug → main
 var APP_SHELL = [
   "./",
   "./index.html",
   "./css/style.css",
   "./data/products.js",
   "./js/state.js",
+  "./js/storage.js",
   "./js/contracts.js",
+  "./js/disclaimer.js",
   "./js/screens.js",
   "./js/debug.js",
   "./js/main.js",

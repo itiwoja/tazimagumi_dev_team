@@ -1,9 +1,10 @@
 name: PR Check
 
 # develop / main 向け PR で、機械的に見られる品質ゲートを回す（Issue #81）。
-#   1) JS 構文チェック（node --check）
-#   2) 商品データ検証（#73 の scripts/validate-products.mjs があれば実行）
-#   3) SW キャッシュ更新もれガード（#107 の運用ルール）
+#   1) ガント同期スクリプトの単体テスト
+#   2) JS 構文チェック（node --check）
+#   3) 商品データ検証（#73 の scripts/validate-products.mjs があれば実行）
+#   4) SW キャッシュ更新もれガード（#107 の運用ルール）
 # ビルドレス方針のため lint は node --check に限定。HTML 厳密検証は将来拡張。
 
 on:
@@ -26,6 +27,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
+
+      - name: Gantt sync unit tests
+        run: node --test scripts/test-sync-gantt-issues.mjs
 
       - name: JS syntax check (node --check)
         run: |

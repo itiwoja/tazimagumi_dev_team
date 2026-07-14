@@ -1,6 +1,6 @@
 # 基盤完成チェックリスト（M-Base）v1.0
 
-**ガントID：** `p2e` → マイルストーン `★mbase`（[ガントチャート v2.0](../schedule/ガントチャート_v2.0.md) §5）
+**ガントID：** `p2e`（[ガントチャート v2.2](../schedule/ガントチャート_v2.2.md) の「GitHub Issue同期ステータス」内 `P2 基盤（完了履歴）`）
 **担当：** 村上（itiwoja） ／ **対象Issue：** [#29 p2e ダミーデータ・型定義・基盤完成→developマージ](https://github.com/itiwoja/tazimagumi_dev_team/issues/29)
 **目的：** 基盤アプリ（PWA雛形・共有部品・ルーティング・4画面の空ハコ・ダミーデータ・型）が `develop` に揃い、各メンバーが feature に着手できる状態であることを確認・記録する。
 

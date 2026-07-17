@@ -75,6 +75,15 @@ branch_rules:
     - non-ascii / whitespace / uppercase / underscore in branch name
 ```
 
+### 週次統合ルール（develop を常に通しデモ可能に保つ）
+
+背景・通しデモ手順は **[`docs/dev/週次統合ルール_v1.0.md`](docs/dev/週次統合ルール_v1.0.md)** を参照（Issue #110）。
+
+- 毎週金曜を統合日とし、develop で S1→S2→S3→S4 の通しデモを1人が実機で確認する（5分）。手順は `docs/dev/週次統合ルール_v1.0.md`。
+- 動かない develop を翌週に持ち越さない（修正を最優先）。
+- ロジック実装のPRは「画面から呼ぶ最小結線」まで含める（純粋関数のみの未結線マージ禁止）。
+- 確認結果は週次で Issue #110 か Discussions に1行残す。
+
 ---
 
 ## メンバーと担当

@@ -1,0 +1,3 @@
+[submodule "mirror-buddy"]
+	path = mirror-buddy
+	url = https://github.com/itiwoja/mirror-buddy

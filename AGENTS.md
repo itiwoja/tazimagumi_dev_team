@@ -74,6 +74,68 @@ branch_rules:
     - non-ascii / whitespace / uppercase / underscore in branch name
 ```
 
+### ブランチ保護ルール（GitHub設定）
+
+`main`・`develop` は GitHub 上で保護ブランチとして設定済み（規約だけでなく機構で強制される）。
+
+- **直接pushは拒否される**：PRを経由しないと反映できない。
+- **force push禁止・ブランチ削除禁止**（`allow_force_pushes: false` / `allow_deletions: false`）。
+- **管理者にも適用**（`enforce_admins: true`）：村上のアカウントでも直接pushはできない。
+- 必須レビュー人数はGitHub設定上0件（レビューなしでもマージ可能）だが、運用として共有ファイル（`app/css/style.css`・`app/js/state.js`・`app/js/main.js`）や基盤に関わるPRは**村上のレビューを待ってからマージ**する。
+- 必須ステータスチェックは未設定（CIが red でもマージ自体は可能）。ただし **red のPRは自己判断でマージしない**。
+- 保護設定自体（レビュー必須化・ステータスチェック必須化など）を変える場合は村上に確認する。
+
+### ワークツリーを使った並行作業
+
+複数のタスク（別Issue・別ブランチ）を同時に進めたい時は、メインの作業ディレクトリで `git switch` を繰り返さず、`git worktree` で別ディレクトリに切る。AIエージェントが並行してブランチを触る場合も同様。
+
+```bash
+# develop起点で新しいworktreeを作る（リポジトリの外、兄弟ディレクトリに置く）
+git worktree add ../wt-<scope> -b <type>/<scope> develop
+cd ../wt-<scope>
+# 実装 → コミット → push → PR は通常のブランチ運用ルールと同じ
+```
+
+- worktreeの置き場所は**リポジトリの外**（例：`../wt-sc02-roadmap-ui`）。リポジトリ内に作ると誤ってgit管理下に入れてしまう恐れがあるため避ける。
+- ブランチ命名・1ブランチ1タスク・developから切る、などのルールはworktreeでも変わらない。
+- 作業が終わりPRがマージされたら、そのworktreeは片付ける：
+```bash
+git worktree remove ../wt-<scope>
+```
+- 既存のworktree一覧は `git worktree list` で確認できる。使い終わって残っているworktreeは掃除する。
+
+### PRの作成
+
+- PRのタイトルはコミット規約と同じ **`<type>: <要約>`**。
+- 本文には最低限「やったこと」を書く。関連Issueがあれば `Closes #<番号>` を入れて自動クローズさせる。
+- 作業途中で先にレビューをもらいたい時は `--draft` を付けてドラフトPRにする。
+- 基本コマンド：
+```bash
+gh pr create --base develop --title "<type>: <要約>" --body "$(cat <<'EOF'
+## 概要
+- 何をしたか
+
+## 関連Issue
+Closes #<番号>
+EOF
+)"
+```
+- **base が `develop` になっているか必ず確認**する（`gh pr create` の出力でもGitHub上でも）。`main` 向けにはPRを出さない（`main`は`develop`からのリリースPRのみ）。
+- 共有ファイル（`app/css/style.css`・`app/js/state.js`・`app/js/main.js`）を含むPRは村上をレビュアーに指定する：
+```bash
+gh pr create --base develop --reviewer itiwoja ...
+```
+- CI（PR Check）が red のままではマージしない。落ちた場合は原因を直してから再push。
+
+### 週次統合ルール（develop を常に通しデモ可能に保つ）
+
+背景・通しデモ手順は **[`docs/dev/週次統合ルール_v1.0.md`](docs/dev/週次統合ルール_v1.0.md)** を参照（Issue #110）。
+
+- 毎週金曜を統合日とし、develop で S1→S2→S3→S4 の通しデモを1人が実機で確認する（5分）。手順は `docs/dev/週次統合ルール_v1.0.md`。
+- 動かない develop を翌週に持ち越さない（修正を最優先）。
+- ロジック実装のPRは「画面から呼ぶ最小結線」まで含める（純粋関数のみの未結線マージ禁止）。
+- 確認結果は週次で Issue #110 か Discussions に1行残す。
+
 ---
 
 ## メンバーと担当

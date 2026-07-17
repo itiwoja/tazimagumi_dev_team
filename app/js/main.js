@@ -167,6 +167,32 @@
   $("sheetScrim").addEventListener("click", closeSheet);
   document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeSheet(); });
 
+  /* ---- プライバシーシート（Issue #84） ---- */
+  var privacyOpenBtn = $("privacyOpenBtn");
+  var privacySheet = $("privacySheet");
+  var privacyClose = $("privacyClose");
+  var privacyScrim = $("privacyScrim");
+  var privacyLastFocus = null;
+  function openPrivacy() {
+    privacyLastFocus = document.activeElement;
+    if (privacySheet) privacySheet.hidden = false;
+    if (privacyClose) privacyClose.focus();
+  }
+  function closePrivacy() {
+    if (privacySheet) privacySheet.hidden = true;
+    if (privacyLastFocus && typeof privacyLastFocus.focus === "function") privacyLastFocus.focus();
+  }
+  if (privacyOpenBtn) privacyOpenBtn.addEventListener("click", openPrivacy);
+  if (privacyClose) privacyClose.addEventListener("click", closePrivacy);
+  if (privacyScrim) privacyScrim.addEventListener("click", closePrivacy);
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && privacySheet && !privacySheet.hidden) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      closePrivacy();
+    }
+  });
+
   /* ---- [F-03] 予算トグル（件数はデータ連動） ---- */
   qAll(".budget__btn").forEach(function (b) {
     b.addEventListener("click", function () {
@@ -277,6 +303,8 @@
       r.setAttribute("aria-pressed", on ? "true" : "false");
     });
   }
+  // screens.js の clearLocalData から S4 記録UIを再描画するために公開（Issue #119）
+  App.repaintRecords = restoreRecords;
 
   /* ---- init ---- */
   syncReminderField();

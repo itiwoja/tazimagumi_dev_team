@@ -312,6 +312,12 @@
         </div>
         <button class="ghost-btn settings-sheet__action settings-sheet__action--danger" id="clearDataBtn" type="button">削除を開始する</button>
       </div>
+
+      <div class="settings-sheet__block">
+        <h4 class="settings-sheet__label">プライバシー</h4>
+        <p class="settings-sheet__note">入力内容は端末内だけに保存され、外部には送信されません。</p>
+        <button class="ghost-btn settings-sheet__action" id="privacyOpenBtn" type="button">プライバシーについて</button>
+      </div>
     </div>
     <button class="sheet__scrim" id="settingsScrim" aria-label="設定を閉じる"></button>
   </div>
@@ -324,6 +330,22 @@
       <button class="ghost-btn sheet__close" id="sheetClose" type="button">とじる</button>
     </div>
     <button class="sheet__scrim" id="sheetScrim" aria-label="とじる"></button>
+  </div>
+
+  <!-- プライバシーポリシーシート（Issue #84） -->
+  <div class="sheet" id="privacySheet" hidden>
+    <div class="sheet__panel" role="dialog" aria-modal="true" aria-labelledby="privacyTitle">
+      <h3 class="sheet__t" id="privacyTitle">プライバシーについて</h3>
+      <div class="sheet__b">
+        <p><b>保存場所</b>：入力内容（肌の悩み・回答・記録）は、お使いの端末内（ブラウザの localStorage）だけに保存します。外部のサーバーへ送信することはありません。</p>
+        <p><b>第三者提供</b>：ありません。広告・解析のための外部送信も行いません。</p>
+        <p><b>削除・書き出し</b>：設定の「保存データを削除」でいつでも全て消せます。「データを書き出す」で手元に保存もできます。</p>
+        <p><b>免責</b>：本アプリは医療・診断行為ではありません。肌に合わない時は使用を中止し、気になる時は皮膚科にご相談ください。</p>
+        <p><b>お問い合わせ</b>：田島組 卒業制作チーム（本アプリは学習・発表を目的としています）。</p>
+      </div>
+      <button class="ghost-btn sheet__close" id="privacyClose" type="button">とじる</button>
+    </div>
+    <button class="sheet__scrim" id="privacyScrim" aria-label="とじる"></button>
   </div>
 
   <footer class="stage__foot">

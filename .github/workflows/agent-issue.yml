@@ -106,9 +106,14 @@ jobs:
               何が問題かを明確にした上で status を "blocked" として報告すること。
 
             最終応答は必ず下記スキーマに従う構造化出力にすること。
+          # claude-code-action は claude_args を shell-quote でトークン化する。
+          # JSON全体をシングルクォートで囲まないと、内側の " がクォート境界と解釈されて
+          # 剥がされてしまい、キー・値の "" が消えた不正なJSONが --json-schema に渡り、
+          # claude プロセスが "JSON Parse error: Expected '}'" で exit 1 する
+          # （run 29556365774 ほかで確認。#109/#110/#112 が全て agent-blocked になった原因）。
           claude_args: |
             --allowedTools "Bash,Read,Write,Edit,Grep,Glob"
-            --json-schema {"type":"object","properties":{"status":{"type":"string","enum":["pr_opened","blocked"]},"pr_url":{"type":"string"},"summary":{"type":"string"}},"required":["status","summary"]}
+            --json-schema '{"type":"object","properties":{"status":{"type":"string","enum":["pr_opened","blocked"]},"pr_url":{"type":"string"},"summary":{"type":"string"}},"required":["status","summary"]}'
 
       - name: 結果に応じてラベル・コメントを更新
         if: always()

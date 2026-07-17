@@ -77,6 +77,63 @@
     if (state.qIndex > 0) { state.qIndex--; App.renderQuestion(); }
   };
 
+  /* =================== [F-02] S2 ロードマップ動的描画 =================== */
+  App.renderRoadmap = function () {
+    var diagnosis = App.diagnose(state.answers);
+    var steps = App.buildRoadmap(diagnosis);
+    var meta = App.TYPE_META[diagnosis.primaryType];
+    var typeLabel = $("s2ResultType");
+    var todayCopy = $("s2TodayCopy");
+    var roadmapLabel = $("s2RoadmapLabel");
+    var roadmapList = $("roadmapList");
+
+    if (!roadmapList || !meta || !Array.isArray(steps) || steps.length === 0) return;
+
+    if (typeLabel) typeLabel.textContent = "あなた向けの「" + meta.name + "」プラン";
+    if (todayCopy) {
+      todayCopy.textContent = steps[0].body + " ";
+      var todayEnd = document.createElement("b");
+      todayEnd.textContent = "今日はここまで。";
+      todayCopy.appendChild(todayEnd);
+    }
+    if (roadmapLabel) roadmapLabel.textContent = steps.length + "ステップ";
+
+    roadmapList.textContent = "";
+    steps.forEach(function (step) {
+      var item = document.createElement("li");
+      item.className = "card road__item";
+
+      var badge = document.createElement("span");
+      badge.className = "step-badge";
+      badge.setAttribute("aria-hidden", "true");
+      badge.textContent = String(step.order);
+
+      var body = document.createElement("div");
+      body.className = "road__body";
+
+      var title = document.createElement("h3");
+      title.className = "road__t";
+      title.textContent = step.title;
+      body.appendChild(title);
+
+      var description = document.createElement("p");
+      description.className = "road__desc";
+      description.textContent = step.body;
+      body.appendChild(description);
+
+      if (step.term) {
+        var term = document.createElement("span");
+        term.className = "pill";
+        term.textContent = step.term;
+        body.appendChild(term);
+      }
+
+      item.appendChild(badge);
+      item.appendChild(body);
+      roadmapList.appendChild(item);
+    });
+  };
+
   /* =================== 完了 / 画面遷移 =================== */
   App.complete = function () {
     if (!state.completed) {
@@ -104,7 +161,10 @@
 
     $("cta").disabled = false;
     if (id === "s1") { App.renderQuestion(); }
-    else { $("cta").textContent = App.CTA_LABEL[id]; }
+    else {
+      if (id === "s2") App.renderRoadmap();
+      $("cta").textContent = App.CTA_LABEL[id];
+    }
     App.setBackVisible(id === "s1" && state.qIndex > 0);
 
     App.updateProgress();

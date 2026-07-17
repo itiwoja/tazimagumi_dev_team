@@ -117,12 +117,20 @@ jobs:
 
       - name: 結果に応じてラベル・コメントを更新
         if: always()
+        # structured_output（Claudeが書く自由記述の summary を含む）を
+        # env経由で渡す。以前は `echo '${{ steps.claude.outputs.structured_output }}'`
+        # のようにシングルクォート文字列へ直接埋め込んでおり、summary内にアポストロフィ
+        # （例: "itiwoja's" ）が1文字でも入るとクォートが途中で閉じてシェル構文エラーで
+        # このステップごと落ちていた（run 29556960614 で確認。#109がPR作成済みなのに
+        # ラベル更新されず agent-in-progress のまま止まった原因）。env経由 + ダブルクォート
+        # 参照ならシェルが内容を再解釈しないため、任意コマンド実行のリスクも同時に塞げる。
         env:
           GH_TOKEN: ${{ secrets.IKKI_CLAUDE_TOKEN }}
+          STRUCTURED_OUTPUT: ${{ steps.claude.outputs.structured_output }}
         run: |
-          STATUS=$(echo '${{ steps.claude.outputs.structured_output }}' | jq -r '.status // "blocked"')
-          SUMMARY=$(echo '${{ steps.claude.outputs.structured_output }}' | jq -r '.summary // "実行結果を取得できませんでした。"')
-          PR_URL=$(echo '${{ steps.claude.outputs.structured_output }}' | jq -r '.pr_url // ""')
+          STATUS=$(echo "$STRUCTURED_OUTPUT" | jq -r '.status // "blocked"')
+          SUMMARY=$(echo "$STRUCTURED_OUTPUT" | jq -r '.summary // "実行結果を取得できませんでした。"')
+          PR_URL=$(echo "$STRUCTURED_OUTPUT" | jq -r '.pr_url // ""')
           RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
           if [ "${{ steps.claude.outcome }}" != "success" ] || [ "$STATUS" != "pr_opened" ]; then

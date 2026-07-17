@@ -138,6 +138,15 @@
   App.complete = function () {
     if (!state.completed) {
       state.completed = true;
+      
+      // 診断とロードマップ生成を実行して状態に保存
+      try {
+        state.diagnosis = App.diagnose(state.answers);
+        state.roadmap = App.buildRoadmap(state.diagnosis);
+      } catch (error) {
+        console.error("診断またはロードマップ生成に失敗しました:", error);
+      }
+
       qAll(".tab").forEach(function (t) {
         t.classList.remove("is-locked");
         t.removeAttribute("aria-disabled");
@@ -176,6 +185,8 @@
     state.qIndex = 0;
     state.answers = new Array(App.S1_TOTAL).fill(null);
     state.completed = false;
+    state.diagnosis = null;
+    state.roadmap = null;
     App.updateProgress();
     qAll(".chip", $("qstack")).forEach(function (ch) { ch.setAttribute("aria-checked", "false"); });
     qAll(".tab").forEach(function (t) {

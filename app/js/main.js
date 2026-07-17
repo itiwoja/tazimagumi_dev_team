@@ -315,6 +315,16 @@
     restoreChips();
     restoreRecords();
     if (state.completed) {
+      // 古いセーブデータ等の理由で診断結果が欠けている場合は再生成
+      if (!state.diagnosis || !state.roadmap) {
+        try {
+          state.diagnosis = App.diagnose(state.answers);
+          state.roadmap = App.buildRoadmap(state.diagnosis);
+        } catch (e) {
+          console.error("診断データの再生成に失敗しました:", e);
+        }
+      }
+
       // 完了済み: タブ解放（App.complete と同等）＋保存画面を復元
       qAll(".tab").forEach(function (t) {
         t.classList.remove("is-locked");

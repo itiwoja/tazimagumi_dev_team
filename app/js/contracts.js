@@ -12,16 +12,16 @@
    - 読み込み順（index.html）: products → state → storage → contracts → disclaimer → screens → main
 
    ■ 実装状況（2026-07 時点）
-   - App.diagnose      : 実装済み（本ファイル下部）。※ただし screens.js/main.js から未呼び出し（画面未結線）
-   - App.buildRoadmap  : 未実装スタブ（Issue #35 / PR #104 で対応中）
+   - App.diagnose      : 実装済み（本ファイル下部）。screens.js の App.renderRoadmap 経由で画面結線済み（Issue #34/#36/#60）。
+   - App.buildRoadmap  : 実装済み（本ファイル下部。Issue #35）。
    - App.recommend     : 実装済み（本ファイル下部。商品 typeTags = Issue #54）
    - App.buildCompareTable : 未実装スタブ（Issue #38）
    - 既知の乖離: 現行UIは最小5問だが diagnose の pointTable は診断ロジック設計書の23問index前提。
-     5問UIへの結線／23問化の統合は別 feature ブランチで対応（下記「■ 未統合」）。
+     5問UIへの結線は完了済み（Issue #34/#36/#60）。23問化の統合は別 feature ブランチ（Issue #59）で対応予定。
 
    ■ 未統合（TODO・別ブランチ）
-   - diagnose を complete() に結線し、5問UIの回答→タイプ判定→S2/S3 に反映する統合が未実施。
-   - Diagnosis.topContributors（型定義・設計書§4 Step7）は現状 diagnose が返していない。
+   - 23問へのUI拡張（Issue #59）。
+   - Diagnosis.topContributors（型定義・設計書§4 Step7）は現状 diagnose が返していない（MVPでは省略し、23問拡張時に対応予定）。
 
    ■ 根拠ドキュメント
    - 診断:  docs/specs/診断ロジック設計書_v1.1.md
@@ -63,7 +63,7 @@
    * @property {SkinType|null} secondaryType  第二タイプ（複合でなければ null）
    * @property {boolean}       isComposite    複合タイプか（第1・第2の差が10pt以内）
    * @property {AxisScores}    scores         軸別スコア（判定根拠）
-   * @property {string[]}     [topContributors] 上位軸に効いた質問など（任意）
+   * @property {string[]}     [topContributors] 上位軸に効いた質問など（任意。MVPでは省略、23問拡張時に実装予定）
    */
 
   /** 推薦の1グループ（概念=categoryごと）。

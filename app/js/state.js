@@ -24,6 +24,8 @@
     qIndex: 0,
     answers: new Array(App.S1_TOTAL).fill(null),
     completed: false,
+    diagnosis: null,
+    roadmap: null,
     // 継続記録(S4)の最小データ。本実装(feature/sc04-record-ui)で拡張予定。
     records: { todayDone: false, weekRating: null }
   };
@@ -86,6 +88,13 @@
     }
     // 未完了なのに s2〜s4 が保存されていたら s1 に戻す（不整合ガード）
     if (!s.completed && s.current !== "s1") s.current = "s1";
+
+    if (saved.diagnosis && typeof saved.diagnosis === "object") {
+      s.diagnosis = saved.diagnosis;
+    }
+    if (Array.isArray(saved.roadmap)) {
+      s.roadmap = saved.roadmap;
+    }
 
     if (saved.records && typeof saved.records === "object") {
       s.records = {

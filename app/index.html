@@ -141,18 +141,24 @@
       <section class="screen" id="s2" aria-label="ロードマップ" hidden>
         <div class="done-head compact-head">
           <h2 class="done-title">お疲れさまでした</h2>
-          <p class="done-sub">診断完了後にあなた向けのステップが表示されます</p>
+          <p class="done-sub"><b id="s2ResultType">今日からの3ステップ</b></p>
         </div>
 
         <div class="card today-card">
           <p class="today-card__k">今日やること</p>
-          <p class="today-card__t">診断完了後に表示されます。</p>
+          <p class="today-card__t" id="s2TodayCopy">洗顔のあと、化粧水を1本。<b>今日はここまで。</b></p>
         </div>
 
-        <p class="sec-label">3ステップ</p>
+        <p class="sec-label" id="s2RoadmapLabel">3ステップ</p>
 
-        <ol class="road road--compact">
-          <!-- JS (screens.js:renderS2) により動的に生成されます -->
+        <ol class="road road--compact" id="roadmapList" aria-live="polite">
+          <li class="card road__item">
+            <span class="step-badge" aria-hidden="true">1</span>
+            <div class="road__body">
+              <h3 class="road__t">買う</h3>
+              <p class="road__flow">洗顔 → 化粧水 → 乳液</p>
+            </div>
+          </li>
         </ol>
 
         <p class="safety">肌に合わない時は使用をやめ、気になる時は皮膚科へ。</p>

@@ -12,12 +12,12 @@
    - 読み込み順（index.html）: products → state → storage → contracts → disclaimer → screens → main
 
    ■ 実装状況（2026-07 時点）
-   - App.diagnose      : 実装済み（本ファイル下部）。
-   - App.buildRoadmap  : 未実装スタブ（Issue #35 / PR #104 で対応中）
+   - App.diagnose      : 実装済み（本ファイル下部）。screens.js の App.renderRoadmap 経由で画面結線済み（Issue #34/#36/#60）。
+   - App.buildRoadmap  : 実装済み（本ファイル下部。Issue #35）。
    - App.recommend     : 実装済み（本ファイル下部。商品 typeTags = Issue #54）
    - App.buildCompareTable : 未実装スタブ（Issue #38）
    - 既知の乖離: 現行UIは最小5問だが diagnose の pointTable は診断ロジック設計書の23問index前提。
-     5問UIへの結線は feature/diagnosis-wiring ブランチで統合済み。23問化の統合は別 feature ブランチ（Issue #59）で対応予定。
+     5問UIへの結線は完了済み（Issue #34/#36/#60）。23問化の統合は別 feature ブランチ（Issue #59）で対応予定。
 
    ■ 未統合（TODO・別ブランチ）
    - 23問へのUI拡張（Issue #59）。

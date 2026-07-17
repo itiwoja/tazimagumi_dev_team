@@ -77,6 +77,63 @@
     if (state.qIndex > 0) { state.qIndex--; App.renderQuestion(); }
   };
 
+  /* =================== [F-02] S2 ロードマップ動的描画 =================== */
+  App.renderRoadmap = function () {
+    var diagnosis = App.diagnose(state.answers);
+    var steps = App.buildRoadmap(diagnosis);
+    var meta = App.TYPE_META[diagnosis.primaryType];
+    var typeLabel = $("s2ResultType");
+    var todayCopy = $("s2TodayCopy");
+    var roadmapLabel = $("s2RoadmapLabel");
+    var roadmapList = $("roadmapList");
+
+    if (!roadmapList || !meta || !Array.isArray(steps) || steps.length === 0) return;
+
+    if (typeLabel) typeLabel.textContent = "あなた向けの「" + meta.name + "」プラン";
+    if (todayCopy) {
+      todayCopy.textContent = steps[0].body + " ";
+      var todayEnd = document.createElement("b");
+      todayEnd.textContent = "今日はここまで。";
+      todayCopy.appendChild(todayEnd);
+    }
+    if (roadmapLabel) roadmapLabel.textContent = steps.length + "ステップ";
+
+    roadmapList.textContent = "";
+    steps.forEach(function (step) {
+      var item = document.createElement("li");
+      item.className = "card road__item";
+
+      var badge = document.createElement("span");
+      badge.className = "step-badge";
+      badge.setAttribute("aria-hidden", "true");
+      badge.textContent = String(step.order);
+
+      var body = document.createElement("div");
+      body.className = "road__body";
+
+      var title = document.createElement("h3");
+      title.className = "road__t";
+      title.textContent = step.title;
+      body.appendChild(title);
+
+      var description = document.createElement("p");
+      description.className = "road__desc";
+      description.textContent = step.body;
+      body.appendChild(description);
+
+      if (step.term) {
+        var term = document.createElement("span");
+        term.className = "pill";
+        term.textContent = step.term;
+        body.appendChild(term);
+      }
+
+      item.appendChild(badge);
+      item.appendChild(body);
+      roadmapList.appendChild(item);
+    });
+  };
+
   /* =================== 完了 / 画面遷移 =================== */
   App.complete = function () {
     if (!state.completed) {
@@ -100,54 +157,6 @@
     App.showScreen("s2");
   };
 
-  App.renderS2 = function () {
-    if (!state.completed || !state.diagnosis || !state.roadmap) return;
-
-    var primaryType = state.diagnosis.primaryType;
-    var meta = App.TYPE_META[primaryType];
-    
-    // 見出しの更新
-    var subEl = document.querySelector("#s2 .done-sub");
-    if (subEl && meta) {
-      subEl.innerHTML = "あなたの診断結果：<b>" + meta.name + "</b>";
-    }
-
-    // 「今日やること」カードの動的化（コンセプトを表示）
-    var todayEl = document.querySelector("#s2 .today-card__t");
-    if (todayEl) {
-      var conceptMap = {
-        type1: "汚れ落とし・化粧水・軽めの保湿",
-        type2: "汚れ落とし・化粧水・乳液",
-        type3: "汚れ落とし・化粧水・低刺激寄りの保湿",
-        type4: "汚れ落とし・化粧水・アフターシェーブ保湿",
-        type5: "汚れ落とし・化粧水・うるおい重視の保湿",
-        type6: "汚れ落とし・オールインワン"
-      };
-      var concept = conceptMap[primaryType] || "汚れ落とし・オールインワン";
-      todayEl.innerHTML = "「<b>" + concept + "</b>」を意識して、今日から始めましょう。";
-    }
-
-    // 3ステップロードマップの動的描画
-    var roadListEl = document.querySelector("#s2 .road");
-    if (roadListEl) {
-      var html = "";
-      state.roadmap.forEach(function (step) {
-        html += '<li class="card road__item">';
-        html += '  <span class="step-badge" aria-hidden="true">' + step.order + '</span>';
-        html += '  <div class="road__body">';
-        html += '    <h3 class="road__t">' + step.title + '</h3>';
-        html += '    <p class="road__flow" style="margin-top: 4px; font-size: 13px; color: var(--text-muted); line-height: 1.5;">' + step.body;
-        if (step.term) {
-          html += ' <button type="button" class="term" data-term="' + step.term + '" style="background: none; border: none; color: var(--accent); font-weight: bold; text-decoration: underline; cursor: pointer; padding: 0; font-size: 12px; margin-left: 4px;">' + step.term + 'ってなに？</button>';
-        }
-        html += '    </p>';
-        html += '  </div>';
-        html += '</li>';
-      });
-      roadListEl.innerHTML = html;
-    }
-  };
-
   App.showScreen = function (id) {
     state.current = id;
     App.SCREENS.forEach(function (s) { $(s).hidden = s !== id; });
@@ -161,11 +170,10 @@
 
     $("cta").disabled = false;
     if (id === "s1") { App.renderQuestion(); }
-    else if (id === "s2") {
-      App.renderS2();
+    else {
+      if (id === "s2") App.renderRoadmap();
       $("cta").textContent = App.CTA_LABEL[id];
     }
-    else { $("cta").textContent = App.CTA_LABEL[id]; }
     App.setBackVisible(id === "s1" && state.qIndex > 0);
 
     App.updateProgress();

@@ -77,10 +77,76 @@
     if (state.qIndex > 0) { state.qIndex--; App.renderQuestion(); }
   };
 
+  /* =================== [F-02] S2 ロードマップ動的描画 =================== */
+  App.renderRoadmap = function () {
+    var diagnosis = App.diagnose(state.answers);
+    var steps = App.buildRoadmap(diagnosis);
+    var meta = App.TYPE_META[diagnosis.primaryType];
+    var typeLabel = $("s2ResultType");
+    var todayCopy = $("s2TodayCopy");
+    var roadmapLabel = $("s2RoadmapLabel");
+    var roadmapList = $("roadmapList");
+
+    if (!roadmapList || !meta || !Array.isArray(steps) || steps.length === 0) return;
+
+    if (typeLabel) typeLabel.textContent = "あなた向けの「" + meta.name + "」プラン";
+    if (todayCopy) {
+      todayCopy.textContent = steps[0].body + " ";
+      var todayEnd = document.createElement("b");
+      todayEnd.textContent = "今日はここまで。";
+      todayCopy.appendChild(todayEnd);
+    }
+    if (roadmapLabel) roadmapLabel.textContent = steps.length + "ステップ";
+
+    roadmapList.textContent = "";
+    steps.forEach(function (step) {
+      var item = document.createElement("li");
+      item.className = "card road__item";
+
+      var badge = document.createElement("span");
+      badge.className = "step-badge";
+      badge.setAttribute("aria-hidden", "true");
+      badge.textContent = String(step.order);
+
+      var body = document.createElement("div");
+      body.className = "road__body";
+
+      var title = document.createElement("h3");
+      title.className = "road__t";
+      title.textContent = step.title;
+      body.appendChild(title);
+
+      var description = document.createElement("p");
+      description.className = "road__desc";
+      description.textContent = step.body;
+      body.appendChild(description);
+
+      if (step.term) {
+        var term = document.createElement("span");
+        term.className = "pill";
+        term.textContent = step.term;
+        body.appendChild(term);
+      }
+
+      item.appendChild(badge);
+      item.appendChild(body);
+      roadmapList.appendChild(item);
+    });
+  };
+
   /* =================== 完了 / 画面遷移 =================== */
   App.complete = function () {
     if (!state.completed) {
       state.completed = true;
+      
+      // 診断とロードマップ生成を実行して状態に保存
+      try {
+        state.diagnosis = App.diagnose(state.answers);
+        state.roadmap = App.buildRoadmap(state.diagnosis);
+      } catch (error) {
+        console.error("診断またはロードマップ生成に失敗しました:", error);
+      }
+
       qAll(".tab").forEach(function (t) {
         t.classList.remove("is-locked");
         t.removeAttribute("aria-disabled");
@@ -104,6 +170,10 @@
 
     $("cta").disabled = false;
     if (id === "s1") { App.renderQuestion(); }
+    else if (id === "s2") {
+      App.renderRoadmap();
+      $("cta").textContent = App.CTA_LABEL[id];
+    }
     else if (id === "s3") {
       $("cta").textContent = App.CTA_LABEL[id];
       if (typeof App.renderS3 === "function") {
@@ -128,6 +198,8 @@
     state.qIndex = 0;
     state.answers = new Array(App.S1_TOTAL).fill(null);
     state.completed = false;
+    state.diagnosis = null;
+    state.roadmap = null;
     App.updateProgress();
     qAll(".chip", $("qstack")).forEach(function (ch) { ch.setAttribute("aria-checked", "false"); });
     qAll(".tab").forEach(function (t) {
@@ -154,6 +226,31 @@
     return App.prefs;
   };
 
+  /**
+   * 記録データを JSON ファイルとして書き出す（[提案-S2] エクスポート / Issue #85）。
+   * 保存層(storage.js)の生 state をそのまま出すので、将来インポートを作る際も復元互換。
+   */
+  App.exportData = function () {
+    var saved = (App.storage && App.storage.load) ? App.storage.load() : null;
+    var payload = { v: 1, exportedAt: Date.now(), state: saved || App.state };
+    var url = null;
+    try {
+      var blob = new global.Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+      url = global.URL.createObjectURL(blob);
+      var a = document.createElement("a");
+      a.href = url;
+      a.download = "midashinami-backup.json";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      App.toast("データを書き出しました");
+    } catch (error) {
+      App.toast("書き出しに失敗しました");
+    } finally {
+      if (url) setTimeout(function () { global.URL.revokeObjectURL(url); }, 0);
+    }
+  };
+
   App.clearLocalData = function () {
     // 本体の永続化データ（midashinami:v1）は storage 層の clear で消す。
     // 直後の resetS1/showScreen の自動保存で初期状態が再保存されるが、
@@ -164,183 +261,23 @@
       try { global.localStorage.removeItem(key); } catch (error) {}
     });
     App.prefs = { reminderTime: "" };
+    // メモリ上の記録も初期化してから resetS1/showScreen（autosaveラップ対象）を呼ぶ。
+    // 先に消さないと、直後の自動保存で records が midashinami:v1 に書き戻される（Issue #119）。
+    state.records.todayDone = false;
+    state.records.weekRating = null;
+    if (typeof App.repaintRecords === "function") App.repaintRecords();
     App.resetS1();
     App.showScreen("s1");
     App.toast("保存データを削除しました");
   };
 
-  /* =================== [F-03/04/05] S3 商品候補・比較 =================== */
-  var selectedIds = [];
-
+  /* =================== [F-03/04/05] S3 商品候補（データ駆動の予算カウント） =================== */
+  /* 候補リスト/比較表の本格描画は担当タスクで data/products.js を使って実装する。
+     ここでは土台として「予算帯の件数表示」だけデータ連動させてある。 */
   App.updateBudgetCount = function (budget) {
     var numEl = $("budgetNum");
     if (!numEl || typeof global.filterProductsByBudget !== "function") return;
     numEl.textContent = String(global.filterProductsByBudget(budget).length);
-
-    // 予算切り替え時にも再描画
-    if (typeof App.renderS3 === "function") {
-      App.renderS3(budget);
-    }
-  };
-
-  App.renderS3 = function (budget) {
-    if (!budget) {
-      var activeBudgetBtn = document.querySelector(".budget__btn.is-on");
-      budget = activeBudgetBtn ? activeBudgetBtn.getAttribute("data-budget") : "core";
-    }
-
-    // 候補商品の抽出
-    var products = [];
-    try {
-      var diagnosis = state.completed ? App.diagnose(state.answers) : null;
-      if (diagnosis && typeof App.recommend === "function") {
-        var rec = App.recommend(diagnosis, budget);
-        if (rec && rec.main) {
-          rec.main.forEach(function (group) {
-            products = products.concat(group.products);
-          });
-        }
-      }
-    } catch (e) {
-      // recommend が未実装の場合は fallback
-    }
-
-    if (products.length === 0) {
-      products = global.filterProductsByBudget ? global.filterProductsByBudget(budget) : [];
-    }
-
-    // 選択状態のバリデーション・初期化
-    var validSelectedIds = selectedIds.filter(function (id) {
-      return products.some(function (p) { return p.id === id; });
-    });
-
-    // 初期表示または予算切り替え等で選択が空になった場合、先頭2件をデフォルト選択
-    if (validSelectedIds.length === 0 && products.length > 0) {
-      validSelectedIds = products.slice(0, 2).map(function (p) { return p.id; });
-    }
-    selectedIds = validSelectedIds;
-
-    // 候補リストの描画
-    var candListEl = document.querySelector(".cand");
-    if (candListEl) {
-      var candHtml = "";
-      products.forEach(function (p) {
-        var isSelected = selectedIds.indexOf(p.id) !== -1;
-        candHtml += '<li class="card cand__item" data-id="' + p.id + '" role="checkbox" aria-checked="' + isSelected + '" tabindex="0">';
-        candHtml += '<span class="medal">候補</span>';
-        candHtml += '<div class="cand__top" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">';
-        candHtml += '  <div class="cand__info">';
-        candHtml += '    <h3 class="cand__name">' + p.name + '</h3>';
-        candHtml += '    <p class="cand__price"><span class="num">¥' + p.price.toLocaleString() + '</span> <span class="cand__vol">／ ' + p.volume + 'mL</span></p>';
-        candHtml += '  </div>';
-        candHtml += '  <div class="cand__checkbox-ui" style="width: 20px; height: 20px; border: 2px solid var(--line-strong); border-radius: 50%; flex-shrink: 0; margin-left: 12px; background: #fff; box-shadow: inset 0 0 0 4px #fff; transition: background 160ms var(--ease), border-color 160ms var(--ease);"></div>';
-        candHtml += '</div>';
-
-        // タグの描画
-        if (Array.isArray(p.ingredients) && p.ingredients.length > 0) {
-          candHtml += '<div class="tags">';
-          p.ingredients.forEach(function (tag) {
-            var isFree = tag.indexOf("フリー") !== -1 || tag.indexOf("無") === 0 || tag === "弱酸性";
-            var tagClass = isFree ? "tag--free" : "tag--has";
-            candHtml += '<span class="tag ' + tagClass + '">' + tag + '</span>';
-          });
-          candHtml += '</div>';
-        }
-        
-        candHtml += '</li>';
-      });
-      candListEl.innerHTML = candHtml;
-
-      // イベントリスナーの配線（一度だけ）
-      if (!candListEl.dataset.listenerAttached) {
-        candListEl.dataset.listenerAttached = "true";
-
-        var toggleSelect = function (id) {
-          var idx = selectedIds.indexOf(id);
-          if (idx !== -1) {
-            selectedIds.splice(idx, 1);
-          } else {
-            if (selectedIds.length >= 3) {
-              App.toast("比較できるのは最大3商品までです");
-              return;
-            }
-            selectedIds.push(id);
-          }
-          App.renderS3(budget);
-        };
-
-        candListEl.addEventListener("click", function (e) {
-          var item = e.target.closest(".cand__item");
-          if (item) {
-            toggleSelect(item.getAttribute("data-id"));
-          }
-        });
-
-        candListEl.addEventListener("keydown", function (e) {
-          if (e.key === " " || e.key === "Enter") {
-            var item = e.target.closest(".cand__item");
-            if (item) {
-              e.preventDefault();
-              toggleSelect(item.getAttribute("data-id"));
-            }
-          }
-        });
-      }
-    }
-
-    // 比較表の構築と描画
-    var selectedProducts = products.filter(function (p) {
-      return selectedIds.indexOf(p.id) !== -1;
-    });
-
-    var compareEl = document.querySelector(".compare");
-    if (compareEl) {
-      compareEl.style.setProperty("--cols", String(selectedProducts.length));
-
-      // セクションの見出しラベル更新
-      var compareLabel = compareEl.previousElementSibling;
-      if (compareLabel && compareLabel.classList.contains("sec-label")) {
-        if (selectedProducts.length === 0) {
-          compareLabel.textContent = "商品をくらべる";
-        } else {
-          compareLabel.textContent = selectedProducts.length + "つをくらべる";
-        }
-      }
-
-      if (selectedProducts.length === 0) {
-        compareEl.innerHTML = '<p class="compare-placeholder" style="text-align: center; padding: 24px; color: var(--muted); font-size: 13px; border: 1px dashed var(--line); border-radius: var(--r-card); background: #fff; margin: 12px 0;">商品をえらぶと、ここに比較表が表示されます</p>';
-        return;
-      }
-
-      var table = App.buildCompareTable(selectedProducts);
-      var html = "";
-
-      // ヘッダ行
-      html += '<div class="compare__row compare__row--head" role="row">';
-      html += '  <span class="compare__lab" role="columnheader">項目</span>';
-      table.columns.forEach(function (p) {
-        html += '  <span class="compare__cell" role="columnheader">' + p.name + '</span>';
-      });
-      html += '</div>';
-
-      // 比較データ行
-      table.rows.forEach(function (row) {
-        html += '<div class="compare__row' + (row.differs ? ' is-diff' : '') + '" role="row">';
-        html += '  <span class="compare__lab" role="rowheader">' + row.label + '</span>';
-        row.values.forEach(function (val) {
-          if (val.indexOf("¥") === 0) {
-            html += '  <span class="compare__cell"><b class="num price">' + val + '</b></span>';
-          } else if (/^\d/.test(val)) {
-            html += '  <span class="compare__cell"><span class="num">' + val + '</span></span>';
-          } else {
-            html += '  <span class="compare__cell">' + val + '</span>';
-          }
-        });
-        html += '</div>';
-      });
-
-      compareEl.innerHTML = html;
-    }
   };
 
   /* =================== [F-06] S4 継続記録 =================== */

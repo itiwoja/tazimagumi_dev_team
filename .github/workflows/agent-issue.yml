@@ -57,6 +57,12 @@ jobs:
 
       - name: Claude Code 実行
         id: claude
+        # GH_TOKEN を step env で渡すことで、Claude が Bash 内で `gh pr create` を
+        # 実行できるようにする（これが無いと gh が未認証で PR 作成に失敗し、
+        # 実装は済んでいるのに status=blocked になる）。push 認証は checkout 済みの
+        # git remote（IKKI_CLAUDE_TOKEN）が担うが、gh CLI は別途この env を要求する。
+        env:
+          GH_TOKEN: ${{ secrets.IKKI_CLAUDE_TOKEN }}
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
@@ -93,24 +99,38 @@ jobs:
             - 実装方針がIssueから一意に決まらない場合、推測で進めること
 
             ## 完了条件
-            - 実装・確認ができたら、PRを作成し `Closes #${{ github.event.issue.number }}` を
-              本文に含めること。テスト内容・確認したことを具体的に書くこと。
+            - 実装・確認ができたら、`gh pr create --base develop`（gh は認証済み）で PR を作成し、
+              本文に `Closes #${{ github.event.issue.number }}` を含めること。
+              テスト内容・確認したことを具体的に書くこと。作成した PR の URL を pr_url に入れること。
             - 実装を完了できない場合（仕様不明瞭・ブロッカーあり等）、PRは作らず、
               何が問題かを明確にした上で status を "blocked" として報告すること。
 
             最終応答は必ず下記スキーマに従う構造化出力にすること。
+          # claude-code-action は claude_args を shell-quote でトークン化する。
+          # JSON全体をシングルクォートで囲まないと、内側の " がクォート境界と解釈されて
+          # 剥がされてしまい、キー・値の "" が消えた不正なJSONが --json-schema に渡り、
+          # claude プロセスが "JSON Parse error: Expected '}'" で exit 1 する
+          # （run 29556365774 ほかで確認。#109/#110/#112 が全て agent-blocked になった原因）。
           claude_args: |
             --allowedTools "Bash,Read,Write,Edit,Grep,Glob"
-            --json-schema {"type":"object","properties":{"status":{"type":"string","enum":["pr_opened","blocked"]},"pr_url":{"type":"string"},"summary":{"type":"string"}},"required":["status","summary"]}
+            --json-schema '{"type":"object","properties":{"status":{"type":"string","enum":["pr_opened","blocked"]},"pr_url":{"type":"string"},"summary":{"type":"string"}},"required":["status","summary"]}'
 
       - name: 結果に応じてラベル・コメントを更新
         if: always()
+        # structured_output（Claudeが書く自由記述の summary を含む）を
+        # env経由で渡す。以前は `echo '${{ steps.claude.outputs.structured_output }}'`
+        # のようにシングルクォート文字列へ直接埋め込んでおり、summary内にアポストロフィ
+        # （例: "itiwoja's" ）が1文字でも入るとクォートが途中で閉じてシェル構文エラーで
+        # このステップごと落ちていた（run 29556960614 で確認。#109がPR作成済みなのに
+        # ラベル更新されず agent-in-progress のまま止まった原因）。env経由 + ダブルクォート
+        # 参照ならシェルが内容を再解釈しないため、任意コマンド実行のリスクも同時に塞げる。
         env:
           GH_TOKEN: ${{ secrets.IKKI_CLAUDE_TOKEN }}
+          STRUCTURED_OUTPUT: ${{ steps.claude.outputs.structured_output }}
         run: |
-          STATUS=$(echo '${{ steps.claude.outputs.structured_output }}' | jq -r '.status // "blocked"')
-          SUMMARY=$(echo '${{ steps.claude.outputs.structured_output }}' | jq -r '.summary // "実行結果を取得できませんでした。"')
-          PR_URL=$(echo '${{ steps.claude.outputs.structured_output }}' | jq -r '.pr_url // ""')
+          STATUS=$(echo "$STRUCTURED_OUTPUT" | jq -r '.status // "blocked"')
+          SUMMARY=$(echo "$STRUCTURED_OUTPUT" | jq -r '.summary // "実行結果を取得できませんでした。"')
+          PR_URL=$(echo "$STRUCTURED_OUTPUT" | jq -r '.pr_url // ""')
           RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
           if [ "${{ steps.claude.outcome }}" != "success" ] || [ "$STATUS" != "pr_opened" ]; then

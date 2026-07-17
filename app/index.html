@@ -236,11 +236,11 @@
         <div class="routine">
           <div class="card routine__card">
             <p class="routine__t">朝</p>
-            <p class="routine__d">化粧水 → 日焼け止め</p>
+            <p class="routine__d" id="routineMorning">化粧水 → 日焼け止め</p>
           </div>
           <div class="card routine__card">
             <p class="routine__t">夜</p>
-            <p class="routine__d">洗顔 → 化粧水</p>
+            <p class="routine__d" id="routineNight">洗顔 → 化粧水</p>
           </div>
         </div>
 
@@ -250,13 +250,7 @@
             <p class="week__sub">抜けてもOK</p>
           </div>
           <div class="dots" id="dots" role="list" aria-label="今週の記録">
-            <div class="dotwrap" role="listitem"><div class="dot dot--done" role="img" aria-label="月曜 記録済み"></div><span class="dotlab">月</span></div>
-            <div class="dotwrap" role="listitem"><div class="dot dot--done" role="img" aria-label="火曜 記録済み"></div><span class="dotlab">火</span></div>
-            <div class="dotwrap" role="listitem"><div class="dot dot--miss" role="img" aria-label="水曜 記録なし"></div><span class="dotlab">水</span></div>
-            <div class="dotwrap" role="listitem"><div class="dot dot--done" role="img" aria-label="木曜 記録済み"></div><span class="dotlab">木</span></div>
-            <div class="dotwrap" role="listitem"><div class="dot dot--done" role="img" aria-label="金曜 記録済み"></div><span class="dotlab">金</span></div>
-            <div class="dotwrap" role="listitem"><button class="dot dot--today" id="todayDot" aria-pressed="false" aria-label="土曜（今日）をタップして記録"></button><span class="dotlab dotlab--today">今日</span></div>
-            <div class="dotwrap" role="listitem"><div class="dot" role="img" aria-label="日曜 まだ"></div><span class="dotlab">日</span></div>
+            <!-- JavaScriptで動的生成 -->
           </div>
         </div>
 
@@ -267,7 +261,9 @@
           <button class="rate" aria-pressed="false">ちょっと荒れた</button>
         </div>
 
-        <p class="reminder">リマインドは1日1回まで</p>
+        <div id="historyContainer"></div>
+
+        <p class="reminder" id="reminderStatus">リマインドは1日1回まで</p>
       </section>
 
     </main>

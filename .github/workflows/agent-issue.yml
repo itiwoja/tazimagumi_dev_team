@@ -57,6 +57,12 @@ jobs:
 
       - name: Claude Code 実行
         id: claude
+        # GH_TOKEN を step env で渡すことで、Claude が Bash 内で `gh pr create` を
+        # 実行できるようにする（これが無いと gh が未認証で PR 作成に失敗し、
+        # 実装は済んでいるのに status=blocked になる）。push 認証は checkout 済みの
+        # git remote（IKKI_CLAUDE_TOKEN）が担うが、gh CLI は別途この env を要求する。
+        env:
+          GH_TOKEN: ${{ secrets.IKKI_CLAUDE_TOKEN }}
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
@@ -93,8 +99,9 @@ jobs:
             - 実装方針がIssueから一意に決まらない場合、推測で進めること
 
             ## 完了条件
-            - 実装・確認ができたら、PRを作成し `Closes #${{ github.event.issue.number }}` を
-              本文に含めること。テスト内容・確認したことを具体的に書くこと。
+            - 実装・確認ができたら、`gh pr create --base develop`（gh は認証済み）で PR を作成し、
+              本文に `Closes #${{ github.event.issue.number }}` を含めること。
+              テスト内容・確認したことを具体的に書くこと。作成した PR の URL を pr_url に入れること。
             - 実装を完了できない場合（仕様不明瞭・ブロッカーあり等）、PRは作らず、
               何が問題かを明確にした上で status を "blocked" として報告すること。
 

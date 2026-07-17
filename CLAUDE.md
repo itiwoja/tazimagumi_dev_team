@@ -16,18 +16,20 @@
 - ブランチ名は **`<type>/<kebab-scope>`**（例 `feature/sc01-check-ui`）。`type` は `feature|fix|docs|chore|refactor`。
 - ブランチ名は **半角英小文字・数字・ハイフンのみ**（日本語・空白・大文字・`_` 禁止）。
 - **1ブランチ＝1機能/1タスク**。
+- **作業は毎回 `git worktree` で専用ディレクトリを分けてから始める**（メインの作業ディレクトリで直接 `git switch -c` しない）。詳細は後述の「ワークツリーでの作業（必須）」を参照。
 - 基盤・共有ファイル（`app/css/style.css`・`app/js/state.js`・`app/js/main.js`）は **村上（itiwoja）が一次管理**。大きな変更は要相談。
 - コミットは **`<type>: <要約>`**（`feat|fix|docs|refactor|test|chore`）。
 
 ### 標準フロー
 ```bash
 git switch develop && git pull
-git switch -c feature/<scope>
+git worktree add ../wt-<scope> -b <type>/<scope> develop
+cd ../wt-<scope>
 # 実装 → コミット
 git add . && git commit -m "feat: <要約>"
-git push -u origin feature/<scope>
+git push -u origin <type>/<scope>
 gh pr create --base develop
-# レビュー後マージ → ブランチ削除 → 各自 develop を pull
+# レビュー後マージ → ブランチ削除 → git worktree remove ../wt-<scope> → 各自 develop を pull
 ```
 
 ### 機械可読ルール（このブロックを唯一の正とする）
@@ -43,6 +45,9 @@ branch_rules:
     charset: "a-z 0-9 -"      # 小文字英数とハイフンのみ
     forbidden_in_name: [japanese, whitespace, uppercase, underscore]
     one_branch_one_task: true
+  worktree:
+    required: true            # 毎回のタスクで git worktree を使う（並行作業に限らない）
+    location: outside_repo    # 例: ../wt-<scope>（リポジトリ内には作らない）
   # 担当領域ごとの「代表ブランチ（計画）」。one_branch_one_task のため実ブランチは
   # タスク単位で都度作成し、マージ後は削除する（常設の固定ブランチではない）。
   # 現在オープンな作業ブランチは GitHub を正とする（例: feature/settings-screen ほか）。
@@ -63,16 +68,18 @@ branch_rules:
   workflow:
     - git switch develop
     - git pull
-    - git switch -c <type>/<scope>
+    - git worktree add ../wt-<scope> -b <type>/<scope> develop
+    - cd ../wt-<scope>
     - implement + commit (commit.format)
     - git push -u origin <type>/<scope>
     - gh pr create --base develop
-    - merge after review, delete branch, others pull develop
+    - merge after review, delete branch, git worktree remove ../wt-<scope>, others pull develop
   forbidden:
     - direct push to main or develop
     - creating branches from main
     - multiple features in one branch
     - non-ascii / whitespace / uppercase / underscore in branch name
+    - working directly in the main checkout instead of a dedicated worktree
 ```
 
 ### ブランチ保護ルール（GitHub設定）
@@ -86,9 +93,9 @@ branch_rules:
 - 必須ステータスチェックは未設定（CIが red でもマージ自体は可能）。ただし **red のPRは自己判断でマージしない**。
 - 保護設定自体（レビュー必須化・ステータスチェック必須化など）を変える場合は村上に確認する。
 
-### ワークツリーを使った並行作業
+### ワークツリーでの作業（必須）
 
-複数のタスク（別Issue・別ブランチ）を同時に進めたい時は、メインの作業ディレクトリで `git switch` を繰り返さず、`git worktree` で別ディレクトリに切る。AIエージェントが並行してブランチを触る場合も同様。
+**作業は毎回 `git worktree` で専用ディレクトリを分けてから始める。** 単独のタスクでも例外にしない（メインの作業ディレクトリで直接 `git switch -c` しない）。複数のタスク（別Issue・別ブランチ）を同時に進める時はもちろん、AIエージェントが作業する場合も同様。
 
 ```bash
 # develop起点で新しいworktreeを作る（リポジトリの外、兄弟ディレクトリに置く）

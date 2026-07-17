@@ -138,42 +138,21 @@
       </section>
 
       <!-- ================= S2 ロードマップ（F-02 / REQ-02） ================= -->
-      <!-- ※ 空ハコ。診断結果に応じた動的生成は feature/roadmap-logic / feature/sc02-roadmap-ui で実装 -->
       <section class="screen" id="s2" aria-label="ロードマップ" hidden>
         <div class="done-head compact-head">
           <h2 class="done-title">お疲れさまでした</h2>
-          <p class="done-sub"><b>今日からの3ステップ</b></p>
+          <p class="done-sub">診断完了後にあなた向けのステップが表示されます</p>
         </div>
 
         <div class="card today-card">
           <p class="today-card__k">今日やること</p>
-          <p class="today-card__t">洗顔のあと、化粧水を1本。<b>今日はここまで。</b></p>
+          <p class="today-card__t">診断完了後に表示されます。</p>
         </div>
 
         <p class="sec-label">3ステップ</p>
 
         <ol class="road road--compact">
-          <li class="card road__item">
-            <span class="step-badge" aria-hidden="true">1</span>
-            <div class="road__body">
-              <h3 class="road__t">買う</h3>
-              <p class="road__flow">洗顔 → 化粧水 → 乳液</p>
-            </div>
-          </li>
-          <li class="card road__item">
-            <span class="step-badge" aria-hidden="true">2</span>
-            <div class="road__body">
-              <h3 class="road__t">夜</h3>
-              <p class="road__flow">洗顔 → 化粧水</p>
-            </div>
-          </li>
-          <li class="card road__item">
-            <span class="step-badge" aria-hidden="true">3</span>
-            <div class="road__body">
-              <h3 class="road__t">朝</h3>
-              <p class="road__flow">化粧水 → 日焼け止め</p>
-            </div>
-          </li>
+          <!-- JS (screens.js:renderS2) により動的に生成されます -->
         </ol>
 
         <p class="safety">肌に合わない時は使用をやめ、気になる時は皮膚科へ。</p>

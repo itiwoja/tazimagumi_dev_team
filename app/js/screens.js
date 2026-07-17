@@ -81,6 +81,15 @@
   App.complete = function () {
     if (!state.completed) {
       state.completed = true;
+      
+      // 診断とロードマップ生成を実行して状態に保存
+      try {
+        state.diagnosis = App.diagnose(state.answers);
+        state.roadmap = App.buildRoadmap(state.diagnosis);
+      } catch (error) {
+        console.error("診断またはロードマップ生成に失敗しました:", error);
+      }
+
       qAll(".tab").forEach(function (t) {
         t.classList.remove("is-locked");
         t.removeAttribute("aria-disabled");
@@ -89,6 +98,54 @@
       App.toast("あなた専用の3ステップができました");
     }
     App.showScreen("s2");
+  };
+
+  App.renderS2 = function () {
+    if (!state.completed || !state.diagnosis || !state.roadmap) return;
+
+    var primaryType = state.diagnosis.primaryType;
+    var meta = App.TYPE_META[primaryType];
+    
+    // 見出しの更新
+    var subEl = document.querySelector("#s2 .done-sub");
+    if (subEl && meta) {
+      subEl.innerHTML = "あなたの診断結果：<b>" + meta.name + "</b>";
+    }
+
+    // 「今日やること」カードの動的化（コンセプトを表示）
+    var todayEl = document.querySelector("#s2 .today-card__t");
+    if (todayEl) {
+      var conceptMap = {
+        type1: "汚れ落とし・化粧水・軽めの保湿",
+        type2: "汚れ落とし・化粧水・乳液",
+        type3: "汚れ落とし・化粧水・低刺激寄りの保湿",
+        type4: "汚れ落とし・化粧水・アフターシェーブ保湿",
+        type5: "汚れ落とし・化粧水・うるおい重視の保湿",
+        type6: "汚れ落とし・オールインワン"
+      };
+      var concept = conceptMap[primaryType] || "汚れ落とし・オールインワン";
+      todayEl.innerHTML = "「<b>" + concept + "</b>」を意識して、今日から始めましょう。";
+    }
+
+    // 3ステップロードマップの動的描画
+    var roadListEl = document.querySelector("#s2 .road");
+    if (roadListEl) {
+      var html = "";
+      state.roadmap.forEach(function (step) {
+        html += '<li class="card road__item">';
+        html += '  <span class="step-badge" aria-hidden="true">' + step.order + '</span>';
+        html += '  <div class="road__body">';
+        html += '    <h3 class="road__t">' + step.title + '</h3>';
+        html += '    <p class="road__flow" style="margin-top: 4px; font-size: 13px; color: var(--text-muted); line-height: 1.5;">' + step.body;
+        if (step.term) {
+          html += ' <button type="button" class="term" data-term="' + step.term + '" style="background: none; border: none; color: var(--accent); font-weight: bold; text-decoration: underline; cursor: pointer; padding: 0; font-size: 12px; margin-left: 4px;">' + step.term + 'ってなに？</button>';
+        }
+        html += '    </p>';
+        html += '  </div>';
+        html += '</li>';
+      });
+      roadListEl.innerHTML = html;
+    }
   };
 
   App.showScreen = function (id) {
@@ -104,6 +161,10 @@
 
     $("cta").disabled = false;
     if (id === "s1") { App.renderQuestion(); }
+    else if (id === "s2") {
+      App.renderS2();
+      $("cta").textContent = App.CTA_LABEL[id];
+    }
     else { $("cta").textContent = App.CTA_LABEL[id]; }
     App.setBackVisible(id === "s1" && state.qIndex > 0);
 
@@ -116,6 +177,8 @@
     state.qIndex = 0;
     state.answers = new Array(App.S1_TOTAL).fill(null);
     state.completed = false;
+    state.diagnosis = null;
+    state.roadmap = null;
     App.updateProgress();
     qAll(".chip", $("qstack")).forEach(function (ch) { ch.setAttribute("aria-checked", "false"); });
     qAll(".tab").forEach(function (t) {

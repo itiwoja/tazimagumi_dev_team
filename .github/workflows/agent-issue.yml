@@ -134,13 +134,42 @@ jobs:
 
           SCHEMA='{"type":"object","properties":{"autonomy":{"type":"string","enum":["auto","needs_review","human_only"]},"plan_markdown":{"type":"string"},"blockers":{"type":"array","items":{"type":"string"}}},"required":["autonomy","plan_markdown"]}'
 
-          # -p 非対話 + --json-schema。既定の text 出力なので stdout がそのまま計画JSONになる。
-          # 失敗しても gate で処理するため、ここでは落とさない（|| true）。
+          # 以降は各コマンドの終了コードを自前で扱うため errexit を無効化
+          # （原因切り分け用の計測を最後まで確実に流す）。gate は plan.json の中身で判定する。
+          set +e
+
+          # --- CLI プリフライト（原因の一次切り分け）-------------------------------
+          # 版数 + 「素の疎通（既定モデル・スキーマ無し）」を先に試し、失敗箇所を1回の実行で特定する:
+          #   smoke 失敗                → 認証(OAuthトークン)・オンボーディング・CLIの問題
+          #   smoke 成功 だが 本番 失敗 → Fable モデルへのアクセス or --json-schema の問題
+          # ※原因特定用の一時計測。安定後に間引いてよい。公開リポジトリなのでログ全出しで問題ない。
+          echo "::group::CLI preflight"
+          claude --version
+          claude -p "pong とだけ返して。" --allowedTools "Read" --dangerously-skip-permissions \
+            > "$RUNNER_TEMP/smoke.txt" 2> "$RUNNER_TEMP/smoke.err"
+          SMOKE_RC=$?
+          echo "smoke rc=$SMOKE_RC"
+          echo "--- smoke stdout ---"; head -c 200 "$RUNNER_TEMP/smoke.txt"; echo ""
+          echo "--- smoke stderr ---"; head -c 800 "$RUNNER_TEMP/smoke.err"; echo ""
+          echo "::endgroup::"
+
+          # --- 本番: 計画生成 -----------------------------------------------------
+          # -p 非対話 + --json-schema（既定 text 出力なので stdout がそのまま計画JSONになる）。
+          # フレッシュrunnerのディレクトリ信頼で止まる対策として --dangerously-skip-permissions を付与
+          # （使用ツールは read-only の Read/Grep/Glob のみなので安全）。
           claude -p \
             --model claude-fable-5 \
             --allowedTools "Read,Grep,Glob" \
+            --dangerously-skip-permissions \
             --json-schema "$SCHEMA" \
-            "$PROMPT" > "$RUNNER_TEMP/plan.json" 2> "$RUNNER_TEMP/plan.err" || true
+            "$PROMPT" > "$RUNNER_TEMP/plan.json" 2> "$RUNNER_TEMP/plan.err"
+          CLAUDE_RC=$?
+          # 失敗原因を追えるよう、終了コード・stderr・stdout先頭を Actions ログにも出す。
+          echo "::group::Fable CLI 結果"
+          echo "claude 終了コード: $CLAUDE_RC"
+          echo "----- stderr (plan.err) -----"; cat "$RUNNER_TEMP/plan.err"
+          echo "----- stdout 先頭4000字 (plan.json) -----"; head -c 4000 "$RUNNER_TEMP/plan.json"; echo ""
+          echo "::endgroup::"
 
       - name: 計画の記録・実装可否ゲート
         id: gate

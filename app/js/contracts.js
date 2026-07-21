@@ -108,11 +108,19 @@
   }
 
   function pickCandidatesForType(type, budget) {
-    return buildCategoryGroups(
-      getEligibleProducts(budget).filter(function (product) {
-        return product.type_tags.indexOf(type) !== -1;
-      })
-    );
+    var filtered = getEligibleProducts(budget).filter(function (product) {
+      return product.type_tags.indexOf(type) !== -1;
+    });
+
+    filtered.sort(function (a, b) {
+      var aHasSummary = a.summary_one_liner ? 1 : 0;
+      var bHasSummary = b.summary_one_liner ? 1 : 0;
+      if (aHasSummary !== bHasSummary) return bHasSummary - aHasSummary;
+      if (a.price !== b.price) return a.price - b.price;
+      return (b.volume || 0) - (a.volume || 0);
+    });
+
+    return buildCategoryGroups(filtered);
   }
 
   /**
@@ -140,14 +148,14 @@
     var types = getTypesFromDiagnosis(diagnosis);
     var mainType = types[0] || null;
     var subType = types[1] || null;
-
+    var isComposite = !!(diagnosis && diagnosis.isComposite && subType);
     var main = mainType ? pickCandidatesForType(mainType, budget) : [];
-    var sub = subType ? pickCandidatesForType(subType, budget) : null;
+    var sub = isComposite ? pickCandidatesForType(subType, budget) : null;
 
     return {
       main: main,
-      sub: diagnosis && diagnosis.isComposite && subType ? sub : null,
-      isComposite: !!(diagnosis && diagnosis.isComposite && subType)
+      sub: sub,
+      isComposite: isComposite
     };
   };
 

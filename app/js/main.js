@@ -217,15 +217,7 @@
     App.persist();
   });
 
-  /* ---- [F-06] 今週の自己評価（単一選択・state.records に保存） ---- */
-  qAll(".rate").forEach(function (r) {
-    r.addEventListener("click", function () {
-      qAll(".rate").forEach(function (x) { x.setAttribute("aria-pressed", "false"); });
-      r.setAttribute("aria-pressed", "true");
-      state.records.weekRating = r.textContent.trim();
-      App.persist();
-    });
-  });
+
 
   if (settingsOpenBtn) settingsOpenBtn.addEventListener("click", openSettingsSheet);
   if (settingsClose) settingsClose.addEventListener("click", closeSettingsSheet);

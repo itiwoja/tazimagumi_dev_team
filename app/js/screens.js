@@ -15,6 +15,8 @@
   var App = global.App;
   var $ = App.$, qAll = App.qAll, state = App.state;
 
+  App.prefs = App.loadPrefs();
+
   /* =================== [F-01] S1 初回チェック ウィザード =================== */
   function currentQCard() {
     return $("qstack").querySelector('.qcard[data-q="' + state.qIndex + '"]');
@@ -114,12 +116,39 @@
     state.qIndex = 0;
     state.answers = new Array(App.S1_TOTAL).fill(null);
     state.completed = false;
+    App.updateProgress();
     qAll(".chip", $("qstack")).forEach(function (ch) { ch.setAttribute("aria-checked", "false"); });
     qAll(".tab").forEach(function (t) {
       var go = t.getAttribute("data-go");
       t.classList.remove("is-done");
       if (go !== "s1") { t.classList.add("is-locked"); t.setAttribute("aria-disabled", "true"); }
     });
+    App.renderQuestion();
+  };
+
+  App.saveReminderTime = function (time) {
+    var nextTime = typeof time === "string" ? time.trim() : "";
+    App.prefs = { reminderTime: nextTime };
+    App.syncPrefs();
+    var input = $("reminderTime");
+    if (input && input.value !== nextTime) input.value = nextTime;
+    App.toast(nextTime ? "リマインド時刻を保存しました" : "リマインド時刻を空にしました");
+    return App.prefs;
+  };
+
+  App.clearLocalData = function () {
+    // 本体の永続化データ（midashinami:v1）は storage 層の clear で消す。
+    // 直後の resetS1/showScreen の自動保存で初期状態が再保存されるが、
+    // 個人データは含まれない
+    if (App.storage) App.storage.clear();
+    var keys = App.LOCAL_KEYS;
+    [keys.answers, keys.result, keys.continuity, keys.prefs].forEach(function (key) {
+      try { global.localStorage.removeItem(key); } catch (error) {}
+    });
+    App.prefs = { reminderTime: "" };
+    App.resetS1();
+    App.showScreen("s1");
+    App.toast("保存データを削除しました");
   };
 
   /* =================== [F-03/04/05] S3 商品候補（データ駆動の予算カウント） =================== */

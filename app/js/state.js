@@ -98,6 +98,38 @@
     return true;
   };
 
+  // GitHub Pages は <user>.github.io 配下の全リポジトリで localStorage を
+  // 共有するため、実際に読み書きするキーは "midashinami:" で名前空間を切る
+  App.LOCAL_KEYS = {
+    answers: "diagnosis_answers",
+    result: "diagnosis_result",
+    continuity: "continuity_log",
+    prefs: "midashinami:prefs:v1"
+  };
+
+  App.prefs = {
+    reminderTime: ""
+  };
+
+  App.loadPrefs = function () {
+    try {
+      var raw = global.localStorage.getItem(App.LOCAL_KEYS.prefs);
+      if (!raw) return App.prefs;
+      var parsed = JSON.parse(raw);
+      return {
+        reminderTime: typeof parsed.reminderTime === "string" ? parsed.reminderTime : ""
+      };
+    } catch (error) {
+      return App.prefs;
+    }
+  };
+
+  App.syncPrefs = function () {
+    try {
+      global.localStorage.setItem(App.LOCAL_KEYS.prefs, JSON.stringify(App.prefs));
+    } catch (error) {}
+  };
+
   /* ---- DOM ヘルパ ---- */
   App.$ = function (id) { return document.getElementById(id); };
   App.qAll = function (sel, root) {

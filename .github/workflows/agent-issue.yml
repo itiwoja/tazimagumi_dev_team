@@ -134,29 +134,14 @@ jobs:
 
           SCHEMA='{"type":"object","properties":{"autonomy":{"type":"string","enum":["auto","needs_review","human_only"]},"plan_markdown":{"type":"string"},"blockers":{"type":"array","items":{"type":"string"}}},"required":["autonomy","plan_markdown"]}'
 
-          # 以降は各コマンドの終了コードを自前で扱うため errexit を無効化
-          # （原因切り分け用の計測を最後まで確実に流す）。gate は plan.json の中身で判定する。
+          # claude の終了コードを自前で扱うため errexit を無効化（失敗しても gate が
+          # plan.json の中身で判定してエスカレーションする）。
           set +e
 
-          # --- CLI プリフライト（原因の一次切り分け）-------------------------------
-          # 版数 + 「素の疎通（既定モデル・スキーマ無し）」を先に試し、失敗箇所を1回の実行で特定する:
-          #   smoke 失敗                → 認証(OAuthトークン)・オンボーディング・CLIの問題
-          #   smoke 成功 だが 本番 失敗 → Fable モデルへのアクセス or --json-schema の問題
-          # ※原因特定用の一時計測。安定後に間引いてよい。公開リポジトリなのでログ全出しで問題ない。
-          echo "::group::CLI preflight"
-          claude --version
-          claude -p "pong とだけ返して。" --allowedTools "Read" --dangerously-skip-permissions \
-            > "$RUNNER_TEMP/smoke.txt" 2> "$RUNNER_TEMP/smoke.err"
-          SMOKE_RC=$?
-          echo "smoke rc=$SMOKE_RC"
-          echo "--- smoke stdout ---"; head -c 200 "$RUNNER_TEMP/smoke.txt"; echo ""
-          echo "--- smoke stderr ---"; head -c 800 "$RUNNER_TEMP/smoke.err"; echo ""
-          echo "::endgroup::"
-
-          # --- 本番: 計画生成 -----------------------------------------------------
-          # -p 非対話 + --json-schema（既定 text 出力なので stdout がそのまま計画JSONになる）。
-          # フレッシュrunnerのディレクトリ信頼で止まる対策として --dangerously-skip-permissions を付与
-          # （使用ツールは read-only の Read/Grep/Glob のみなので安全）。
+          # 計画生成: -p 非対話 + --json-schema（既定 text 出力なので stdout がそのまま計画JSONになる）。
+          # --dangerously-skip-permissions は必須。これが無いとフレッシュrunnerのディレクトリ信頼
+          # ゲートで claude -p が止まり、空出力→無効JSON→blocked になる（#178 で原因特定済み）。
+          # 使用ツールは read-only の Read/Grep/Glob のみなので付与しても安全。
           claude -p \
             --model claude-fable-5 \
             --allowedTools "Read,Grep,Glob" \
@@ -164,11 +149,10 @@ jobs:
             --json-schema "$SCHEMA" \
             "$PROMPT" > "$RUNNER_TEMP/plan.json" 2> "$RUNNER_TEMP/plan.err"
           CLAUDE_RC=$?
-          # 失敗原因を追えるよう、終了コード・stderr・stdout先頭を Actions ログにも出す。
-          echo "::group::Fable CLI 結果"
-          echo "claude 終了コード: $CLAUDE_RC"
-          echo "----- stderr (plan.err) -----"; cat "$RUNNER_TEMP/plan.err"
-          echo "----- stdout 先頭4000字 (plan.json) -----"; head -c 4000 "$RUNNER_TEMP/plan.json"; echo ""
+          # 失敗時に原因を追えるよう、終了コードと stderr は常にログへ出す（成功時 stderr は空でノイズ無し）。
+          # 計画本文(stdout)は gate が Issue コメントに全文投稿するため、ここでは出さない。
+          echo "::group::Fable CLI 結果 (rc=$CLAUDE_RC)"
+          cat "$RUNNER_TEMP/plan.err"
           echo "::endgroup::"
 
       - name: 計画の記録・実装可否ゲート

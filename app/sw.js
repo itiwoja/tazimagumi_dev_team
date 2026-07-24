@@ -2,7 +2,7 @@
 "use strict";
 
 var CACHE_NAME = "tazimagumi-app-v19"; // 結果カード演出を更新（Issue #67）
-// index.html の読み込み順に合わせる: data → state → storage → contracts → disclaimer → screens → debug → main
+// index.html の読み込み順に合わせる: data → state → storage → contracts → disclaimer → screens → debug → main → sw-register
 var APP_SHELL = [
   "./",
   "./index.html",
@@ -16,6 +16,7 @@ var APP_SHELL = [
   "./js/screens.js",
   "./js/debug.js",
   "./js/main.js",
+  "./js/sw-register.js",
   "./manifest.webmanifest",
   "./icons/icon-192.png",
   "./icons/icon-512.png",

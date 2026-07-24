@@ -7,7 +7,6 @@
 
   /**
    * @typedef {Object} Product
-　　feature/recommend-logic
    * @property {string} id
    * @property {string} category
    * @property {string} name
@@ -19,7 +18,6 @@
    * @property {string} feel
    * @property {string} scent
    * @property {string[]} ingredients
-=======
    * @property {string} id           一意ID
    * @property {string} category     カテゴリ（例: "化粧水"）
    * @property {string} name         商品名
@@ -35,7 +33,6 @@
    *                                   type1 皮脂 / type2 乾燥 / type3 炎症・肌荒れ /
    *                                   type4 髭剃り後 / type5 加齢 / type6 入門
    * @property {string} summary_one_liner 初心者向け「違いの一言」
- develop
    */
 
   /** @type {Product[]} */
@@ -47,11 +44,7 @@
       price: 1320,
       volume: 200,
       budget: "sub",
- feature/recommend-logic
-      type_tags: ["type1", "type6"],
-=======
       typeTags: ["type1", "type6"],
- develop
       summary_one_liner: "さっぱり使えて、はじめの1本に選びやすい",
       feel: "さっぱり",
       scent: "無香料",
@@ -64,11 +57,7 @@
       price: 1480,
       volume: 180,
       budget: "sub",
- feature/recommend-logic
-      type_tags: ["type2", "type5"],
-=======
       typeTags: ["type2", "type5"],
- develop
       summary_one_liner: "しっとり感を重視した、乾燥しやすい人向け",
       feel: "しっとり",
       scent: "無香料",
@@ -81,11 +70,7 @@
       price: 990,
       volume: 150,
       budget: "sub",
- feature/recommend-logic
-      type_tags: ["type1", "type3"],
-=======
       typeTags: ["type1", "type3"],
- develop
       summary_one_liner: "さっぱり系で、ベタつきやすい人に使いやすい",
       feel: "さっぱり",
       scent: "無香料",

@@ -5,8 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>男の身だしなみアプリ｜基盤アプリ（MVP）</title>
 <meta name="description" content="身だしなみ初心者向けアプリ MVP の基盤（初回チェック→ロードマップ→商品比較→継続記録）。バニラJS・ビルド不要。">
+ feature/csp-meta-tag
+<meta name="theme-color" content="#ffffff">
+<!-- CSP（Issue #86）: 静的サイトでも防御方針を明示。外部読み込みは Google Fonts のみ許可し、他は self に限定 -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self'; connect-src 'self'; manifest-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'">
 <meta name="theme-color" media="(prefers-color-scheme: light)" content="#fff7ee">
 <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#15110d">
+ develop
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="icon" href="./icons/icon-192.png" sizes="192x192" type="image/png">
 <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
@@ -63,7 +68,7 @@
       </nav>
 
       <div class="progress" role="progressbar" aria-label="全体の進捗" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progressBar">
-        <span class="progress__fill" id="progressFill" style="--p:.04"></span>
+        <span class="progress__fill" id="progressFill"></span>
       </div>
     </div>
 
@@ -352,22 +357,6 @@
   </footer>
 </div>
 
-<script>
-  (function () {
-    "use strict";
-
-    var canUseServiceWorker =
-      "serviceWorker" in navigator &&
-      (location.protocol === "http:" || location.protocol === "https:");
-
-    if (!canUseServiceWorker) return;
-
-    window.addEventListener("load", function () {
-      navigator.serviceWorker.register("./sw.js").catch(function (error) {
-        console.info("Service Worker registration skipped:", error);
-      });
-    });
-  })();
-</script>
+<script src="./js/sw-register.js" defer></script>
 </body>
 </html>

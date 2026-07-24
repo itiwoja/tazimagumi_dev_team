@@ -89,7 +89,7 @@
 
     if (!roadmapList || !meta || !Array.isArray(steps) || steps.length === 0) return;
 
-    if (typeLabel) typeLabel.textContent = "あなた向けの「" + meta.name + "」プラン";
+    if (typeLabel) typeLabel.textContent = "あなたは「" + meta.name + "」タイプの傾向がありそうです";
     if (todayCopy) {
       todayCopy.textContent = steps[0].body + " ";
       var todayEnd = document.createElement("b");
@@ -134,8 +134,22 @@
     });
   };
 
+  App.playResultReveal = function () {
+    var card = $("s2ResultCard");
+    if (!card) return;
+
+    card.classList.remove("result-card--revealing");
+    // Force a reflow so the same animation can play after a fresh diagnosis.
+    void card.offsetWidth;
+    card.classList.add("result-card--revealing");
+    card.addEventListener("animationend", function () {
+      card.classList.remove("result-card--revealing");
+    }, { once: true });
+  };
+
   /* =================== 完了 / 画面遷移 =================== */
   App.complete = function () {
+    var completedNow = !state.completed;
     if (!state.completed) {
       state.completed = true;
       
@@ -155,6 +169,7 @@
       App.toast("あなた専用の3ステップができました");
     }
     App.showScreen("s2");
+    if (completedNow) App.playResultReveal();
   };
 
   App.showScreen = function (id) {

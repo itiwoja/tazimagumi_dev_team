@@ -1,18 +1,35 @@
 name: ikki-claude Issue Agent
 
 # ikki-claude にアサイン + agent-ready ラベルが付いた Issue を検知し、
-# Claude Code（サブスクOAuthトークン）で自律実装 → develop 向けPR作成まで行う。
+# 2フェーズ（モデル切り替え）で自律実装 → develop 向けPR作成まで行う。
+#
+#   フェーズ1 調査・計画: Fable 5（claude-fable-5）
+#     - 素の `claude` CLI を read-only ツール（Read/Grep/Glob）だけで実行。
+#       claude-code-action は read-only 指定でも内部でブランチ/PRを作りうるため、
+#       「git 副作用ゼロで計画だけ作る」用途には向かない。CLI を直接使う。
+#     - 出力（実装計画＋自律可否判定）はリポジトリ外の $RUNNER_TEMP に置き、
+#       フェーズ2 のブランチと衝突させない。
+#     - 計画は必ず Issue コメントに記録する（透明性）。
+#     - 「推測なしで実装できる」と判定できなければ agent-blocked にして人間へ返す
+#       （実装フェーズは走らせない）。
+#
+#   フェーズ2 実装・テスト: Sonnet 5（claude-sonnet-5）
+#     - claude-code-action で、確定した計画に従って実装・テストし PR を作成。
+#     - マージは絶対にしない。PR作成までで必ず人間の承認待ちに戻す。
 #
 # 設計方針（起票時のIssue議論を参照）:
 #   - 発火条件はGitHubのWebhookイベントそのもの（issues: assigned/labeled）。
-#     ポーリングや「これはテストです」的な自己言及メッセージを使わないため、
-#     Claude自身が「検証されていない自動トリガー」として拒否する問題を回避できる。
 #   - マージは絶対にしない。PR作成までで必ず人間の承認待ちに戻す。
-#   - 実装できない/仕様が曖昧な場合は agent-blocked ラベルで人間にエスカレーションする。
-#     生成AIの当て推量でPRを作らない。
+#   - 実装方針が一意に決まらない場合は agent-blocked で人間にエスカレーションする。
+#     生成AIの当て推量でPRを作らない（計画フェーズがゲートを兼ねる）。
+#   - Actions の成否表示は「PRができたか」に揃える: 緑(success)=PR作成(agent-review) /
+#     赤(failure)=計画ゲート差し戻し・実装未完了(agent-blocked)・エラー。
+#     ラベル/コメントを書き終えてから run を落とすので、状態遷移は壊さない。
+#     Issueラベル（agent-review / agent-blocked）と run の緑赤は必ず一致する。
 #
 # 必要な repository secrets（GitHub側で人間が設定。値はこのファイルには書かない）:
-#   CLAUDE_CODE_OAUTH_TOKEN - `claude setup-token` で生成（Claude Pro/Maxサブスク認証）
+#   CLAUDE_CODE_OAUTH_TOKEN - `claude setup-token` で生成（Claude Pro/Maxサブスク認証）。
+#                             Fable 5 / Sonnet 5 両方へのアクセスに使う。
 #   IKKI_CLAUDE_TOKEN       - ikki-claude アカウントの PAT（repo scope）
 #   IKKI_CLAUDE_EMAIL       - ikki-claude アカウントで verified な email（コミット帰属に必要）
 #   IKKI_CLAUDE_USER_ID     - `gh api users/ikki-claude --jq .id` の数値ID
@@ -55,8 +72,166 @@ jobs:
           token: ${{ secrets.IKKI_CLAUDE_TOKEN }}
           fetch-depth: 0
 
-      - name: Claude Code 実行
+      # ── フェーズ1: 調査・計画（Fable 5, read-only）────────────────────────────
+      # 計画フェーズは claude-code-action ではなく素の CLI を使う（理由は先頭コメント参照）。
+      # npm 経由でインストール。--json-schema を使うため十分新しい版が必要（npm latest でよい）。
+      - name: Claude CLI を用意（計画フェーズ用）
+        continue-on-error: true
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: フェーズ1 調査・計画（Fable 5）
+        id: plan
+        # 計画フェーズで落ちても、次の gate ステップで agent-blocked に着地させたいので
+        # ここでジョブを止めない。CLI未導入・トークン失効・モデル未アクセス等はすべて gate が処理。
+        continue-on-error: true
+        # Issue のタイトル・本文は env 経由で渡す（run スクリプトへ直接展開しない）。
+        # 本文にアポストロフィやバッククォート等が入ってもシェル構文を壊さず、
+        # 任意コマンド実行のリスクも塞げる（フェーズ2の summary 受け渡しと同じ方針）。
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -o pipefail
+          # 固定の指示部（'EOF' クォートで変数展開を止める）
+          INSTRUCTIONS=$(cat <<'EOF'
+          あなたは田島組（卒業制作「男の身だしなみアプリ」）の自律実装エージェントの
+          「調査・計画」担当です。今回はコードを一切変更しません。後段で別モデル（Sonnet 5）が
+          迷わず・最小トークンで実装できる「実装計画」を作ることだけが仕事です。
+
+          ## やること
+          1. このリポジトリの既存実装を調査する（app/ 配下の HTML/CSS/JS、docs/specs の仕様書）。
+             使ってよいツールは Read / Grep / Glob のみ。ファイル変更・git 操作は一切禁止。
+          2. 下記 Issue を実装するための計画を、実装担当がそのまま辿れる粒度で作る。
+             - 触るファイルの現状（実装済みか未実装か）
+             - 変更対象ファイル（new / edit。共有ファイル app/css/style.css・app/js/state.js・
+               app/js/main.js を含むかどうか明示）
+             - 関数名・データ構造まで踏み込んだ順序つき実装手順
+             - スコープ外（やらないこと）
+             - 完了条件（受け入れ基準・変更した各JSの node --check・PR本文の Closes #<番号>）
+          3. この Issue を「推測なしで」自律実装できるか判定する。
+             仕様が一意に決まらない点が一つでも残るなら autonomy を "needs_review" か
+             "human_only" にし、blockers に具体的に列挙する（勝手に埋めない）。
+
+          ## 出力（構造化・スキーマ厳守）
+          - autonomy: auto（推測なしで実装可）/ needs_review（一部人間判断が要る）/
+                      human_only（人間対応が必要）
+          - plan_markdown: 上記の計画を Markdown で。実装担当への指示書として単体で完結させる。
+          - blockers: 曖昧・不足している点の配列（無ければ空配列）
+          EOF
+          )
+          # Issue コンテキストを付与（env 変数はここで文字列として埋め込むだけ。再評価されない）
+          PROMPT="${INSTRUCTIONS}
+
+          ---
+          リポジトリ: ${REPO}
+          Issue番号: #${ISSUE_NUMBER}
+          タイトル: ${ISSUE_TITLE}
+          本文:
+          ${ISSUE_BODY}"
+
+          SCHEMA='{"type":"object","properties":{"autonomy":{"type":"string","enum":["auto","needs_review","human_only"]},"plan_markdown":{"type":"string"},"blockers":{"type":"array","items":{"type":"string"}}},"required":["autonomy","plan_markdown"]}'
+
+          # claude の終了コードを自前で扱うため errexit を無効化（失敗しても gate が
+          # plan.json の中身で判定してエスカレーションする）。
+          set +e
+
+          # 計画生成: -p 非対話 + --json-schema（既定 text 出力なので stdout がそのまま計画JSONになる）。
+          # --dangerously-skip-permissions は必須。これが無いとフレッシュrunnerのディレクトリ信頼
+          # ゲートで claude -p が止まり、空出力→無効JSON→blocked になる（#178 で原因特定済み）。
+          # 使用ツールは read-only の Read/Grep/Glob のみなので付与しても安全。
+          claude -p \
+            --model claude-fable-5 \
+            --allowedTools "Read,Grep,Glob" \
+            --dangerously-skip-permissions \
+            --json-schema "$SCHEMA" \
+            "$PROMPT" > "$RUNNER_TEMP/plan.json" 2> "$RUNNER_TEMP/plan.err"
+          CLAUDE_RC=$?
+          # 失敗時に原因を追えるよう、終了コードと stderr は常にログへ出す（成功時 stderr は空でノイズ無し）。
+          # 計画本文(stdout)は gate が Issue コメントに全文投稿するため、ここでは出さない。
+          echo "::group::Fable CLI 結果 (rc=$CLAUDE_RC)"
+          cat "$RUNNER_TEMP/plan.err"
+          echo "::endgroup::"
+
+      - name: 計画の記録・実装可否ゲート
+        id: gate
+        if: always()
+        # 計画を Issue に記録し、自律可否で実装フェーズへ進むか（人間へ返すか）を決める。
+        env:
+          GH_TOKEN: ${{ secrets.IKKI_CLAUDE_TOKEN }}
+        run: |
+          PLAN_JSON="$RUNNER_TEMP/plan.json"
+          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          ISSUE="${{ github.event.issue.number }}"
+          REPO="${{ github.repository }}"
+
+          escalate_blocked () {
+            # $1: Issueに書く本文（複数行可）
+            echo "proceed=false" >> "$GITHUB_OUTPUT"
+            gh issue edit "$ISSUE" --repo "$REPO" \
+              --remove-label "agent-in-progress" --add-label "agent-blocked"
+            printf '%s\n' "$1" > "$RUNNER_TEMP/gate_comment.md"
+            gh issue comment "$ISSUE" --repo "$REPO" --body-file "$RUNNER_TEMP/gate_comment.md"
+          }
+
+          # 計画フェーズが落ちた / 出力が壊れている場合は blocked 扱い
+          if [ "${{ steps.plan.outcome }}" != "success" ] || ! jq -e . "$PLAN_JSON" >/dev/null 2>&1; then
+            escalate_blocked "計画フェーズ（Fable 5）を完了できませんでした。
+
+          Fable モデルへのアクセス不可・OAuthトークン失効・CLIエラーなどが考えられます。
+          実行ログ: $RUN_URL
+
+          再着手させる場合は agent-blocked を外して agent-ready を付け直してください。"
+            # PRは作られていない。緑=PR成功に揃えるため run を赤(失敗)で終える
+            # （ラベル/コメントは escalate_blocked 内で書き終えているので状態遷移は完了済み）。
+            exit 1
+          fi
+
+          AUTONOMY=$(jq -r '.autonomy // "human_only"' "$PLAN_JSON")
+          jq -r '.plan_markdown // "(計画本文を取得できませんでした)"' "$PLAN_JSON" > "$RUNNER_TEMP/plan.md"
+          BLOCKERS=$(jq -r '(.blockers // []) | map("- " + .) | join("\n")' "$PLAN_JSON")
+
+          # 計画は必ず Issue に記録（透明性）
+          {
+            echo "## 🔎 実装計画（Fable 5 自動生成）"
+            echo ""
+            echo "**自律可否**: \`$AUTONOMY\`"
+            echo ""
+            cat "$RUNNER_TEMP/plan.md"
+            if [ -n "$BLOCKERS" ]; then
+              echo ""
+              echo "### ⚠️ 未確定・要判断の点"
+              echo "$BLOCKERS"
+            fi
+            echo ""
+            echo "<sub>調査・計画: Fable 5 ／ 実装・テスト: Sonnet 5（自動）・ログ: $RUN_URL</sub>"
+          } > "$RUNNER_TEMP/plan_comment.md"
+          gh issue comment "$ISSUE" --repo "$REPO" --body-file "$RUNNER_TEMP/plan_comment.md"
+
+          # 推測実装を避けるゲート: auto かつ blockers 空でなければ実装へ進めない
+          if [ "$AUTONOMY" != "auto" ] || [ -n "$BLOCKERS" ]; then
+            escalate_blocked "計画の結果、自律実装を見送りました（推測実装を避けるため）。
+
+          上のコメントの「未確定・要判断の点」を解消し、Issue本文を具体化してから、
+          agent-blocked を外して agent-ready を付け直してください。"
+            # 計画ゲートで差し戻し（PRなし）。緑=PR成功に揃えるため run を赤(失敗)で終える。
+            exit 1
+          fi
+
+          # 実装フェーズ（Sonnet 5）へ計画を引き渡す
+          echo "proceed=true" >> "$GITHUB_OUTPUT"
+          {
+            echo "PLAN_MD<<__PLAN_EOF__"
+            cat "$RUNNER_TEMP/plan.md"
+            echo "__PLAN_EOF__"
+          } >> "$GITHUB_ENV"
+
+      # ── フェーズ2: 実装・テスト（Sonnet 5）────────────────────────────────────
+      - name: フェーズ2 実装・テスト（Sonnet 5）
         id: claude
+        if: steps.gate.outputs.proceed == 'true'
         # GH_TOKEN を step env で渡すことで、Claude が Bash 内で `gh pr create` を
         # 実行できるようにする（これが無いと gh が未認証で PR 作成に失敗し、
         # 実装は済んでいるのに status=blocked になる）。push 認証は checkout 済みの
@@ -74,14 +249,16 @@ jobs:
           branch_prefix: "feature/issue-"
           prompt: |
             あなたは itiwoja のチーム（田島組・卒業制作「男の身だしなみアプリ」）の
-            自律実装エージェント（GitHubアカウント: ikki-claude）です。
-            以下の Issue を実装し、develop 向けの Pull Request を作成してください。
+            自律実装エージェント（GitHubアカウント: ikki-claude）の「実装・テスト」担当です。
+            調査・計画は別モデル（Fable 5）が完了済みです。下記の確定した実装計画に従って
+            実装・テストし、develop 向けの Pull Request を作成してください。
 
             リポジトリ: ${{ github.repository }}
             Issue番号: #${{ github.event.issue.number }}
             タイトル: ${{ github.event.issue.title }}
-            本文:
-            ${{ github.event.issue.body }}
+
+            ## 確定済みの実装計画（この通りに実装する。方針を勝手に変えない）
+            ${{ env.PLAN_MD }}
 
             ## 必ず守るルール（このリポジトリの CLAUDE.md / AGENTS.md より）
             - ブランチは develop から切る（base_branch指定済み）。
@@ -95,14 +272,15 @@ jobs:
 
             ## 絶対にしてはいけないこと
             - develop / main への直接push、PRの自己マージ
-            - Issue本文にない機能の追加（スコープ拡張はしない）
-            - 実装方針がIssueから一意に決まらない場合、推測で進めること
+            - 計画・Issue本文にない機能の追加（スコープ拡張はしない）
+            - 計画に書かれていない方針判断が新たに必要になった場合、推測で進めること
+              （その場合は実装せず status を "blocked" として報告すること）
 
             ## 完了条件
             - 実装・確認ができたら、`gh pr create --base develop`（gh は認証済み）で PR を作成し、
               本文に `Closes #${{ github.event.issue.number }}` を含めること。
               テスト内容・確認したことを具体的に書くこと。作成した PR の URL を pr_url に入れること。
-            - 実装を完了できない場合（仕様不明瞭・ブロッカーあり等）、PRは作らず、
+            - 実装を完了できない場合（計画で想定外の障害・仕様の穴が判明等）、PRは作らず、
               何が問題かを明確にした上で status を "blocked" として報告すること。
 
             最終応答は必ず下記スキーマに従う構造化出力にすること。
@@ -111,12 +289,15 @@ jobs:
           # 剥がされてしまい、キー・値の "" が消えた不正なJSONが --json-schema に渡り、
           # claude プロセスが "JSON Parse error: Expected '}'" で exit 1 する
           # （run 29556365774 ほかで確認。#109/#110/#112 が全て agent-blocked になった原因）。
+          # --model でこのフェーズのモデルを Sonnet 5 に固定する（計画フェーズは Fable 5）。
           claude_args: |
             --allowedTools "Bash,Read,Write,Edit,Grep,Glob"
+            --model claude-sonnet-5
             --json-schema '{"type":"object","properties":{"status":{"type":"string","enum":["pr_opened","blocked"]},"pr_url":{"type":"string"},"summary":{"type":"string"}},"required":["status","summary"]}'
 
-      - name: 結果に応じてラベル・コメントを更新
-        if: always()
+      - name: 実装結果に応じてラベル・コメントを更新
+        # 実装フェーズが走った場合のみ（proceed=false は gate 側で既にラベル/コメント確定済み）。
+        if: always() && steps.gate.outputs.proceed == 'true'
         # structured_output（Claudeが書く自由記述の summary を含む）を
         # env経由で渡す。以前は `echo '${{ steps.claude.outputs.structured_output }}'`
         # のようにシングルクォート文字列へ直接埋め込んでおり、summary内にアポストロフィ
@@ -146,6 +327,8 @@ jobs:
               echo "人間の判断・修正をお願いします。再度自律着手させる場合は agent-blocked を外して agent-ready を付け直してください。"
             } > /tmp/agent-comment.md
             gh issue comment "${{ github.event.issue.number }}" --repo "${{ github.repository }}" --body-file /tmp/agent-comment.md
+            # 実装が完了せずPRなし（agent-blocked）→ 緑=PR成功に揃えるため run を赤(失敗)で終える。
+            exit 1
           else
             gh issue edit "${{ github.event.issue.number }}" --repo "${{ github.repository }}" \
               --remove-label "agent-in-progress" --add-label "agent-review"

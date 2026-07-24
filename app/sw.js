@@ -1,7 +1,7 @@
 /* global self, caches, fetch */
 "use strict";
 
-var CACHE_NAME = "tazimagumi-app-v5"; // storage.js/disclaimer.js の登録もれ修正のため+1（Issue #107）
+var CACHE_NAME = "tazimagumi-app-v17"; // appアセット更新のため+1（Issue #107）
 // index.html の読み込み順に合わせる: data → state → storage → contracts → disclaimer → screens → debug → main
 var APP_SHELL = [
   "./",

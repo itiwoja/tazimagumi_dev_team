@@ -66,7 +66,7 @@ cd tazimagumi_dev_team
 
 ## 直近の目標
 
-- **2026-08-31 に最小機能アプリを GitHub Pages で Web公開**（[`docs/schedule/ガントチャート_v2.0.md`](docs/schedule/ガントチャート_v2.0.md) の M-MVP）。
+- **2026-08-31 に最小機能アプリを GitHub Pages で Web公開**（[`docs/schedule/ガントチャート_v2.2.md`](docs/schedule/ガントチャート_v2.2.md) の M-MVP）。
 - まず村上が基盤を先行構築（M-Base）→ 各機能を feature ブランチで分担。
 
 ---

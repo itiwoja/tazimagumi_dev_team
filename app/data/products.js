@@ -1,18 +1,25 @@
 /* =====================================================================
-   商品データ（手動整備マスター） — F-03/F-04/F-05 の土台
-   担当タスク: [DATA] 商品データ整備（30-50件・成分タグ）
-   ---------------------------------------------------------------------
-   方針（要件定義書 REQ-03/05 / 機能定義書 F-05）:
-   - 成分は「配合の有無」という事実のみ。安全/危険・効く/効かないは書かない。
-   - 効能の断定表現（効く・治る・最適 等）は禁止（薬機法）。
-   - 予算帯は core(〜5,000円) / sub(〜1,500円) の2区分。
-   - グローバル window.PRODUCTS として読み込む（ビルド不要）。
+   Product master for recommendation logic.
+   MVP keeps a small, local-only dataset.
    ===================================================================== */
 (function (global) {
   "use strict";
 
   /**
    * @typedef {Object} Product
+　　feature/recommend-logic
+   * @property {string} id
+   * @property {string} category
+   * @property {string} name
+   * @property {number} price
+   * @property {number} volume
+   * @property {("core"|"sub")} budget
+   * @property {string[]} type_tags
+   * @property {string} summary_one_liner
+   * @property {string} feel
+   * @property {string} scent
+   * @property {string[]} ingredients
+=======
    * @property {string} id           一意ID
    * @property {string} category     カテゴリ（例: "化粧水"）
    * @property {string} name         商品名
@@ -28,6 +35,7 @@
    *                                   type1 皮脂 / type2 乾燥 / type3 炎症・肌荒れ /
    *                                   type4 髭剃り後 / type5 加齢 / type6 入門
    * @property {string} summary_one_liner 初心者向け「違いの一言」
+ develop
    */
 
   /** @type {Product[]} */
@@ -39,7 +47,11 @@
       price: 1320,
       volume: 200,
       budget: "sub",
+ feature/recommend-logic
+      type_tags: ["type1", "type6"],
+=======
       typeTags: ["type1", "type6"],
+ develop
       summary_one_liner: "さっぱり使えて、はじめの1本に選びやすい",
       feel: "さっぱり",
       scent: "無香料",
@@ -52,7 +64,11 @@
       price: 1480,
       volume: 180,
       budget: "sub",
+ feature/recommend-logic
+      type_tags: ["type2", "type5"],
+=======
       typeTags: ["type2", "type5"],
+ develop
       summary_one_liner: "しっとり感を重視した、乾燥しやすい人向け",
       feel: "しっとり",
       scent: "無香料",
@@ -65,7 +81,11 @@
       price: 990,
       volume: 150,
       budget: "sub",
+ feature/recommend-logic
+      type_tags: ["type1", "type3"],
+=======
       typeTags: ["type1", "type3"],
+ develop
       summary_one_liner: "さっぱり系で、ベタつきやすい人に使いやすい",
       feel: "さっぱり",
       scent: "無香料",
@@ -232,12 +252,11 @@
   global.PRODUCTS = PRODUCTS;
 
   /**
-   * 予算帯でしぼり込む。
    * @param {("core"|"sub")} budget
    * @returns {Product[]}
    */
   global.filterProductsByBudget = function (budget) {
-    if (budget === "core") return PRODUCTS.slice(); // core は全件が対象(〜5,000円)
+    if (budget === "core") return PRODUCTS.slice();
     return PRODUCTS.filter(function (p) { return p.budget === "sub"; });
   };
 })(window);

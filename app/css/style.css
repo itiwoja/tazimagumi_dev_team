@@ -383,7 +383,7 @@ b{font-weight:700}
   .cand__name{font-size:13px}
   .cand__price{font-size:12px}
   .cand__vol{font-size:10px}
-  .tags,.ghost-btn{display:none}
+  .tags{display:none}
   .compare__row{grid-template-columns:64px 1fr 1fr}
   .compare__lab,.compare__cell{padding:6px;font-size:11px}
   .compare__lab{font-size:10.5px}

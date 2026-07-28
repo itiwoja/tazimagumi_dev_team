@@ -1,7 +1,7 @@
 /* global self, caches, fetch */
 "use strict";
 
-var CACHE_NAME = "tazimagumi-app-v20"; // PC幅の2カラムレイアウト追加（Issue #107）
+var CACHE_NAME = "tazimagumi-app-v21"; // S3 推薦ロジックの画面結線（Issue #107 / #61）
 // index.html の読み込み順に合わせる: data → state → storage → contracts → disclaimer → screens → debug → main → sw-register
 var APP_SHELL = [
   "./",

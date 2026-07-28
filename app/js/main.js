@@ -193,7 +193,7 @@
     }
   });
 
-  /* ---- [F-03] 予算トグル（件数はデータ連動） ---- */
+  /* ---- [F-03] 予算トグル（候補・比較表もデータ連動） ---- */
   qAll(".budget__btn").forEach(function (b) {
     b.addEventListener("click", function () {
       qAll(".budget__btn").forEach(function (x) {
@@ -201,7 +201,11 @@
       });
       b.classList.add("is-on"); b.setAttribute("aria-pressed", "true");
       var key = b.getAttribute("data-budget");
-      App.updateBudgetCount(key);
+      if (typeof App.renderS3 === "function") {
+        App.renderS3();
+      } else {
+        App.updateBudgetCount(key);
+      }
       if (key === "sub") App.toast("まず1本だけ。これで十分はじめられます");
     });
   });

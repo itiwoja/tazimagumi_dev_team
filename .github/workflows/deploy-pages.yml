@@ -1,14 +1,22 @@
 name: Deploy to GitHub Pages
 
-# main へのマージをトリガーに、app/ を GitHub Pages へ自動公開する（Issue #80）。
+# develop へのマージをトリガーに、app/ を GitHub Pages へ自動公開する（Issue #80）。
 # 公開ルートは app/（ビルド不要のバニラ JS）。相対パス運用のためサブパス /<repo>/ で動く。
+#
+# 【トリガーが develop である理由】Pages の `github-pages` 環境はデプロイ許可ブランチが
+#   develop に設定されており、main からのデプロイは環境保護ルールで拒否される
+#   （2026-07-28 に main で実際に失敗）。環境設定を変える代わりにトリガー側を develop へ
+#   合わせる方針を採用した。このため develop へのマージは即座に公開へ反映される
+#   ＝ develop は常に通しデモ可能に保つこと（docs/dev/週次統合ルール_v1.0.md）。
 #
 # 【人間が一度だけ行う設定】リポジトリ Settings → Pages → Build and deployment →
 #   Source を「GitHub Actions」に切り替える（管理者操作。これが無いと deploy-pages が失敗する）。
+#   加えて Settings → Environments → github-pages のデプロイ許可ブランチに develop が
+#   含まれている必要がある。
 
 on:
   push:
-    branches: [main]
+    branches: [develop]
   workflow_dispatch:
 
 permissions:

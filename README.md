@@ -1,6 +1,7 @@
 # tazimagumi_dev_team
 
-学校の卒業制作リポジトリ。男性5人チームで、**美容（男性向け日常スキンケア管理）** をテーマにしたWebアプリを開発します。
+田島組 卒業制作。男性5人チームで **男の身だしなみ（日常スキンケア）アプリ** を開発するリポジトリです。
+**まずバニラJSでMVPを完成させ、時間があれば別スタックへ移行**する方針です。
 
 ---
 
@@ -8,13 +9,14 @@
 
 | レイヤ | 採用技術 |
 |---|---|
-| フロントエンド | React (Vite + TypeScript) + UIライブラリ |
-| バックエンド | Java + Spring Boot |
-| データベース | 後日確定（MySQL or PostgreSQL） |
-| AI/データ処理 | Python（必要になったら追加） |
-| デプロイ | AWS（将来） |
+| フロント | **HTML + CSS + バニラJS**（`app/` 配下・**ビルド不要**） |
+| データ | ローカルの商品マスタ（`app/data/products.js`） |
+| BaaS / DB | Supabase（Postgres / Auth）※**将来拡張**。MVPはローカルのみ |
+| デプロイ | GitHub Pages（予定） |
 | バージョン管理 | Git / GitHub |
-| タスク管理 | GitHub Issue |
+| タスク管理 | GitHub Issues + Projects（かんばん） |
+
+> 設計の正は [`docs/specs/基本設計書_v1.0.md`](docs/specs/基本設計書_v1.0.md)。スタック移行方針は同書 §2.4。
 
 ---
 
@@ -22,66 +24,58 @@
 
 ```
 tazimagumi_dev_team/
-├── .github/         GitHub の Issue / PR テンプレ
-├── frontend/        React のプロジェクト（後で配置）
-├── backend/         Spring Boot のプロジェクト（後で配置）
-├── docs/            設計書・議事録・ヒアリング記録
-├── .gitignore       Git で管理しないファイルの一覧
-├── README.md        このファイル
-└── CONTRIBUTING.md  開発ルール（必読）
+├── app/             実装本体（ビルド不要・ブラウザで開けば動く）
+│   ├── index.html       エントリ
+│   ├── css/style.css    スタイル
+│   ├── js/              state.js / screens.js / main.js
+│   └── data/products.js 商品マスタ（ダミー）
+├── docs/            設計書・ガイドライン・スケジュール（詳細は docs/README.md）
+├── mockup/          発表用の静的HTMLモックアップ
+├── .github/         Issue / PR テンプレ
+├── AGENTS.md        AIエージェント＆共通の作業ルール（ブランチ運用）
+├── CLAUDE.md        AGENTS.md と同内容
+├── CONTRIBUTING.md  開発ルール（必読）
+└── README.md        このファイル
 ```
 
 ---
 
-## 初回セットアップ手順
+## 動かし方
 
-開発を始める前に、各自のPCで以下を1回だけ実行します。
-
-### 1. リポジトリをクローン
+ビルドは不要です。クローンして **`app/index.html` をブラウザで開くだけ**で動きます。
 
 ```bash
-git clone https://github.com/<オーナー名>/tazimagumi_dev_team.git
+git clone https://github.com/itiwoja/tazimagumi_dev_team.git
 cd tazimagumi_dev_team
+# app/index.html をダブルクリック（またはブラウザにドラッグ）
 ```
-
-### 2. develop ブランチに切り替え
-
-```bash
-git fetch origin
-git checkout develop
-```
-
-> ※ `main` は本番用なので、普段は触りません。作業はすべて `develop` から派生させます。
-
-### 3. 最新の状態に更新
-
-```bash
-git pull
-```
-
-これで準備完了です。
 
 ---
 
 ## 開発の流れ
 
-すべての作業は **GitHub Issue** から始めます。詳細は [CONTRIBUTING.md](./CONTRIBUTING.md) を必ず読んでください。
+1. 取り組む作業を **GitHub Issues / Projects（かんばん）** から選ぶ
+2. **`develop` から**ブランチを切る（命名は `<type>/<kebab-scope>`）
+3. コードを書いてコミット（`<type>: <要約>`）
+4. push して **`develop` 向けにPR** → レビュー後マージ
 
-ざっくり5ステップ:
+> 詳しい手順とブランチ名・担当の一覧は
+> [`CONTRIBUTING.md`](CONTRIBUTING.md) ／ [`docs/dev/ブランチ運用ルール_v1.0.md`](docs/dev/ブランチ運用ルール_v1.0.md) ／ [`AGENTS.md`](AGENTS.md) を参照。
 
-1. GitHub で **Issue を作る**（やりたいこと/直したいことを書く）
-2. **ブランチを切る**（`feature/<Issue番号>-<短い説明>`）
-3. **コード書いてコミット**
-4. **push する**
-5. **Pull Request（PR）を `develop` 向けに出す** → 他のメンバーがレビュー → マージ
+---
+
+## 直近の目標
+
+- **2026-08-31 に最小機能アプリを GitHub Pages で Web公開**（[`docs/schedule/ガントチャート_v2.2.md`](docs/schedule/ガントチャート_v2.2.md) の M-MVP）。
+- まず村上が基盤を先行構築（M-Base）→ 各機能を feature ブランチで分担。
 
 ---
 
 ## やってはいけないこと
 
-- ❌ `main` ブランチに直接 push する（保護ルールで弾かれます）
-- ❌ 他の人が作業中のブランチに push する
-- ❌ `git push --force`（過去のコミット履歴を壊す危険な操作）
-- ❌ `.env` などのパスワード・APIキーを含むファイルをコミットする
+- ❌ `main` / `develop` へ直接 push（必ずPR経由）
+- ❌ `main` からブランチを切る（`develop` から切る）
+- ❌ `git push --force`（履歴を壊す）
+- ❌ `.env` などパスワード・APIキーのコミット
 
 困ったときは Issue にコメントするか、チームに聞いてください。

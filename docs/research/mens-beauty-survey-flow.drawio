@@ -1,0 +1,117 @@
+<mxGraphModel dx="900" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1000" pageHeight="1300" math="0" shadow="0" adaptiveColors="auto">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="lbl_title" value="男性美容アンケート 設問フロー" style="text;html=1;align=left;verticalAlign=middle;fontSize=18;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="60" y="20" width="400" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="sec1" value="セクション1：全員共通" style="text;html=1;align=left;verticalAlign=middle;fontSize=12;fontStyle=2;fontColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="60" y="70" width="240" height="24" as="geometry"/>
+    </mxCell>
+    <mxCell id="n_start" value="アンケート開始" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="380" y="100" width="240" height="46" as="geometry"/>
+    </mxCell>
+    <mxCell id="n_age" value="Q1. 年齢を教えてください&#10;（単一選択）" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="380" y="180" width="240" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="d_status" value="Q2. 現在スキンケアをしているか&#10;している ／ 以前していた ／ したことがない&#10;（単一選択・分岐）" style="rhombus;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="350" y="270" width="300" height="120" as="geometry"/>
+    </mxCell>
+    <mxCell id="sec2" value="セクション2：していない／やめた人" style="text;html=1;align=left;verticalAlign=middle;fontSize=12;fontStyle=2;fontColor=#d79b00;" vertex="1" parent="1">
+      <mxGeometry x="60" y="430" width="280" height="24" as="geometry"/>
+    </mxCell>
+    <mxCell id="s2_reason" value="Q. やっていない／やめた理由&#10;（複数選択＋記述）" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="70" y="470" width="240" height="56" as="geometry"/>
+    </mxCell>
+    <mxCell id="s2_future" value="Q. 今後やってみたいと思うか&#10;（5段階尺度）" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="70" y="560" width="240" height="56" as="geometry"/>
+    </mxCell>
+    <mxCell id="s2_trigger" value="Q. 始めるきっかけになりそうなこと&#10;（複数選択：肌悩み／好きな人／安さ／何を買うか分かる 等）" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="70" y="650" width="240" height="66" as="geometry"/>
+    </mxCell>
+    <mxCell id="sec3" value="セクション3：している人" style="text;html=1;align=left;verticalAlign=middle;fontSize=12;fontStyle=2;fontColor=#82b366;" vertex="1" parent="1">
+      <mxGeometry x="680" y="430" width="240" height="24" as="geometry"/>
+    </mxCell>
+    <mxCell id="s3_start" value="Q. 始める際に困ったこと&#10;（記述）" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="680" y="470" width="250" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="s3_consult" value="Q. 美容を相談できる人は身近にいるか&#10;（単一選択：友人／家族／店員／プロ／いない 等）" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="680" y="540" width="250" height="56" as="geometry"/>
+    </mxCell>
+    <mxCell id="s3_freq" value="Q. 友人と美容の話をする頻度&#10;（単一選択）" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="680" y="616" width="250" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="s3_money" value="Q. 月にかける金額&#10;（単一選択：〜千円／〜3千円／〜5千円／それ以上）" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="680" y="686" width="250" height="56" as="geometry"/>
+    </mxCell>
+    <mxCell id="s3_info" value="Q. 情報収集の手段&#10;（複数選択：SNS／動画／友人／店員／アプリ／検索）" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="680" y="762" width="250" height="56" as="geometry"/>
+    </mxCell>
+    <mxCell id="s3_keep" value="Q. 続ける上での悩み&#10;（記述）" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="680" y="838" width="250" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="s3_app" value="Q. 美容アプリを使ったことがあるか&#10;（単一選択 → ありの人へ：何のアプリ／良かった点・不満を記述）" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="680" y="908" width="250" height="66" as="geometry"/>
+    </mxCell>
+    <mxCell id="seccom" value="共通（最後・全員）：アプリのニーズ" style="text;html=1;align=left;verticalAlign=middle;fontSize=12;fontStyle=2;fontColor=#9673a6;" vertex="1" parent="1">
+      <mxGeometry x="60" y="1030" width="320" height="24" as="geometry"/>
+    </mxCell>
+    <mxCell id="c_need" value="Q. スキンケアの相談・記録ができるアプリがあったら使いたいか&#10;（5段階尺度）" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="380" y="1070" width="260" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="c_feature" value="Q. あったら欲しい機能&#10;（記述・任意）" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="380" y="1160" width="260" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="n_end" value="回答終了・ご協力ありがとうございました" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="380" y="1240" width="260" height="46" as="geometry"/>
+    </mxCell>
+    <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" edge="1" parent="1" source="n_start" target="n_age">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" edge="1" parent="1" source="n_age" target="d_status">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e3" value="していない／やめた" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontColor=#d79b00;fontStyle=1;" edge="1" parent="1" source="d_status" target="s2_reason">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e4" value="している" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontColor=#82b366;fontStyle=1;" edge="1" parent="1" source="d_status" target="s3_start">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" edge="1" parent="1" source="s2_reason" target="s2_future">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" edge="1" parent="1" source="s2_future" target="s2_trigger">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" edge="1" parent="1" source="s3_start" target="s3_consult">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" edge="1" parent="1" source="s3_consult" target="s3_freq">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" edge="1" parent="1" source="s3_freq" target="s3_money">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" edge="1" parent="1" source="s3_money" target="s3_info">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" edge="1" parent="1" source="s3_info" target="s3_keep">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" edge="1" parent="1" source="s3_keep" target="s3_app">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e13" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" edge="1" parent="1" source="s2_trigger" target="c_need">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e14" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" edge="1" parent="1" source="s3_app" target="c_need">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e15" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" edge="1" parent="1" source="c_need" target="c_feature">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e16" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;" edge="1" parent="1" source="c_feature" target="n_end">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

@@ -29,23 +29,19 @@
 </head>
 <body>
 
-<div class="stage">
-  <noscript>
-    <p>このアプリを使うにはブラウザのJavaScriptを有効にしてください。</p>
-  </noscript>
-  <header class="stage__head">
-    <p class="stage__eyebrow">田島組 卒業制作 ｜ MVP 基盤アプリ（ワイヤーフレーム）</p>
-    <h1 class="stage__title">男の身だしなみアプリ <span class="clip-text">基盤</span></h1>
-    <p class="stage__lead">4画面フロー（初回チェック→ロードマップ→商品比較→継続記録）の最小ワイヤーフレーム。デザインは後で載せます。</p>
-  </header>
+<noscript>
+  <p class="noscript-note">このアプリを使うにはブラウザのJavaScriptを有効にしてください。</p>
+</noscript>
 
-  <!-- ===== Phone shell ===== -->
-  <div class="phone" role="group" aria-label="身だしなみアプリ">
+<!-- ===== App shell ===== -->
+  <!-- 画面いっぱいにアプリ本体だけを表示する（端末枠・紹介ヘッダーは廃止）。
+       .app は position:relative の配置基準（.dock / .toast が absolute で乗る）。 -->
+  <div class="app" role="group" aria-label="身だしなみアプリ">
 
     <!-- App bar: brand + step tabs + progress -->
     <div class="appbar">
       <div class="appbar__brand">
-        <span class="appbar__name">みだしなみ</span>
+        <h1 class="appbar__name">みだしなみ</h1>
         <span class="appbar__step" id="stepLabel" aria-live="polite">はじめる</span>
       </div>
 
@@ -349,10 +345,6 @@
     <button class="sheet__scrim" id="privacyScrim" aria-label="とじる"></button>
   </div>
 
-  <footer class="stage__foot">
-    <p>基盤アプリ（HTML/CSS/バニラJS・ビルド不要・外部API非依存）。最小ワイヤーフレーム。各機能は feature ブランチで追加します。</p>
-  </footer>
-</div>
 
 <script src="./js/sw-register.js" defer></script>
 </body>

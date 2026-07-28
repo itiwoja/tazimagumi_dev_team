@@ -1,7 +1,7 @@
 /* global self, caches, fetch */
 "use strict";
 
-var CACHE_NAME = "tazimagumi-app-v18"; // 競合マーカー混入の修復（Issue #86 / #107）
+var CACHE_NAME = "tazimagumi-app-v19"; // 端末枠を廃止し全画面レイアウトへ（Issue #107）
 // index.html の読み込み順に合わせる: data → state → storage → contracts → disclaimer → screens → debug → main → sw-register
 var APP_SHELL = [
   "./",

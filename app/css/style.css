@@ -132,6 +132,14 @@ b{font-weight:700}
 
 .sec-label{margin:18px 2px 10px;font-size:14px;font-weight:700}
 .sec-label:first-child{margin-top:4px}
+
+/* 列ラッパー。PC幅（≥1024px）で .screen が2カラムになったときの振り分け単位。
+   スマホ／タブレットでは素のブロックなので、見た目も表示順も従来どおりの縦積み。 */
+.col{min-width:0}
+/* ラッパーを挟んだことで2列目の見出しが :first-child になり上マージンが詰まる。
+   縦積み時は従来の間隔へ戻す（PC幅では下の @media で 4px に戻す）。 */
+.col + .col > .sec-label:first-child{margin-top:18px}
+
 .sec-note{font-size:11px;font-weight:400;color:var(--muted)}
 .diff-key{text-decoration:underline}
 
@@ -410,6 +418,8 @@ b{font-weight:700}
   .settings-sheet__label{font-size:13px}
   .settings-sheet__note,.settings-sheet__lead,.settings-sheet__confirm-text{font-size:11px}
   .settings-sheet__time,.settings-sheet__action,.settings-sheet__save{min-height:40px}
+  /* 見出しの詰め方に合わせて、列ラッパー由来の補正もスマホ幅の値へ揃える */
+  .col + .col > .sec-label:first-child{margin-top:8px}
 }
 @media (max-width:360px){
   .compare__row{grid-template-columns:58px 1fr 1fr}
@@ -420,6 +430,48 @@ b{font-weight:700}
   .cta-back{width:40px}
   .cta{font-size:12px}
   .settings-sheet__confirm-actions{grid-template-columns:1fr}
+}
+
+/* ===================== PC（2カラム） =====================
+   横に余裕がある画面では、空いた左右を使って縦スクロールを減らす。
+   .screen 直下の .col を左右に振り分けるだけなので、各画面の中身の
+   マークアップはスマホ用と共通のまま。 */
+@media (min-width:1024px){
+  /* 2カラムを置ける幅まで中身の最大幅を広げる */
+  :root{--content-max:1080px}
+
+  /* タブは全幅まで間延びさせず、中央に寄せる */
+  .tabs{max-width:760px;margin-inline:auto}
+
+  /* 画面本体を2カラムへ。[hidden] の画面は :not() で除外して display:none を守る */
+  .screen:not([hidden]){
+    display:grid;align-content:start;align-items:start;
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:32px;
+  }
+  /* 全幅で置きたいもの（薬機法ディスクレーマー等）は両列にまたがる */
+  .col--full{grid-column:1 / -1}
+  /* 横並びになったので、2列目の見出しも1列目と同じ高さで始める */
+  .col + .col > .sec-label:first-child{margin-top:4px}
+
+  /* S1: 導入カードを左、質問カードを右に */
+  #s1:not([hidden]){grid-template-columns:minmax(240px,320px) minmax(0,1fr)}
+  #s1 .s1-head{margin-bottom:0}
+
+  /* S2: 左に「今日やること」＋注意書き、右にステップ（2×2で縦を詰める）。
+     注意書きは DOM 上は最後のままにして（スマホでの読み順を守るため）、
+     grid-template-areas で左列の下に置き直し、左の余白を埋めてスクロールを消す。 */
+  #s2:not([hidden]){
+    grid-template-columns:minmax(260px,380px) minmax(0,1fr);
+    grid-template-areas:"intro steps" "note steps";
+  }
+  #s2 > .col:first-child{grid-area:intro}
+  #s2 > .col:nth-child(2){grid-area:steps}
+  #s2 > .col--full{grid-area:note}
+  #s2 .road{display:grid;grid-template-columns:repeat(2,1fr);align-content:start}
+
+  /* 下部ボタン: 全幅に間延びさせず、設定は左端・CTAは右端に置く */
+  .settings-btn{margin-right:auto}
+  .cta{flex:0 0 auto;min-width:320px}
 }
 
 /* ===================== reduced motion ===================== */

@@ -210,6 +210,16 @@
     });
   });
 
+  /* ---- [F-04] 比較対象の選択 ---- */
+  var candGroups = $("candGroups");
+  if (candGroups) {
+    candGroups.addEventListener("click", function (e) {
+      var select = e.target.closest("[data-product-id]");
+      if (!select || typeof App.toggleCompareProduct !== "function") return;
+      App.toggleCompareProduct(select.getAttribute("data-product-id"));
+    });
+  }
+
   /* ---- [F-06] 今日のドット（state.records に保存） ---- */
   var dot = $("todayDot");
   if (dot) dot.addEventListener("click", function () {

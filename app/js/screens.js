@@ -287,15 +287,24 @@
     return "¥" + Number(price || 0).toLocaleString("ja-JP");
   }
 
+  var selectedCompareIds = [];
+  var selectedCompareBudget = null;
+
   function buildCandItem(product, isTop) {
     var li = document.createElement("li");
     li.className = "card cand__item";
+
+    var select = document.createElement("button");
+    select.type = "button";
+    select.className = "cand__select";
+    select.setAttribute("data-product-id", product.id);
+    select.setAttribute("aria-pressed", selectedCompareIds.indexOf(product.id) !== -1 ? "true" : "false");
 
     if (isTop) {
       var medal = document.createElement("span");
       medal.className = "medal";
       medal.textContent = "候補";
-      li.appendChild(medal);
+      select.appendChild(medal);
     }
 
     var top = document.createElement("div");
@@ -330,7 +339,7 @@
     }
 
     top.appendChild(info);
-    li.appendChild(top);
+    select.appendChild(top);
 
     var ingredients = Array.isArray(product.ingredients) ? product.ingredients : [];
     if (ingredients.length) {
@@ -342,9 +351,11 @@
         tag.textContent = ingredient;
         tags.appendChild(tag);
       });
-      li.appendChild(tags);
+      select.appendChild(tags);
     }
 
+    li.classList.toggle("is-selected", selectedCompareIds.indexOf(product.id) !== -1);
+    li.appendChild(select);
     return li;
   }
 
@@ -427,6 +438,40 @@
     return fragment;
   }
 
+  function compareHint(text) {
+    var hint = $("compareHint");
+    if (hint) hint.textContent = text;
+  }
+
+  function renderCompareSelection(recommendation) {
+    var compareEl = $("compareTable");
+    if (!compareEl) return;
+
+    compareEl.textContent = "";
+    var products = [];
+    (recommendation.main || []).concat(recommendation.sub || []).forEach(function (group) {
+      (group.products || []).forEach(function (product) {
+        if (selectedCompareIds.indexOf(product.id) !== -1) products.push(product);
+      });
+    });
+
+    if (products.length >= 2) {
+      compareHint(products.length + "件を比較中。候補から最大3件まで選べます。");
+      compareEl.appendChild(buildCompareDom(App.buildCompareTable(products.slice(0, 3))));
+      return;
+    }
+
+    compareHint(products.length === 1
+      ? "あと1件選ぶと比較表が表示されます。"
+      : "候補から2〜3件選ぶと比較表が表示されます。");
+    var note = document.createElement("p");
+    note.className = "cand__note";
+    note.textContent = products.length === 1
+      ? "比較するもう1件を候補から選んでください。"
+      : "比較する商品を候補から選んでください。";
+    compareEl.appendChild(note);
+  }
+
   /**
    * 診断結果 ＋ 選択中の予算帯 → S3の候補一覧・比較表を描画する。
    * App.recommend / App.buildCompareTable（contracts.js）を画面に結線する（Issue #61）。
@@ -438,6 +483,11 @@
     var budget = currentS3Budget();
     var meta = App.TYPE_META[diagnosis.primaryType];
     var recommendation = App.recommend(diagnosis, budget);
+
+    if (selectedCompareBudget !== budget) {
+      selectedCompareBudget = budget;
+      selectedCompareIds = [];
+    }
 
     App.updateBudgetCount(budget);
 
@@ -466,20 +516,31 @@
       }
     }
 
-    var compareEl = $("compareTable");
-    if (compareEl) {
-      compareEl.textContent = "";
-      var primaryGroup = (recommendation.main || [])[0];
-      var compareProducts = primaryGroup ? primaryGroup.products.slice(0, 3) : [];
-      if (compareProducts.length >= 2) {
-        compareEl.appendChild(buildCompareDom(App.buildCompareTable(compareProducts)));
-      } else {
-        var note = document.createElement("p");
-        note.className = "cand__note";
-        note.textContent = "くらべられる候補がまだ2件そろっていません。";
-        compareEl.appendChild(note);
-      }
+    renderCompareSelection(recommendation);
+  };
+
+  App.toggleCompareProduct = function (productId) {
+    var diagnosis = state.diagnosis || App.diagnose(state.answers);
+    var budget = currentS3Budget();
+    var recommendation = App.recommend(diagnosis, budget);
+    var candidates = [];
+    (recommendation.main || []).concat(recommendation.sub || []).forEach(function (group) {
+      (group.products || []).forEach(function (product) {
+        if (candidates.every(function (item) { return item.id !== product.id; })) candidates.push(product);
+      });
+    });
+    if (!candidates.some(function (product) { return product.id === productId; })) return;
+
+    var index = selectedCompareIds.indexOf(productId);
+    if (index !== -1) {
+      selectedCompareIds.splice(index, 1);
+    } else if (selectedCompareIds.length >= 3) {
+      App.toast("比較できるのは最大3商品までです");
+      return;
+    } else {
+      selectedCompareIds.push(productId);
     }
+    App.renderS3();
   };
 
   /* =================== [F-06] S4 継続記録 =================== */

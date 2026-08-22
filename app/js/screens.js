@@ -200,6 +200,8 @@
     state.completed = false;
     state.diagnosis = null;
     state.roadmap = null;
+    selectedCompareIds = [];
+    selectedCompareBudget = null;
     App.updateProgress();
     qAll(".chip", $("qstack")).forEach(function (ch) { ch.setAttribute("aria-checked", "false"); });
     qAll(".tab").forEach(function (t) {

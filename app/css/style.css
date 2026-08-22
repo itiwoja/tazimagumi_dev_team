@@ -219,7 +219,7 @@ b{font-weight:700}
 .tag--free{border-style:dashed}
 .tag--more{color:var(--muted)}
 
-.ghost-btn{width:100%;min-height:42px;border:1px solid var(--line-strong);border-radius:var(--r-btn);
+.ghost-btn{width:100%;min-height:44px;border:1px solid var(--line-strong);border-radius:var(--r-btn);
   background:var(--surface);color:var(--text);font:700 14px/1 inherit;cursor:pointer}
 .ghost-btn:hover{background:var(--soft)}
 
@@ -310,7 +310,7 @@ b{font-weight:700}
 .sheet__b{margin:0 0 16px;font-size:14px;line-height:1.7;color:var(--text)}
 .sheet__close{max-width:none}
 .sheet__head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:14px}
-.sheet__icon{flex:0 0 auto;width:40px;height:40px;border:1px solid var(--ink);background:var(--surface);color:var(--ink);font:700 18px/1 inherit;cursor:pointer}
+.sheet__icon{flex:0 0 auto;width:44px;height:44px;border:1px solid var(--ink);background:var(--surface);color:var(--ink);font:700 18px/1 inherit;cursor:pointer}
 .sheet__icon:hover{background:var(--soft)}
 
 /* ---- settings sheet ---- */
@@ -329,7 +329,7 @@ b{font-weight:700}
 .settings-sheet__confirm{margin-bottom:10px;border:1px solid var(--line);padding:10px;background:var(--soft)}
 .settings-sheet__confirm-text{margin:0 0 10px;font-size:12.5px;line-height:1.5}
 .settings-sheet__confirm-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.settings-sheet__confirm-btn{min-height:40px}
+.settings-sheet__confirm-btn{min-height:44px}
 .settings-sheet__close-row{display:flex;justify-content:flex-end}
 
 /* ===================== responsive ===================== */
@@ -359,7 +359,7 @@ b{font-weight:700}
   .qtitle{margin-bottom:4px;font-size:16px;line-height:1.3}
   .qhint{margin-bottom:8px;font-size:11px}
   .chips{gap:5px}
-  .chip{min-height:40px;padding:7px 9px}
+  .chip{min-height:44px;padding:7px 9px}
   .chip__label{font-size:13px;line-height:1.25}
   .chip__hint{display:none}
   .chip::after{width:14px;height:14px}
@@ -376,7 +376,7 @@ b{font-weight:700}
   .road__desc,.road__row,.pill{display:none}
   .safety{margin:8px 2px 0;padding:7px 8px;font-size:10.5px;line-height:1.4}
   .budget{gap:6px}
-  .budget__btn{min-height:34px;font-size:11px}
+  .budget__btn{min-height:44px;font-size:11px}
   .budget__count{margin:5px 2px 2px;font-size:12px}
   .cand{margin-top:3px;gap:6px}
   .medal{margin-bottom:5px;font-size:10px;padding:1px 6px}
@@ -401,23 +401,23 @@ b{font-weight:700}
   .week__sub{font-size:10px}
   .dots{gap:2px}
   .dot{width:14px;height:14px}
-  .dot--today{width:26px;height:26px}
+  .dot--today{width:44px;height:44px}
   .dotlab{font-size:10px}
   .rating{gap:6px}
-  .rate{min-height:38px;font-size:11px;padding:5px 2px}
+  .rate{min-height:44px;font-size:11px;padding:5px 2px}
   .reminder{margin-top:7px;font-size:10.5px}
   .dock{position:absolute;padding:8px 10px calc(8px + env(safe-area-inset-bottom));gap:8px}
-  .cta,.settings-btn,.cta-back{height:40px}
+  .cta,.settings-btn,.cta-back{height:44px}
   .cta{font-size:13px}
   .settings-btn{min-width:54px;padding:0 10px}
-  .cta-back{width:42px}
+  .cta-back{width:44px}
   .settings-sheet__panel{max-height:86svh;padding:14px 12px calc(14px + env(safe-area-inset-bottom))}
   .sheet__head{margin-bottom:10px}
-  .sheet__icon{width:36px;height:36px}
+  .sheet__icon{width:44px;height:44px}
   .settings-sheet__block{padding:10px}
   .settings-sheet__label{font-size:13px}
   .settings-sheet__note,.settings-sheet__lead,.settings-sheet__confirm-text{font-size:11px}
-  .settings-sheet__time,.settings-sheet__action,.settings-sheet__save{min-height:40px}
+  .settings-sheet__time,.settings-sheet__action,.settings-sheet__save{min-height:44px}
   /* 見出しの詰め方に合わせて、列ラッパー由来の補正もスマホ幅の値へ揃える */
   .col + .col > .sec-label:first-child{margin-top:8px}
 }

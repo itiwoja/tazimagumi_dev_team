@@ -16,13 +16,14 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=Inter:wght@500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="./css/style.css">
-<!-- 読み込み順（基盤の約束）: data → state → storage → contracts → disclaimer → screens → debug → main。各scriptはdeferで順序保持 -->
+<!-- 読み込み順（基盤の約束）: data → state → storage → contracts → disclaimer → s3 → screens → debug → main。各scriptはdeferで順序保持 -->
 <!-- debug.js は localStorage を書き換えるため main.js（App.restore）より前で固定（Issue #113） -->
 <script src="./data/products.js" defer></script>
 <script src="./js/state.js" defer></script>
 <script src="./js/storage.js" defer></script>
 <script src="./js/contracts.js" defer></script>
 <script src="./js/disclaimer.js" defer></script>
+<script src="./js/s3.js" defer></script>
 <script src="./js/screens.js" defer></script>
 <script src="./js/debug.js" defer></script>
 <script src="./js/main.js" defer></script>
@@ -178,7 +179,7 @@
       </section>
 
       <!-- ================= S3 商品候補・比較（F-03/04/05 / REQ-03/04/05） ================= -->
-      <!-- ※ 候補一覧・比較表は App.renderS3（screens.js）が data/products.js + App.recommend/App.buildCompareTable から動的に描画する（Issue #61） -->
+      <!-- ※ 候補一覧・比較表は App.renderS3（s3.js）が data/products.js + App.recommend/App.buildCompareTable から動的に描画する（Issue #61） -->
       <section class="screen" id="s3" aria-label="商品候補と比較" hidden>
         <div class="col">
           <p class="sec-label" id="s3CandHeading">商品の候補</p>

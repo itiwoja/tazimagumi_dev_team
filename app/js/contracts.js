@@ -14,8 +14,8 @@
    ■ 実装状況（2026-07 時点）
    - App.diagnose      : 実装済み（本ファイル下部）。screens.js の App.renderRoadmap 経由で画面結線済み（Issue #34/#36/#60）。
    - App.buildRoadmap  : 実装済み（本ファイル下部。Issue #35）。
-   - App.recommend     : 実装済み（本ファイル下部。商品 typeTags = Issue #54）。screens.js の App.renderS3 経由で画面結線済み（Issue #61）。
-   - App.buildCompareTable : 実装済み（本ファイル下部。Issue #38）。App.renderS3 から呼び出し済み。
+   - App.recommend     : 実装済み（本ファイル下部。商品 typeTags = Issue #54）。s3.js の App.renderS3 経由で画面結線済み（Issue #61）。
+   - App.buildCompareTable : 実装済み（本ファイル下部。Issue #38）。s3.js の App.renderS3 から呼び出し済み。
    - 既知の乖離: 現行UIは最小5問だが diagnose の pointTable は診断ロジック設計書の23問index前提。
      5問UIへの結線は完了済み（Issue #34/#36/#60）。23問化の統合は別 feature ブランチ（Issue #59）で対応予定。
 

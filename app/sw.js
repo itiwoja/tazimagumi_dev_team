@@ -1,8 +1,8 @@
 /* global self, caches, fetch */
 "use strict";
 
-var CACHE_NAME = "tazimagumi-app-v23"; // S3結線とスマホ操作部44pxを反映（Issue #107 / #61 / #199）
-// index.html の読み込み順に合わせる: data → state → storage → contracts → disclaimer → screens → debug → main → sw-register
+var CACHE_NAME = "tazimagumi-app-v24"; // S3 module分割と比較focus回帰を反映（Issue #197）
+// index.html の読み込み順に合わせる: data → state → storage → contracts → disclaimer → s3 → screens → debug → main → sw-register
 var APP_SHELL = [
   "./",
   "./index.html",
@@ -12,6 +12,7 @@ var APP_SHELL = [
   "./js/storage.js",
   "./js/contracts.js",
   "./js/disclaimer.js",
+  "./js/s3.js",
   "./js/screens.js",
   "./js/debug.js",
   "./js/main.js",

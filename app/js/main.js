@@ -53,6 +53,8 @@
   var settingsOpenBtn = $("settingsBtn");
   var reminderTime = $("reminderTime");
   var reminderSaveBtn = $("reminderSaveBtn");
+  var avoidChips = $("avoidChips");
+  var avoidIngredientCount = $("avoidIngredientCount");
   var resetDiagnosisBtn = $("resetDiagnosisBtn");
   var replayIntroBtn = $("replayIntroBtn");
   var exportDataBtn = $("exportDataBtn");
@@ -65,6 +67,56 @@
 
   function syncReminderField() {
     if (reminderTime) reminderTime.value = App.prefs.reminderTime || "";
+  }
+
+  // 成分マスタのうち、配合の事実タグとして扱えるものだけを設定に出す。
+  // 「無香料」「低刺激」などの表示・配慮タグは回避対象にしない。
+  var AVOID_INGREDIENT_IDS = [
+    "ceramide", "hyaluronic-acid", "glycerin", "aminosurfactant", "clay",
+    "shaving-balm-base", "uva-uvb", "shea-butter", "moisturizing-agent"
+  ];
+
+  function normalizedAvoidedIngredients(value) {
+    if (typeof App.normalizeAvoidedIngredients === "function") {
+      return App.normalizeAvoidedIngredients(value);
+    }
+    return Array.isArray(value) ? value.filter(function (name) {
+      return typeof name === "string" && name.trim() !== "";
+    }) : [];
+  }
+
+  function availableAvoidIngredients() {
+    return (Array.isArray(global.INGREDIENTS) ? global.INGREDIENTS : []).filter(function (ingredient) {
+      return ingredient && AVOID_INGREDIENT_IDS.indexOf(ingredient.id) !== -1;
+    });
+  }
+
+  function renderAvoidIngredientChips() {
+    if (!avoidChips) return;
+    var selected = normalizedAvoidedIngredients(App.prefs && App.prefs.avoidedIngredients);
+    avoidChips.textContent = "";
+
+    availableAvoidIngredients().forEach(function (ingredient) {
+      var chip = document.createElement("button");
+      var isSelected = selected.indexOf(ingredient.name) !== -1;
+      chip.type = "button";
+      chip.className = "avoid-chip";
+      chip.setAttribute("aria-pressed", isSelected ? "true" : "false");
+      chip.textContent = ingredient.name;
+      chip.addEventListener("click", function () {
+        var next = normalizedAvoidedIngredients(App.prefs && App.prefs.avoidedIngredients);
+        var index = next.indexOf(ingredient.name);
+        if (index === -1) next.push(ingredient.name);
+        else next.splice(index, 1);
+        App.prefs.avoidedIngredients = normalizedAvoidedIngredients(next);
+        App.syncPrefs();
+        renderAvoidIngredientChips();
+        if (state.completed && typeof App.renderS3 === "function") App.renderS3();
+      });
+      avoidChips.appendChild(chip);
+    });
+
+    if (avoidIngredientCount) avoidIngredientCount.textContent = selected.length + "個を選択中";
   }
 
   function closeClearConfirm() {
@@ -308,6 +360,7 @@
     if (!settingsArmedClear) return;
     closeSettingsSheet();
     App.clearLocalData();
+    renderAvoidIngredientChips();
   });
   document.addEventListener("keydown", handleSettingsKeydown);
 
@@ -361,6 +414,7 @@
 
   /* ---- init ---- */
   syncReminderField();
+  renderAvoidIngredientChips();
 
   var restored = App.restore();
 

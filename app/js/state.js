@@ -119,7 +119,19 @@
   App.prefs = {
     reminderTime: "",
     // SC-00 導入画面を見たか（設計書 SC-00 v0.1 §4。初回のみ表示の判定に使う）
-    hasSeenIntro: false
+    hasSeenIntro: false,
+    // 設定でユーザー自身が選んだ、候補から外したい成分タグ名。
+    avoidedIngredients: []
+  };
+
+  /** 保存値・UI入力のどちらにも使う、成分タグ名配列の後方互換ガード。 */
+  App.normalizeAvoidedIngredients = function (value) {
+    if (!Array.isArray(value)) return [];
+    return value.reduce(function (names, name) {
+      var normalized = typeof name === "string" ? name.trim() : "";
+      if (normalized && names.indexOf(normalized) === -1) names.push(normalized);
+      return names;
+    }, []);
   };
 
   App.loadPrefs = function () {
@@ -130,7 +142,8 @@
       return {
         reminderTime: typeof parsed.reminderTime === "string" ? parsed.reminderTime : "",
         // 型ガード: 壊れた値・旧形式は初期値(false)のまま扱う（設計書 SC-00 §4）
-        hasSeenIntro: typeof parsed.hasSeenIntro === "boolean" ? parsed.hasSeenIntro : false
+        hasSeenIntro: typeof parsed.hasSeenIntro === "boolean" ? parsed.hasSeenIntro : false,
+        avoidedIngredients: App.normalizeAvoidedIngredients(parsed.avoidedIngredients)
       };
     } catch (error) {
       return App.prefs;
@@ -139,6 +152,26 @@
 
   App.syncPrefs = function () {
     try {
+      var prefs = App.prefs && typeof App.prefs === "object" ? App.prefs : {};
+      var avoidedIngredients = App.normalizeAvoidedIngredients(prefs.avoidedIngredients);
+
+      // 旧画面の設定保存は avoidedIngredients を持たないオブジェクトを再構成する。
+      // その場合だけ既存の保存値を引き継ぎ、チップで空配列を明示した変更は優先する。
+      if (!Array.isArray(prefs.avoidedIngredients)) {
+        try {
+          var raw = global.localStorage.getItem(App.LOCAL_KEYS.prefs);
+          var saved = raw ? JSON.parse(raw) : null;
+          avoidedIngredients = App.normalizeAvoidedIngredients(saved && saved.avoidedIngredients);
+        } catch (error) {
+          avoidedIngredients = [];
+        }
+      }
+
+      App.prefs = {
+        reminderTime: typeof prefs.reminderTime === "string" ? prefs.reminderTime : "",
+        hasSeenIntro: prefs.hasSeenIntro === true,
+        avoidedIngredients: avoidedIngredients
+      };
       global.localStorage.setItem(App.LOCAL_KEYS.prefs, JSON.stringify(App.prefs));
     } catch (error) {}
   };

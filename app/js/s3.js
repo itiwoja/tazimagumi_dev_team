@@ -62,8 +62,6 @@
           category: group.category,
           products: products
         };
-      }).filter(function (group) {
-        return group.products.length > 0;
       });
     }
 
@@ -97,6 +95,73 @@
       });
     });
     return products;
+  }
+
+  function avoidedIngredients() {
+    var prefs = App.prefs && typeof App.prefs === "object" ? App.prefs : {};
+    if (typeof App.normalizeAvoidedIngredients === "function") {
+      return App.normalizeAvoidedIngredients(prefs.avoidedIngredients);
+    }
+    return Array.isArray(prefs.avoidedIngredients) ? prefs.avoidedIngredients : [];
+  }
+
+  function productsForBudget(budget) {
+    var products = typeof global.filterProductsByBudget === "function"
+      ? global.filterProductsByBudget(budget)
+      : (global.PRODUCTS || []).slice();
+    return Array.isArray(products) ? products : [];
+  }
+
+  function priceAscending(left, right) {
+    var leftPrice = typeof left.price === "number" ? left.price : Number.POSITIVE_INFINITY;
+    var rightPrice = typeof right.price === "number" ? right.price : Number.POSITIVE_INFINITY;
+    return leftPrice - rightPrice;
+  }
+
+  function findTypeMismatchAlternative(category, budget, avoided, expectedType, usedIds) {
+    var categoryProducts = productsForBudget(budget).filter(function (product) {
+      return product && product.category === category && Array.isArray(product.typeTags) &&
+        product.typeTags.indexOf(expectedType) === -1 && usedIds.indexOf(product.id) === -1;
+    });
+    var filtered = typeof App.filterByAvoidedIngredients === "function"
+      ? App.filterByAvoidedIngredients(categoryProducts, avoided).visible
+      : categoryProducts;
+    return filtered.sort(priceAscending)[0] || null;
+  }
+
+  function filterRecommendationByAvoidedIngredients(recommendation, budget, avoided, diagnosis) {
+    var usedIds = [];
+
+    function filterGroups(groups, expectedType) {
+      if (!Array.isArray(groups)) return [];
+      return groups.map(function (group) {
+        var filtered = typeof App.filterByAvoidedIngredients === "function"
+          ? App.filterByAvoidedIngredients(group.products, avoided)
+          : { visible: group.products || [] };
+        var products = filtered.visible;
+        products.forEach(function (product) { usedIds.push(product.id); });
+        if (products.length) return { category: group.category, products: products, isAlternative: false };
+
+        // 設定が空のときは、従来の推薦結果をそのまま表示する。
+        // NG成分が実際に候補を除外した場合だけ代替候補を探す。
+        if (!avoided.length || !filtered.excluded || !filtered.excluded.length) return null;
+
+        var alternative = findTypeMismatchAlternative(group.category, budget, avoided, expectedType, usedIds);
+        if (alternative) {
+          usedIds.push(alternative.id);
+          return { category: group.category, products: [alternative], isAlternative: true };
+        }
+        return { category: group.category, products: [], isAlternative: false };
+      }).filter(function (group) { return group !== null; });
+    }
+
+    return {
+      main: filterGroups(recommendation.main, diagnosis.primaryType),
+      sub: recommendation.isComposite
+        ? filterGroups(recommendation.sub, diagnosis.secondaryType)
+        : null,
+      isComposite: recommendation.isComposite
+    };
   }
 
   function buildCandItem(product, isTop) {
@@ -188,8 +253,14 @@
       empty.appendChild(emptyNote);
       ul.appendChild(empty);
     } else {
+      if (group.isAlternative) {
+        var alternativeNote = document.createElement("li");
+        alternativeNote.className = "cand__alternative-note";
+        alternativeNote.textContent = "「" + group.category + "」は、選んだ成分を含まない同じタイプの候補が見つかりませんでした。タイプは異なりますが、この商品は選んだ成分を含みません。";
+        ul.appendChild(alternativeNote);
+      }
       group.products.forEach(function (product, index) {
-        ul.appendChild(buildCandItem(product, index === 0));
+        ul.appendChild(buildCandItem(product, index === 0 && !group.isAlternative));
       });
     }
 
@@ -289,17 +360,32 @@
     var diagnosis = state.diagnosis || App.diagnose(state.answers);
     var budget = currentS3Budget();
     var meta = App.TYPE_META[diagnosis.primaryType];
-    var recommendation = uniqueRecommendation(App.recommend(diagnosis, budget));
+    var avoided = avoidedIngredients();
+    var recommendation = filterRecommendationByAvoidedIngredients(
+      uniqueRecommendation(App.recommend(diagnosis, budget)), budget, avoided, diagnosis
+    );
 
     if (selectedCompareBudget !== budget) {
       selectedCompareBudget = budget;
       selectedCompareIds = [];
     }
 
-    App.updateBudgetCount(budget, recommendationProducts(recommendation).length);
+    var candidates = recommendationProducts(recommendation);
+    selectedCompareIds = selectedCompareIds.filter(function (productId) {
+      return candidates.some(function (product) { return product.id === productId; });
+    });
+    App.updateBudgetCount(budget, candidates.length);
 
     var heading = $("s3CandHeading");
     if (heading) heading.textContent = (meta ? meta.set : "商品") + "の候補";
+
+    var avoidStatus = $("s3AvoidStatus");
+    if (avoidStatus) {
+      avoidStatus.hidden = avoided.length === 0;
+      avoidStatus.textContent = avoided.length
+        ? avoided.map(function (name) { return "「" + name + "」"; }).join("、") + "を含まない候補を表示しています（設定で変更できます）"
+        : "";
+    }
 
     var groupsEl = $("candGroups");
     if (groupsEl) {
@@ -342,7 +428,9 @@
       active.getAttribute("data-product-id") === productId;
     var diagnosis = state.diagnosis || App.diagnose(state.answers);
     var budget = currentS3Budget();
-    var recommendation = uniqueRecommendation(App.recommend(diagnosis, budget));
+    var recommendation = filterRecommendationByAvoidedIngredients(
+      uniqueRecommendation(App.recommend(diagnosis, budget)), budget, avoidedIngredients(), diagnosis
+    );
     var candidates = recommendationProducts(recommendation);
     if (!candidates.some(function (product) { return product.id === productId; })) return;
 

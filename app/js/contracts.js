@@ -660,6 +660,34 @@
   };
 
   /**
+   * 商品リストを、ユーザーが選んだ成分タグの有無だけで分ける。
+   * 商品や入力配列は変更しないため、推薦結果の描画前フィルタにも使える。
+   * @param {Product[]} products
+   * @param {string[]} avoidedIngredients
+   * @returns {{visible: Product[], excluded: Product[]}}
+   */
+  App.filterByAvoidedIngredients = function (products, avoidedIngredients) {
+    var avoided = Array.isArray(avoidedIngredients)
+      ? avoidedIngredients.reduce(function (names, name) {
+        var normalized = typeof name === "string" ? name.trim() : "";
+        if (normalized && names.indexOf(normalized) === -1) names.push(normalized);
+        return names;
+      }, [])
+      : [];
+    var result = { visible: [], excluded: [] };
+
+    (Array.isArray(products) ? products : []).forEach(function (product) {
+      var ingredients = product && Array.isArray(product.ingredients) ? product.ingredients : [];
+      var containsAvoidedIngredient = avoided.some(function (name) {
+        return ingredients.indexOf(name) !== -1;
+      });
+      result[containsAvoidedIngredient ? "excluded" : "visible"].push(product);
+    });
+
+    return result;
+  };
+
+  /**
    * 選んだ商品（最大3）→ 横並び比較表。値が分かれる行は differs=true。
    * 比較軸: 価格・容量・目的（category）・成分タグ（有無）・違いの一言。
    * 成分は「有無」のみ。効能・安全性の断定は載せない（薬機法）。

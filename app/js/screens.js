@@ -432,7 +432,7 @@
       return todayStr >= start && todayStr <= end;
     });
     if (currentWeek) {
-      state.records.weekRating = currentWeek.rating;
+      state.records.weekRating = typeof currentWeek.rating === "string" ? currentWeek.rating : null;
     }
 
     // 3. 今週のドット描画

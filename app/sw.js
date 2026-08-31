@@ -1,7 +1,7 @@
 /* global self, caches, fetch */
 "use strict";
 
-var CACHE_NAME = "tazimagumi-app-v24"; // S3 module分割と比較focus回帰を反映（Issue #197）
+var CACHE_NAME = "tazimagumi-app-v25"; // SC-04記録UIの変更を反映
 // index.html の読み込み順に合わせる: data → state → storage → contracts → disclaimer → s3 → screens → debug → main → sw-register
 var APP_SHELL = [
   "./",

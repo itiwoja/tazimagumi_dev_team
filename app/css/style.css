@@ -480,6 +480,43 @@ b{font-weight:700}
   .cta{flex:0 0 auto;min-width:320px}
 }
 
+/* ===================== SC-00 導入（設計書 SC-00 v0.1 / 案A） =====================
+   初回のみ表示する独立画面。アプリバー・タブ・CTA は main.js が非表示にするので、
+   この画面は中身だけで成立させる。装飾は抑え、暖色の既存トークンに頼る
+   （AI感のない・看板らしくない素直な造り）。 */
+/* 旧 .screen の余白（下部104px=dock 分）と PC 2カラム化を打ち消す。id で高優先に。 */
+#s0.screen{
+  min-height:100%;
+  display:flex;align-items:center;justify-content:center;
+  padding-block:24px 24px;
+}
+.appbar[hidden],
+.dock[hidden]{display:none}
+
+.intro{width:100%;max-width:420px;padding:32px 28px;background:var(--soft);
+  border:1px solid var(--line);border-radius:var(--r-hero)}
+.intro__name{margin:0 0 18px;font-size:18px;font-weight:900;text-align:center}
+.intro__lead{margin:0 0 26px;font-size:21px;font-weight:900;line-height:1.55;text-align:center}
+.intro__points{list-style:none;margin:0 0 30px;padding:0;display:flex;flex-direction:column;gap:13px}
+.intro__points li{position:relative;padding-left:22px;font-size:14px;line-height:1.6}
+.intro__points li::before{content:"";position:absolute;left:2px;top:.72em;width:8px;height:8px;background:var(--orange)}
+.intro__start{display:block;width:100%;height:52px;border:1px solid var(--orange-cta);border-radius:var(--r-btn);
+  background:var(--orange-cta);color:#fff;font:700 16px/1 inherit;cursor:pointer;touch-action:manipulation;
+  box-shadow:0 8px 18px rgba(217,112,31,.22)}
+.intro__start:hover{background:#c9671c}
+.intro__note{margin:18px 0 0;font-size:12px;color:var(--muted);text-align:center}
+
+@media (max-width:430px){
+  #s0.screen{padding-block:12px 12px}
+  .intro{padding:24px 18px}
+  .intro__name{margin-bottom:12px;font-size:16px}
+  .intro__lead{margin-bottom:20px;font-size:18px}
+  .intro__points{margin-bottom:24px;gap:10px}
+  .intro__points li{font-size:13px}
+  .intro__start{height:48px;font-size:15px}
+  .intro__note{margin-top:14px;font-size:11px}
+}
+
 /* ===================== reduced motion ===================== */
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important;scroll-behavior:auto!important}

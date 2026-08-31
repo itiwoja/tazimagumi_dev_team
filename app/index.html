@@ -72,6 +72,24 @@
     <!-- Scroll viewport -->
     <main class="screen-wrap" id="screenWrap">
 
+      <!-- ================= SC-00 導入（初回のみ表示 / 設計書 SC-00 v0.1） =================
+           ※ 案A: App.SCREENS に載せない独立画面。初回（hasSeenIntro=false）のとき
+             main.js がアプリバー・タブ・CTA ごと非表示にしてこの画面だけを出す。
+             「はじめる」で保存済みの画面（state.current）へ戻す。 -->
+      <section class="screen" id="s0" aria-label="導入" hidden>
+        <div class="intro">
+          <h1 class="intro__name">みだしなみ</h1>
+          <p class="intro__lead">男の身だしなみ、<br>最初の一歩を決めるアプリ</p>
+          <ul class="intro__points">
+            <li>5つの質問に答えるだけ</li>
+            <li>今日買うものとやることが<br>3分で決まります</li>
+            <li>入力は端末の中だけに保存</li>
+          </ul>
+          <button class="intro__start" id="introStart" type="button">はじめる</button>
+          <p class="intro__note">お試しなので、気軽にどうぞ</p>
+        </div>
+      </section>
+
       <!-- ================= S1 初回チェック（F-01 / REQ-01） ================= -->
       <!-- ※ 最小版の5問。本実装は診断ロジック設計書 v1.1 の23問へ拡張（feature/sc01-check-ui / feature/diagnosis-logic） -->
       <section class="screen is-active" id="s1" aria-label="初回チェック">
@@ -288,6 +306,12 @@
         <h4 class="settings-sheet__label">診断をやり直す</h4>
         <p class="settings-sheet__note">回答とロック状態を初期化して、最初の質問に戻ります。</p>
         <button class="ghost-btn settings-sheet__action" id="resetDiagnosisBtn" type="button">S1からやり直す</button>
+      </div>
+
+      <div class="settings-sheet__block">
+        <h4 class="settings-sheet__label">はじめの画面をもう一度見る</h4>
+        <p class="settings-sheet__note">導入画面を表示します。はじめるを押すと、今の進行状態に戻れます。</p>
+        <button class="ghost-btn settings-sheet__action" id="replayIntroBtn" type="button">はじめの画面を見る</button>
       </div>
 
       <div class="settings-sheet__block">

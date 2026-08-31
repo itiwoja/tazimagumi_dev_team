@@ -117,7 +117,9 @@
   };
 
   App.prefs = {
-    reminderTime: ""
+    reminderTime: "",
+    // SC-00 導入画面を見たか（設計書 SC-00 v0.1 §4。初回のみ表示の判定に使う）
+    hasSeenIntro: false
   };
 
   App.loadPrefs = function () {
@@ -126,7 +128,9 @@
       if (!raw) return App.prefs;
       var parsed = JSON.parse(raw);
       return {
-        reminderTime: typeof parsed.reminderTime === "string" ? parsed.reminderTime : ""
+        reminderTime: typeof parsed.reminderTime === "string" ? parsed.reminderTime : "",
+        // 型ガード: 壊れた値・旧形式は初期値(false)のまま扱う（設計書 SC-00 §4）
+        hasSeenIntro: typeof parsed.hasSeenIntro === "boolean" ? parsed.hasSeenIntro : false
       };
     } catch (error) {
       return App.prefs;

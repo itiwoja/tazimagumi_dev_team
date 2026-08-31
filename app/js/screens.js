@@ -128,6 +128,21 @@
         body.appendChild(term);
       }
 
+      var category = typeof App.resolveStepCategory === "function"
+        ? App.resolveStepCategory(step)
+        : null;
+      if (category) {
+        var categoryLink = document.createElement("button");
+        categoryLink.type = "button";
+        categoryLink.className = "road__category-link";
+        categoryLink.textContent = "「" + step.term + "」の候補を見る →";
+        categoryLink.setAttribute("aria-label", step.term + "の候補を見る（商品画面へ移動）");
+        categoryLink.addEventListener("click", function () {
+          if (typeof App.gotoCategory === "function") App.gotoCategory(category, step.lane);
+        });
+        body.appendChild(categoryLink);
+      }
+
       item.appendChild(badge);
       item.appendChild(body);
       roadmapList.appendChild(item);

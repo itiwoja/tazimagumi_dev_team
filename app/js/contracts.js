@@ -98,6 +98,7 @@
    * @property {string}  title  見出し（例: "まず1本：化粧水"）
    * @property {string}  body   やさしい説明文（断定表現は使わない）
    * @property {string} [term] 用語シートのキー（あれば「○○ってなに？」を出す）
+   * @property {"main"|"sub"} [lane] 複合診断時の商品候補レーン
    */
 
   /**
@@ -112,6 +113,29 @@
     type4: { name: "ひげ剃り後の荒れを防ぎたい",     axis: "shave",    set: "アフターシェーブセット" },
     type5: { name: "くすみ・エイジングが気になる",   axis: "aging",    set: "年齢肌ケアセット" },
     type6: { name: "とにかく始めたい（入門）",       axis: "beginner", set: "入門オールインワン1本" }
+  };
+
+  /**
+   * ロードマップで使う概念語と商品カテゴリの対応。
+   * 部分一致では解決せず、S2のstep.termと完全一致する概念だけを扱う。
+   */
+  App.CONCEPT_TO_CATEGORY = {
+    "化粧水": "化粧水",
+    "乳液": "乳液",
+    "オールインワン": "オールインワン",
+    "アフターシェーブ": "アフターシェーブ"
+  };
+
+  /**
+   * ロードマップの1ステップから、対応する商品カテゴリを解決する。
+   * @param {RoadmapStep} step
+   * @returns {string|null} products.js のcategory値。未対応ならnull。
+   */
+  App.resolveStepCategory = function (step) {
+    var term = step && typeof step.term === "string" ? step.term.trim() : "";
+    return Object.prototype.hasOwnProperty.call(App.CONCEPT_TO_CATEGORY, term)
+      ? App.CONCEPT_TO_CATEGORY[term]
+      : null;
   };
 
   /* =====================================================================
@@ -521,19 +545,22 @@
         order: 1,
         title: "今日そろえる概念を決める",
         body: "まずは商品名ではなく、「" + main.concept + "」のような概念で必要な手順を整理します。具体的な候補は次の画面で確認します。",
-        term: main.term
+        term: main.term,
+        lane: "main"
       },
       {
         order: 2,
         title: main.tonightTitle,
         body: main.tonightBody,
-        term: main.term
+        term: main.term,
+        lane: "main"
       },
       {
         order: 3,
         title: main.morningTitle,
         body: main.morningBody,
-        term: main.term
+        term: main.term,
+        lane: "main"
       }
     ];
 
@@ -544,7 +571,8 @@
         order: 4,
         title: "もう一つの傾向も少しだけ意識する",
         body: "第二タイプとして「" + subMeta.name + "」の傾向も見られます。最初から手順を増やしすぎず、メインの流れに慣れてから「" + sub.concept + "」の要素を1つずつ足す形が選択肢になります。",
-        term: sub.term
+        term: sub.term,
+        lane: "sub"
       });
     } else {
       steps.push({

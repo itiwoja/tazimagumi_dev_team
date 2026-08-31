@@ -32,8 +32,16 @@
     return "¥" + Number(price || 0).toLocaleString("ja-JP");
   }
 
+  function categoryGroupId(category, lane) {
+    var laneSuffix = lane === "sub" ? "-sub" : "";
+    return "cand-group-" + encodeURIComponent(String(category)).replace(/%/g, "_") + laneSuffix;
+  }
+
+  App.categoryGroupId = categoryGroupId;
+
   var selectedCompareIds = [];
   var selectedCompareBudget = null;
+  var focusedGroupTimer = null;
 
   App.resetS3Comparison = function () {
     selectedCompareIds = [];
@@ -62,8 +70,6 @@
           category: group.category,
           products: products
         };
-      }).filter(function (group) {
-        return group.products.length > 0;
       });
     }
 
@@ -97,6 +103,73 @@
       });
     });
     return products;
+  }
+
+  function avoidedIngredients() {
+    var prefs = App.prefs && typeof App.prefs === "object" ? App.prefs : {};
+    if (typeof App.normalizeAvoidedIngredients === "function") {
+      return App.normalizeAvoidedIngredients(prefs.avoidedIngredients);
+    }
+    return Array.isArray(prefs.avoidedIngredients) ? prefs.avoidedIngredients : [];
+  }
+
+  function productsForBudget(budget) {
+    var products = typeof global.filterProductsByBudget === "function"
+      ? global.filterProductsByBudget(budget)
+      : (global.PRODUCTS || []).slice();
+    return Array.isArray(products) ? products : [];
+  }
+
+  function priceAscending(left, right) {
+    var leftPrice = typeof left.price === "number" ? left.price : Number.POSITIVE_INFINITY;
+    var rightPrice = typeof right.price === "number" ? right.price : Number.POSITIVE_INFINITY;
+    return leftPrice - rightPrice;
+  }
+
+  function findTypeMismatchAlternative(category, budget, avoided, expectedType, usedIds) {
+    var categoryProducts = productsForBudget(budget).filter(function (product) {
+      return product && product.category === category && Array.isArray(product.typeTags) &&
+        product.typeTags.indexOf(expectedType) === -1 && usedIds.indexOf(product.id) === -1;
+    });
+    var filtered = typeof App.filterByAvoidedIngredients === "function"
+      ? App.filterByAvoidedIngredients(categoryProducts, avoided).visible
+      : categoryProducts;
+    return filtered.sort(priceAscending)[0] || null;
+  }
+
+  function filterRecommendationByAvoidedIngredients(recommendation, budget, avoided, diagnosis) {
+    var usedIds = [];
+
+    function filterGroups(groups, expectedType) {
+      if (!Array.isArray(groups)) return [];
+      return groups.map(function (group) {
+        var filtered = typeof App.filterByAvoidedIngredients === "function"
+          ? App.filterByAvoidedIngredients(group.products, avoided)
+          : { visible: group.products || [] };
+        var products = filtered.visible;
+        products.forEach(function (product) { usedIds.push(product.id); });
+        if (products.length) return { category: group.category, products: products, isAlternative: false };
+
+        // 設定が空のときは、従来の推薦結果をそのまま表示する。
+        // NG成分が実際に候補を除外した場合だけ代替候補を探す。
+        if (!avoided.length || !filtered.excluded || !filtered.excluded.length) return null;
+
+        var alternative = findTypeMismatchAlternative(group.category, budget, avoided, expectedType, usedIds);
+        if (alternative) {
+          usedIds.push(alternative.id);
+          return { category: group.category, products: [alternative], isAlternative: true };
+        }
+        return { category: group.category, products: [], isAlternative: false };
+      }).filter(function (group) { return group !== null; });
+    }
+
+    return {
+      main: filterGroups(recommendation.main, diagnosis.primaryType),
+      sub: recommendation.isComposite
+        ? filterGroups(recommendation.sub, diagnosis.secondaryType)
+        : null,
+      isComposite: recommendation.isComposite
+    };
   }
 
   function buildCandItem(product, isTop) {
@@ -168,13 +241,15 @@
     return li;
   }
 
-  function buildCandGroup(group) {
-    var fragment = document.createDocumentFragment();
+  function buildCandGroup(group, lane) {
+    var groupEl = document.createElement("section");
+    groupEl.className = "cand-group";
+    groupEl.setAttribute("id", categoryGroupId(group.category, lane));
 
     var label = document.createElement("p");
     label.className = "sec-label";
     label.textContent = group.category + "の候補";
-    fragment.appendChild(label);
+    groupEl.appendChild(label);
 
     var ul = document.createElement("ul");
     ul.className = "cand";
@@ -188,14 +263,68 @@
       empty.appendChild(emptyNote);
       ul.appendChild(empty);
     } else {
+      if (group.isAlternative) {
+        var alternativeNote = document.createElement("li");
+        alternativeNote.className = "cand__alternative-note";
+        alternativeNote.textContent = "「" + group.category + "」は、選んだ成分を含まない同じタイプの候補が見つかりませんでした。タイプは異なりますが、この商品は選んだ成分を含みません。";
+        ul.appendChild(alternativeNote);
+      }
       group.products.forEach(function (product, index) {
-        ul.appendChild(buildCandItem(product, index === 0));
+        ul.appendChild(buildCandItem(product, index === 0 && !group.isAlternative));
       });
     }
 
-    fragment.appendChild(ul);
-    return fragment;
+    groupEl.appendChild(ul);
+    return groupEl;
   }
+
+  function findCategoryGroup(category, lane) {
+    return document.getElementById(categoryGroupId(category, lane));
+  }
+
+  function appendEmptyCategoryGroup(category, lane) {
+    var groupsEl = $("candGroups");
+    if (!groupsEl || findCategoryGroup(category, lane)) return findCategoryGroup(category, lane);
+    groupsEl.appendChild(buildCandGroup({ category: category, products: [] }, lane));
+    return findCategoryGroup(category, lane);
+  }
+
+  function focusCategoryGroup(groupEl) {
+    var firstCandidate = groupEl.querySelector("[data-product-id]");
+    if (firstCandidate) {
+      firstCandidate.focus();
+      return;
+    }
+    groupEl.setAttribute("tabindex", "-1");
+    groupEl.focus({ preventScroll: true });
+  }
+
+  function highlightCategoryGroup(groupEl) {
+    if (focusedGroupTimer !== null && typeof global.clearTimeout === "function") {
+      global.clearTimeout(focusedGroupTimer);
+    }
+    groupEl.classList.remove("is-focused");
+    void groupEl.offsetWidth;
+    groupEl.classList.add("is-focused");
+    focusedGroupTimer = global.setTimeout(function () {
+      groupEl.classList.remove("is-focused");
+      focusedGroupTimer = null;
+    }, 2000);
+  }
+
+  App.gotoCategory = function (category, lane) {
+    if (typeof category !== "string" || category.trim() === "") return false;
+
+    lane = lane === "sub" ? "sub" : "main";
+    App.showScreen("s3");
+    var target = findCategoryGroup(category, lane) || appendEmptyCategoryGroup(category, lane);
+    if (!target) return false;
+
+    target.scrollIntoView({ behavior: "smooth", block: "start" });
+    focusCategoryGroup(target);
+    highlightCategoryGroup(target);
+    return true;
+  };
 
   function buildCompareDom(table) {
     var fragment = document.createDocumentFragment();
@@ -370,23 +499,38 @@
     var diagnosis = state.diagnosis || App.diagnose(state.answers);
     var budget = currentS3Budget();
     var meta = App.TYPE_META[diagnosis.primaryType];
-    var recommendation = uniqueRecommendation(App.recommend(diagnosis, budget));
+    var avoided = avoidedIngredients();
+    var recommendation = filterRecommendationByAvoidedIngredients(
+      uniqueRecommendation(App.recommend(diagnosis, budget)), budget, avoided, diagnosis
+    );
 
     if (selectedCompareBudget !== budget) {
       selectedCompareBudget = budget;
       selectedCompareIds = [];
     }
 
-    App.updateBudgetCount(budget, recommendationProducts(recommendation).length);
+    var candidates = recommendationProducts(recommendation);
+    selectedCompareIds = selectedCompareIds.filter(function (productId) {
+      return candidates.some(function (product) { return product.id === productId; });
+    });
+    App.updateBudgetCount(budget, candidates.length);
 
     var heading = $("s3CandHeading");
     if (heading) heading.textContent = (meta ? meta.set : "商品") + "の候補";
+
+    var avoidStatus = $("s3AvoidStatus");
+    if (avoidStatus) {
+      avoidStatus.hidden = avoided.length === 0;
+      avoidStatus.textContent = avoided.length
+        ? avoided.map(function (name) { return "「" + name + "」"; }).join("、") + "を含まない候補を表示しています（設定で変更できます）"
+        : "";
+    }
 
     var groupsEl = $("candGroups");
     if (groupsEl) {
       groupsEl.textContent = "";
       (recommendation.main || []).forEach(function (group) {
-        groupsEl.appendChild(buildCandGroup(group));
+        groupsEl.appendChild(buildCandGroup(group, "main"));
       });
 
       if (recommendation.isComposite && recommendation.sub && recommendation.sub.length) {
@@ -399,7 +543,7 @@
         groupsEl.appendChild(subNote);
 
         recommendation.sub.forEach(function (group) {
-          groupsEl.appendChild(buildCandGroup(group));
+          groupsEl.appendChild(buildCandGroup(group, "sub"));
         });
       }
     }
@@ -455,7 +599,9 @@
       active.getAttribute("data-product-id") === productId;
     var diagnosis = state.diagnosis || App.diagnose(state.answers);
     var budget = currentS3Budget();
-    var recommendation = uniqueRecommendation(App.recommend(diagnosis, budget));
+    var recommendation = filterRecommendationByAvoidedIngredients(
+      uniqueRecommendation(App.recommend(diagnosis, budget)), budget, avoidedIngredients(), diagnosis
+    );
     var candidates = recommendationProducts(recommendation);
     if (!candidates.some(function (product) { return product.id === productId; })) return;
 

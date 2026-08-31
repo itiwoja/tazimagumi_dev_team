@@ -128,6 +128,21 @@
         body.appendChild(term);
       }
 
+      var category = typeof App.resolveStepCategory === "function"
+        ? App.resolveStepCategory(step)
+        : null;
+      if (category) {
+        var categoryLink = document.createElement("button");
+        categoryLink.type = "button";
+        categoryLink.className = "road__category-link";
+        categoryLink.textContent = "「" + step.term + "」の候補を見る →";
+        categoryLink.setAttribute("aria-label", step.term + "の候補を見る（商品画面へ移動）");
+        categoryLink.addEventListener("click", function () {
+          if (typeof App.gotoCategory === "function") App.gotoCategory(category, step.lane);
+        });
+        body.appendChild(categoryLink);
+      }
+
       item.appendChild(badge);
       item.appendChild(body);
       roadmapList.appendChild(item);
@@ -252,7 +267,12 @@
    */
   App.exportData = function () {
     var saved = (App.storage && App.storage.load) ? App.storage.load() : null;
-    var payload = { v: 1, exportedAt: Date.now(), state: saved || App.state };
+    var payload = {
+      v: 1,
+      exportedAt: Date.now(),
+      state: saved || App.state,
+      prefs: App.prefs || {}
+    };
     var url = null;
     try {
       var blob = new global.Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
@@ -285,9 +305,14 @@
     // 先に消さないと、直後の自動保存で records が midashinami:v1 に書き戻される（Issue #119）。
     state.records.todayDone = false;
     state.records.weekRating = null;
+    state.records.doneDates = [];
+    state.records.lastDoneAt = null;
     if (typeof App.repaintRecords === "function") App.repaintRecords();
-    App.resetS1();
-    App.showScreen("s1");
+    // 非ブラウザの検証環境ではDOMがないため、状態初期化だけを行う。
+    if (typeof document !== "undefined" && document && typeof document.getElementById === "function") {
+      App.resetS1();
+      App.showScreen("s1");
+    }
     App.toast("保存データを削除しました");
   };
 
@@ -343,11 +368,25 @@
   }
 
   function toDateKey(d) {
-    var y = d.getFullYear();
-    var m = ("0" + (d.getMonth() + 1)).slice(-2);
-    var day = ("0" + d.getDate()).slice(-2);
-    return y + "-" + m + "-" + day;
+    return typeof App.toLocalDateKey === "function" ? App.toLocalDateKey(d) : "";
   }
+
+  /** records から S4 の累計表示に必要な情報だけを作る。 */
+  App.summarizeRecords = function (records, today) {
+    var normalized = typeof App.normalizeRecords === "function"
+      ? App.normalizeRecords(records, today)
+      : { doneDates: [], lastDoneAt: null };
+    var total = normalized.doneDates.length;
+    var isReturning = total > 0 && normalized.lastDoneAt !== null &&
+      Math.round((new Date(today + "T00:00:00").getTime() - new Date(normalized.lastDoneAt + "T00:00:00").getTime()) / 86400000) >= 3;
+    return { total: total, isReturning: isReturning };
+  };
+
+  App.recordTotalCopy = function (summary) {
+    if (summary.total === 0) return "記録はこれから。できた日がここにたまっていきます";
+    if (summary.isReturning) return "おかえりなさい。これまでの " + summary.total + " 日はそのままです";
+    return "これまでに " + summary.total + " 日できました";
+  };
 
   function addDays(dateStr, numDays) {
     var parts = dateStr.split("-");
@@ -379,6 +418,12 @@
   App.renderS4 = function () {
     var today = new Date();
     var todayStr = toDateKey(today);
+    var normalizedRecords = typeof App.normalizeRecords === "function"
+      ? App.normalizeRecords(state.records, todayStr) : state.records;
+    state.records.todayDone = normalizedRecords.todayDone;
+    state.records.weekRating = normalizedRecords.weekRating;
+    state.records.doneDates = normalizedRecords.doneDates;
+    state.records.lastDoneAt = normalizedRecords.lastDoneAt;
 
     // 1. ルーティン提示
     var diagnosis = state.completed ? App.diagnose(state.answers) : null;
@@ -421,12 +466,16 @@
       saveLog(log);
     }
 
-    // 今日の記録状態を同期
+    // 旧週次ログの当日記録は、履歴がない保存データだけを一度だけ移行する。
     var todayItem = log.days.find(function (d) { return d.date === todayStr; });
-    if (todayItem) {
-      state.records.todayDone = todayItem.done;
-    } else {
-      state.records.todayDone = false;
+    if (!state.records.doneDates.length && todayItem && todayItem.done && typeof App.syncTodayRecord === "function") {
+      App.syncTodayRecord(true, todayStr);
+    }
+
+    // 新しい履歴を当日の週ドットへ反映し、従来の週次ログの見せ方を維持する。
+    if (todayItem && todayItem.done !== state.records.todayDone) {
+      todayItem.done = state.records.todayDone;
+      saveLog(log);
     }
 
     // 今週の評価状態を同期
@@ -469,6 +518,9 @@
     if (dotsContainer) {
       dotsContainer.innerHTML = dotsHtml;
     }
+
+    var totalEl = $("weekTotal");
+    if (totalEl) totalEl.textContent = App.recordTotalCopy(App.summarizeRecords(state.records, todayStr));
 
     // 4. 今週の自己評価選択ボタン状態の反映
     qAll(".rate").forEach(function (r) {
@@ -548,15 +600,17 @@
         if (todayBtn) {
           var on = todayBtn.getAttribute("aria-pressed") === "true";
           var next = !on;
+          var recordDate = toDateKey(new Date());
           todayBtn.setAttribute("aria-pressed", next ? "true" : "false");
-          state.records.todayDone = next;
+          if (typeof App.syncTodayRecord === "function") App.syncTodayRecord(next, recordDate);
+          else state.records.todayDone = next;
 
           var currentLog = loadLog();
-          var todayItem = currentLog.days.find(function (d) { return d.date === todayStr; });
+          var todayItem = currentLog.days.find(function (d) { return d.date === recordDate; });
           if (todayItem) {
             todayItem.done = next;
           } else {
-            currentLog.days.push({ date: todayStr, done: next });
+            currentLog.days.push({ date: recordDate, done: next });
           }
           saveLog(currentLog);
 

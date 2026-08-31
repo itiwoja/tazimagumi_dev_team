@@ -207,6 +207,7 @@
       <section class="screen" id="s3" aria-label="商品候補と比較" hidden>
         <div class="col">
           <p class="sec-label" id="s3CandHeading">商品の候補</p>
+          <p class="s3-avoid-status" id="s3AvoidStatus" role="status" hidden></p>
 
           <div class="budget" role="group" aria-label="予算帯">
             <button class="budget__btn is-on" data-budget="core" aria-pressed="true">〜5,000円でそろえる</button>
@@ -255,6 +256,7 @@
           <div class="dots" id="dots" role="list" aria-label="今週の記録">
             <!-- JavaScriptで動的生成 -->
           </div>
+          <p class="week__total" id="weekTotal" aria-live="polite">記録はこれから。できた日がここにたまっていきます</p>
         </div>
         </div>
 
@@ -302,6 +304,13 @@
           <input class="settings-sheet__time" id="reminderTime" name="reminderTime" type="time" autocomplete="off">
           <button class="ghost-btn settings-sheet__save" id="reminderSaveBtn" type="button">保存する</button>
         </div>
+      </div>
+
+      <div class="settings-sheet__block">
+        <h4 class="settings-sheet__label">避けたい成分を選ぶ</h4>
+        <p class="settings-sheet__note">以前合わなかった成分がある場合に。選んだ成分を含む商品は候補に出しません。端末内だけに保存されます。</p>
+        <p class="settings-sheet__selection" id="avoidIngredientCount" role="status">0個を選択中</p>
+        <div class="settings-sheet__chips" id="avoidChips"></div>
       </div>
 
       <div class="settings-sheet__block">

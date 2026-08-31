@@ -26,8 +26,63 @@
     completed: false,
     diagnosis: null,
     roadmap: null,
-    // 継続記録(S4)の最小データ。本実装(feature/sc04-record-ui)で拡張予定。
-    records: { todayDone: false, weekRating: null }
+    // 継続記録(S4)。doneDates はローカル暦日の重複なし履歴で、累計の唯一の元データ。
+    records: { todayDone: false, weekRating: null, doneDates: [], lastDoneAt: null }
+  };
+
+  /** Date を端末ローカルの YYYY-MM-DD キーへ変換する。 */
+  App.toLocalDateKey = function (date) {
+    var d = date instanceof Date ? date : new Date();
+    var y = d.getFullYear();
+    var m = ("0" + (d.getMonth() + 1)).slice(-2);
+    var day = ("0" + d.getDate()).slice(-2);
+    return y + "-" + m + "-" + day;
+  };
+
+  function isDateKey(value) {
+    if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+    var parts = value.split("-");
+    var date = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+    return date.getFullYear() === Number(parts[0]) &&
+      date.getMonth() === Number(parts[1]) - 1 &&
+      date.getDate() === Number(parts[2]);
+  }
+
+  /**
+   * records を表示・保存可能な最小スキーマへ正規化する。
+   * lastDoneAt は doneDates から導くため、削除済みの日付が残らない。
+   */
+  App.normalizeRecords = function (records, today) {
+    var source = records && typeof records === "object" ? records : {};
+    var todayKey = isDateKey(today) ? today : App.toLocalDateKey(new Date());
+    var seen = {};
+    var doneDates = Array.isArray(source.doneDates) ? source.doneDates.filter(function (date) {
+      if (!isDateKey(date) || date > todayKey || seen[date]) return false;
+      seen[date] = true;
+      return true;
+    }).sort() : [];
+
+    return {
+      todayDone: doneDates.indexOf(todayKey) !== -1,
+      weekRating: typeof source.weekRating === "string" ? source.weekRating : null,
+      doneDates: doneDates,
+      lastDoneAt: doneDates.length ? doneDates[doneDates.length - 1] : null
+    };
+  };
+
+  /** 今日の完了トグルと履歴を同じローカル日付キーで同期する。 */
+  App.syncTodayRecord = function (done, today) {
+    var todayKey = isDateKey(today) ? today : App.toLocalDateKey(new Date());
+    var records = App.normalizeRecords(App.state.records, todayKey);
+    var dates = records.doneDates.filter(function (date) { return date !== todayKey; });
+    if (done === true) dates.push(todayKey);
+    dates.sort();
+
+    App.state.records.todayDone = done === true;
+    App.state.records.weekRating = records.weekRating;
+    App.state.records.doneDates = dates;
+    App.state.records.lastDoneAt = dates.length ? dates[dates.length - 1] : null;
+    return App.state.records;
   };
 
   /* =====================================================================
@@ -97,11 +152,7 @@
     }
 
     if (saved.records && typeof saved.records === "object") {
-      s.records = {
-        todayDone: saved.records.todayDone === true,
-        weekRating: typeof saved.records.weekRating === "string"
-          ? saved.records.weekRating : null
-      };
+      s.records = App.normalizeRecords(saved.records);
     }
 
     return true;
@@ -119,7 +170,19 @@
   App.prefs = {
     reminderTime: "",
     // SC-00 導入画面を見たか（設計書 SC-00 v0.1 §4。初回のみ表示の判定に使う）
-    hasSeenIntro: false
+    hasSeenIntro: false,
+    // 設定でユーザー自身が選んだ、候補から外したい成分タグ名。
+    avoidedIngredients: []
+  };
+
+  /** 保存値・UI入力のどちらにも使う、成分タグ名配列の後方互換ガード。 */
+  App.normalizeAvoidedIngredients = function (value) {
+    if (!Array.isArray(value)) return [];
+    return value.reduce(function (names, name) {
+      var normalized = typeof name === "string" ? name.trim() : "";
+      if (normalized && names.indexOf(normalized) === -1) names.push(normalized);
+      return names;
+    }, []);
   };
 
   App.loadPrefs = function () {
@@ -130,7 +193,8 @@
       return {
         reminderTime: typeof parsed.reminderTime === "string" ? parsed.reminderTime : "",
         // 型ガード: 壊れた値・旧形式は初期値(false)のまま扱う（設計書 SC-00 §4）
-        hasSeenIntro: typeof parsed.hasSeenIntro === "boolean" ? parsed.hasSeenIntro : false
+        hasSeenIntro: typeof parsed.hasSeenIntro === "boolean" ? parsed.hasSeenIntro : false,
+        avoidedIngredients: App.normalizeAvoidedIngredients(parsed.avoidedIngredients)
       };
     } catch (error) {
       return App.prefs;
@@ -139,14 +203,41 @@
 
   App.syncPrefs = function () {
     try {
+      var prefs = App.prefs && typeof App.prefs === "object" ? App.prefs : {};
+      var avoidedIngredients = App.normalizeAvoidedIngredients(prefs.avoidedIngredients);
+
+      // 旧画面の設定保存は avoidedIngredients を持たないオブジェクトを再構成する。
+      // その場合だけ既存の保存値を引き継ぎ、チップで空配列を明示した変更は優先する。
+      if (!Array.isArray(prefs.avoidedIngredients)) {
+        try {
+          var raw = global.localStorage.getItem(App.LOCAL_KEYS.prefs);
+          var saved = raw ? JSON.parse(raw) : null;
+          avoidedIngredients = App.normalizeAvoidedIngredients(saved && saved.avoidedIngredients);
+        } catch (error) {
+          avoidedIngredients = [];
+        }
+      }
+
+      App.prefs = {
+        reminderTime: typeof prefs.reminderTime === "string" ? prefs.reminderTime : "",
+        hasSeenIntro: prefs.hasSeenIntro === true,
+        avoidedIngredients: avoidedIngredients
+      };
       global.localStorage.setItem(App.LOCAL_KEYS.prefs, JSON.stringify(App.prefs));
     } catch (error) {}
   };
 
   /* ---- DOM ヘルパ ---- */
-  App.$ = function (id) { return document.getElementById(id); };
+  App.$ = function (id) {
+    return typeof document !== "undefined" && document && typeof document.getElementById === "function"
+      ? document.getElementById(id)
+      : null;
+  };
   App.qAll = function (sel, root) {
-    return Array.prototype.slice.call((root || document).querySelectorAll(sel));
+    var target = root || (typeof document !== "undefined" ? document : null);
+    return target && typeof target.querySelectorAll === "function"
+      ? Array.prototype.slice.call(target.querySelectorAll(sel))
+      : [];
   };
 
   App.answeredCount = function () {

@@ -1,12 +1,6 @@
 /* =====================================================================
-   商品データ（手動整備マスター） — F-03/F-04/F-05 の土台
-   担当タスク: [DATA] 商品データ整備（30-50件・成分タグ）
-   ---------------------------------------------------------------------
-   方針（要件定義書 REQ-03/05 / 機能定義書 F-05）:
-   - 成分は「配合の有無」という事実のみ。安全/危険・効く/効かないは書かない。
-   - 効能の断定表現（効く・治る・最適 等）は禁止（薬機法）。
-   - 予算帯は core(〜5,000円) / sub(〜1,500円) の2区分。
-   - グローバル window.PRODUCTS として読み込む（ビルド不要）。
+   Product master for recommendation logic.
+   MVP keeps a small, local-only dataset.
    ===================================================================== */
 (function (global) {
   "use strict";
@@ -232,12 +226,11 @@
   global.PRODUCTS = PRODUCTS;
 
   /**
-   * 予算帯でしぼり込む。
    * @param {("core"|"sub")} budget
    * @returns {Product[]}
    */
   global.filterProductsByBudget = function (budget) {
-    if (budget === "core") return PRODUCTS.slice(); // core は全件が対象(〜5,000円)
+    if (budget === "core") return PRODUCTS.slice();
     return PRODUCTS.filter(function (p) { return p.budget === "sub"; });
   };
 })(window);

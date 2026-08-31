@@ -1,8 +1,8 @@
 /* global self, caches, fetch */
 "use strict";
 
-var CACHE_NAME = "tazimagumi-app-v17"; // appアセット更新のため+1（Issue #107）
-// index.html の読み込み順に合わせる: data → state → storage → contracts → disclaimer → screens → debug → main
+var CACHE_NAME = "tazimagumi-app-v24"; // S3 module分割と比較focus回帰を反映（Issue #197）
+// index.html の読み込み順に合わせる: data → state → storage → contracts → disclaimer → s3 → screens → debug → main → sw-register
 var APP_SHELL = [
   "./",
   "./index.html",
@@ -12,9 +12,11 @@ var APP_SHELL = [
   "./js/storage.js",
   "./js/contracts.js",
   "./js/disclaimer.js",
+  "./js/s3.js",
   "./js/screens.js",
   "./js/debug.js",
   "./js/main.js",
+  "./js/sw-register.js",
   "./manifest.webmanifest",
   "./icons/icon-192.png",
   "./icons/icon-512.png",

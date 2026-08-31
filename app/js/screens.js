@@ -3,7 +3,7 @@
    担当タスク:
      [F-01] 初回チェック（S1ウィザード）
      [F-02] ロードマップ（S2）
-     [F-03/04/05] 商品候補・比較（S3）  ← data/products.js を使う
+     [F-03/04/05] 商品候補・比較（S3）は app/js/s3.js へ分離
      [F-06] 継続記録（S4）
    ---------------------------------------------------------------------
    - 共有状態は window.App（state.js）から読む。
@@ -200,6 +200,7 @@
     state.completed = false;
     state.diagnosis = null;
     state.roadmap = null;
+    if (typeof App.resetS3Comparison === "function") App.resetS3Comparison();
     App.updateProgress();
     qAll(".chip", $("qstack")).forEach(function (ch) { ch.setAttribute("aria-checked", "false"); });
     qAll(".tab").forEach(function (t) {
@@ -269,15 +270,6 @@
     App.resetS1();
     App.showScreen("s1");
     App.toast("保存データを削除しました");
-  };
-
-  /* =================== [F-03/04/05] S3 商品候補（データ駆動の予算カウント） =================== */
-  /* 候補リスト/比較表の本格描画は担当タスクで data/products.js を使って実装する。
-     ここでは土台として「予算帯の件数表示」だけデータ連動させてある。 */
-  App.updateBudgetCount = function (budget) {
-    var numEl = $("budgetNum");
-    if (!numEl || typeof global.filterProductsByBudget !== "function") return;
-    numEl.textContent = String(global.filterProductsByBudget(budget).length);
   };
 
   /* =================== [F-06] S4 継続記録 =================== */

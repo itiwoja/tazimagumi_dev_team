@@ -1,0 +1,88 @@
+name: Sync Gantt from GitHub Issues
+
+# Issueの状態・コメント・担当・タイトル・ラベル・マイルストーン変更を、ガントチャートの自動生成ブロックへ反映する。
+# developは保護ブランチ（enforce_admins）で直接pushできないため、同期差分を一時PRとして作成し、
+# マージ予約（--auto）してPR Check成功後に自動マージする（人手のレビュー・マージは不要）。
+# 差分が無ければPRもマージも発生しない。
+
+on:
+  issues:
+    types: [closed, reopened, edited, labeled, unlabeled, assigned, unassigned, milestoned, demilestoned]
+  issue_comment:
+    types: [created, edited, deleted]
+  label:
+    types: [edited, deleted]
+  milestone:
+    types: [edited, deleted]
+  push:
+    branches: [develop]
+    paths:
+      - "scripts/gantt-issue-map.json"
+      - "scripts/sync-gantt-issues.mjs"
+      - "docs/schedule/ガントチャート_v2.2.md"
+      - ".github/workflows/sync-gantt-issues.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: read
+
+concurrency:
+  group: sync-gantt-issues
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    if: github.event_name != 'issue_comment' || github.event.issue.pull_request == null
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout develop
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          ref: develop
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "20"
+
+      - name: Regenerate Issue sync block
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/sync-gantt-issues.mjs
+
+      - name: Create or update sync PR
+        id: cpr
+        uses: peter-evans/create-pull-request@22a9089034f40e5a961c8808d113e2c98fb63676 # v7
+        with:
+          # GITHUB_TOKENでのPR作成が無効なため、既存の自動化用PATをSecret経由で使う。
+          token: ${{ secrets.IKKI_CLAUDE_TOKEN }}
+          branch: chore/sync-gantt-issues
+          base: develop
+          delete-branch: true
+          add-paths: docs/schedule/ガントチャート_v2.2.md
+          commit-message: "docs: GitHub Issue進捗をガントへ同期"
+          title: "docs: GitHub Issue進捗をガントへ同期"
+          body: |
+            ## 概要
+            GitHub Issuesのタイトル・Issue状態・担当・緊急度ラベル・マイルストーン・最終更新・完了日を、`docs/schedule/ガントチャート_v2.2.md` の自動同期ブロックへ反映します。
+
+            ## 注意
+            - 日程・ガントID・Issue番号の対応は `scripts/gantt-issue-map.json` が正です。
+            - Issue状態はdevelopへの統合済み・リリース準備完了を意味しません。
+            - `develop` は保護ブランチのため直接pushできず、このPRは自動生成後にマージ予約され、PR Check 成功後に自動マージされます（人手のレビュー・マージは不要）。
+
+      - name: Auto-merge sync PR
+        # 差分があってPRが作成/更新された時だけマージする（差分なし=operation 'none'、
+        # 差分が消えてクローズされた場合=operation 'closed' はマージ対象外）。
+        # developはレビュー必須0件だが PR Check が必須ステータスチェックなので、即時マージは
+        # 「チェック保留中」で失敗する。--auto でマージ予約し、PR Check 成功後に自動で入る。
+        if: steps.cpr.outputs.pull-request-operation == 'created' || steps.cpr.outputs.pull-request-operation == 'updated'
+        env:
+          # GITHUB_TOKENではマージ後のイベントが連鎖しない/権限が足りないため、PR作成と同じPATを使う。
+          GH_TOKEN: ${{ secrets.IKKI_CLAUDE_TOKEN }}
+        run: |
+          gh pr merge "${{ steps.cpr.outputs.pull-request-number }}" \
+            --repo "${{ github.repository }}" \
+            --auto --squash --delete-branch

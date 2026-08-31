@@ -54,6 +54,7 @@
   var reminderTime = $("reminderTime");
   var reminderSaveBtn = $("reminderSaveBtn");
   var resetDiagnosisBtn = $("resetDiagnosisBtn");
+  var exportDataBtn = $("exportDataBtn");
   var clearDataBtn = $("clearDataBtn");
   var clearConfirm = $("clearConfirm");
   var clearConfirmBtn = $("clearConfirmBtn");
@@ -166,7 +167,33 @@
   $("sheetScrim").addEventListener("click", closeSheet);
   document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeSheet(); });
 
-  /* ---- [F-03] 予算トグル（件数はデータ連動） ---- */
+  /* ---- プライバシーシート（Issue #84） ---- */
+  var privacyOpenBtn = $("privacyOpenBtn");
+  var privacySheet = $("privacySheet");
+  var privacyClose = $("privacyClose");
+  var privacyScrim = $("privacyScrim");
+  var privacyLastFocus = null;
+  function openPrivacy() {
+    privacyLastFocus = document.activeElement;
+    if (privacySheet) privacySheet.hidden = false;
+    if (privacyClose) privacyClose.focus();
+  }
+  function closePrivacy() {
+    if (privacySheet) privacySheet.hidden = true;
+    if (privacyLastFocus && typeof privacyLastFocus.focus === "function") privacyLastFocus.focus();
+  }
+  if (privacyOpenBtn) privacyOpenBtn.addEventListener("click", openPrivacy);
+  if (privacyClose) privacyClose.addEventListener("click", closePrivacy);
+  if (privacyScrim) privacyScrim.addEventListener("click", closePrivacy);
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && privacySheet && !privacySheet.hidden) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      closePrivacy();
+    }
+  });
+
+  /* ---- [F-03] 予算トグル（候補・比較表もデータ連動） ---- */
   qAll(".budget__btn").forEach(function (b) {
     b.addEventListener("click", function () {
       qAll(".budget__btn").forEach(function (x) {
@@ -174,10 +201,24 @@
       });
       b.classList.add("is-on"); b.setAttribute("aria-pressed", "true");
       var key = b.getAttribute("data-budget");
-      App.updateBudgetCount(key);
+      if (typeof App.renderS3 === "function") {
+        App.renderS3();
+      } else {
+        App.updateBudgetCount(key);
+      }
       if (key === "sub") App.toast("まず1本だけ。これで十分はじめられます");
     });
   });
+
+  /* ---- [F-04] 比較対象の選択 ---- */
+  var candGroups = $("candGroups");
+  if (candGroups) {
+    candGroups.addEventListener("click", function (e) {
+      var select = e.target.closest("[data-product-id]");
+      if (!select || typeof App.toggleCompareProduct !== "function") return;
+      App.toggleCompareProduct(select.getAttribute("data-product-id"));
+    });
+  }
 
   /* ---- [F-06] 今日のドット（state.records に保存） ---- */
   var dot = $("todayDot");
@@ -214,6 +255,9 @@
     App.showScreen("s1");
     closeSettingsSheet();
     App.toast("診断をS1からやり直しました");
+  });
+  if (exportDataBtn) exportDataBtn.addEventListener("click", function () {
+    if (typeof App.exportData === "function") App.exportData();
   });
   if (clearDataBtn) clearDataBtn.addEventListener("click", function () {
     settingsArmedClear = true;
@@ -273,6 +317,8 @@
       r.setAttribute("aria-pressed", on ? "true" : "false");
     });
   }
+  // screens.js の clearLocalData から S4 記録UIを再描画するために公開（Issue #119）
+  App.repaintRecords = restoreRecords;
 
   /* ---- init ---- */
   syncReminderField();
@@ -283,6 +329,16 @@
     restoreChips();
     restoreRecords();
     if (state.completed) {
+      // 古いセーブデータ等の理由で診断結果が欠けている場合は再生成
+      if (!state.diagnosis || !state.roadmap) {
+        try {
+          state.diagnosis = App.diagnose(state.answers);
+          state.roadmap = App.buildRoadmap(state.diagnosis);
+        } catch (e) {
+          console.error("診断データの再生成に失敗しました:", e);
+        }
+      }
+
       // 完了済み: タブ解放（App.complete と同等）＋保存画面を復元
       qAll(".tab").forEach(function (t) {
         t.classList.remove("is-locked");

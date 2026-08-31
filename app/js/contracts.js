@@ -12,16 +12,16 @@
    - 読み込み順（index.html）: products → state → storage → contracts → disclaimer → screens → main
 
    ■ 実装状況（2026-07 時点）
-   - App.diagnose      : 実装済み（本ファイル下部）。※ただし screens.js/main.js から未呼び出し（画面未結線）
-   - App.buildRoadmap  : 未実装スタブ（Issue #35 / PR #104 で対応中）
-   - App.recommend     : 未実装スタブ（Issue #37。前提: 商品 typeTags = Issue #54）
-   - App.buildCompareTable : 未実装スタブ（Issue #38）
+   - App.diagnose      : 実装済み（本ファイル下部）。screens.js の App.renderRoadmap 経由で画面結線済み（Issue #34/#36/#60）。
+   - App.buildRoadmap  : 実装済み（本ファイル下部。Issue #35）。
+   - App.recommend     : 実装済み（本ファイル下部。商品 typeTags = Issue #54）。s3.js の App.renderS3 経由で画面結線済み（Issue #61）。
+   - App.buildCompareTable : 実装済み（本ファイル下部。Issue #38）。s3.js の App.renderS3 から呼び出し済み。
    - 既知の乖離: 現行UIは最小5問だが diagnose の pointTable は診断ロジック設計書の23問index前提。
-     5問UIへの結線／23問化の統合は別 feature ブランチで対応（下記「■ 未統合」）。
+     5問UIへの結線は完了済み（Issue #34/#36/#60）。23問化の統合は別 feature ブランチ（Issue #59）で対応予定。
 
    ■ 未統合（TODO・別ブランチ）
-   - diagnose を complete() に結線し、5問UIの回答→タイプ判定→S2/S3 に反映する統合が未実施。
-   - Diagnosis.topContributors（型定義・設計書§4 Step7）は現状 diagnose が返していない。
+   - 23問へのUI拡張（Issue #59）。
+   - Diagnosis.topContributors（型定義・設計書§4 Step7）は現状 diagnose が返していない（MVPでは省略し、23問拡張時に対応予定）。
 
    ■ 根拠ドキュメント
    - 診断:  docs/specs/診断ロジック設計書_v1.1.md
@@ -63,7 +63,7 @@
    * @property {SkinType|null} secondaryType  第二タイプ（複合でなければ null）
    * @property {boolean}       isComposite    複合タイプか（第1・第2の差が10pt以内）
    * @property {AxisScores}    scores         軸別スコア（判定根拠）
-   * @property {string[]}     [topContributors] 上位軸に効いた質問など（任意）
+   * @property {string[]}     [topContributors] 上位軸に効いた質問など（任意。MVPでは省略、23問拡張時に実装予定）
    */
 
   /** 推薦の1グループ（概念=categoryごと）。
@@ -557,6 +557,79 @@
     return steps;
   };
 
+  function recommendationTypes(diagnosis) {
+    var mainType = diagnosis && diagnosis.primaryType ? diagnosis.primaryType : null;
+    var subType = null;
+
+    if (
+      diagnosis &&
+      diagnosis.isComposite &&
+      diagnosis.secondaryType &&
+      diagnosis.secondaryType !== "type6" &&
+      diagnosis.secondaryType !== mainType
+    ) {
+      subType = diagnosis.secondaryType;
+    }
+
+    return {
+      mainType: mainType,
+      subType: subType,
+      targets: subType ? [mainType, subType] : (mainType ? [mainType] : [])
+    };
+  }
+
+  function eligibleProducts(budget) {
+    var source = typeof global.filterProductsByBudget === "function"
+      ? global.filterProductsByBudget(budget)
+      : (global.PRODUCTS || []).slice();
+
+    return source.filter(function (product) {
+      return product && Array.isArray(product.typeTags);
+    });
+  }
+
+  function matchingTypeCount(product, targets) {
+    return targets.reduce(function (count, type) {
+      return count + (product.typeTags.indexOf(type) !== -1 ? 1 : 0);
+    }, 0);
+  }
+
+  function compareCandidates(targets) {
+    return function (left, right) {
+      var matchDifference = matchingTypeCount(right, targets) - matchingTypeCount(left, targets);
+      if (matchDifference !== 0) return matchDifference;
+
+      var leftPrice = typeof left.price === "number" ? left.price : Number.POSITIVE_INFINITY;
+      var rightPrice = typeof right.price === "number" ? right.price : Number.POSITIVE_INFINITY;
+      if (leftPrice !== rightPrice) return leftPrice - rightPrice;
+
+      var leftHasSummary = typeof left.summary_one_liner === "string" && left.summary_one_liner.trim() !== "";
+      var rightHasSummary = typeof right.summary_one_liner === "string" && right.summary_one_liner.trim() !== "";
+      return Number(rightHasSummary) - Number(leftHasSummary);
+    };
+  }
+
+  function categoryGroups(products, targets) {
+    var groups = [];
+    var indexes = {};
+
+    products.forEach(function (product) {
+      var category = product.category || "";
+      if (!Object.prototype.hasOwnProperty.call(indexes, category)) {
+        indexes[category] = groups.length;
+        groups.push({ category: category, products: [] });
+      }
+      groups[indexes[category]].products.push(product);
+    });
+
+    groups.forEach(function (group) {
+      group.products.sort(compareCandidates(targets));
+      group.products = group.products.slice(0, 3);
+    });
+
+    return groups;
+  }
+
   /**
    * 診断結果 ＋ 予算帯 → 商品候補（概念ごと／複合時はメイン＋サブ）。
    * data/products.js（window.PRODUCTS, filterProductsByBudget）を使う。
@@ -565,18 +638,75 @@
    * @param {("core"|"sub")} budget
    * @returns {Recommendation}
    */
-  App.recommend = notImplemented(
-    "App.recommend", "たかと・ひろと", "#37", "docs/design/推薦ロジック仕様書_v1.0.md §2-3"
-  );
+  App.recommend = function (diagnosis, budget) {
+    var types = recommendationTypes(diagnosis);
+    var products = eligibleProducts(budget);
+    var main = types.mainType
+      ? categoryGroups(products.filter(function (product) {
+        return product.typeTags.indexOf(types.mainType) !== -1;
+      }), types.targets)
+      : [];
+    var sub = types.subType
+      ? categoryGroups(products.filter(function (product) {
+        return product.typeTags.indexOf(types.subType) !== -1;
+      }), types.targets)
+      : null;
+
+    return {
+      main: main,
+      sub: sub,
+      isComposite: types.subType !== null
+    };
+  };
 
   /**
    * 選んだ商品（最大3）→ 横並び比較表。値が分かれる行は differs=true。
+   * 比較軸: 価格・容量・目的（category）・成分タグ（有無）・違いの一言。
    * 成分は「有無」のみ。効能・安全性の断定は載せない（薬機法）。
    * 担当: ゆうと / Issue #38 [p4d] SC-03 商品比較UI
+   * 参照: docs/design/推薦ロジック仕様書_v1.0.md §4
    * @param {Product[]} products
    * @returns {CompareTable}
    */
-  App.buildCompareTable = notImplemented(
-    "App.buildCompareTable", "ゆうと", "#38", "docs/design/推薦ロジック仕様書_v1.0.md §4"
-  );
+  App.buildCompareTable = function (products) {
+    var columns = Array.isArray(products) ? products.slice(0, 3) : [];
+
+    function differs(values) {
+      return values.some(function (value) { return value !== values[0]; });
+    }
+
+    function row(label, values) {
+      return { label: label, values: values, differs: differs(values) };
+    }
+
+    var rows = [
+      row("価格", columns.map(function (p) {
+        return "¥" + Number(p.price || 0).toLocaleString("ja-JP");
+      })),
+      row("容量", columns.map(function (p) {
+        return (typeof p.volume === "number" ? p.volume : "-") + "mL";
+      })),
+      row("目的", columns.map(function (p) {
+        return p.category || "-";
+      }))
+    ];
+
+    var ingredientNames = [];
+    columns.forEach(function (p) {
+      (Array.isArray(p.ingredients) ? p.ingredients : []).forEach(function (name) {
+        if (ingredientNames.indexOf(name) === -1) ingredientNames.push(name);
+      });
+    });
+    ingredientNames.forEach(function (name) {
+      rows.push(row("成分: " + name, columns.map(function (p) {
+        return Array.isArray(p.ingredients) && p.ingredients.indexOf(name) !== -1 ? "あり" : "なし";
+      })));
+    });
+
+    rows.push(row("違いの一言", columns.map(function (p) {
+      return (p.summary_one_liner && p.summary_one_liner.trim()) || "—";
+    })));
+
+    return { columns: columns, rows: rows };
+  };
 })(window);

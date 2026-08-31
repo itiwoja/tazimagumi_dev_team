@@ -1,0 +1,113 @@
+/* Issue #67: 診断完了直後の結果カード演出 */
+.result-card {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-bottom: 4px solid var(--orange);
+  border-radius: var(--r-card);
+  box-shadow: var(--shadow-soft);
+  padding: .5rem .75rem .65rem;
+  transform-origin: 50% 0;
+}
+
+.result-card__cracker {
+  position: absolute;
+  bottom: .35rem;
+  z-index: 0;
+  width: .6rem;
+  height: .6rem;
+  opacity: 0;
+  border-radius: 50%;
+  background: var(--orange);
+  box-shadow: 0 0 0 .18rem rgba(224, 126, 52, .18);
+  pointer-events: none;
+}
+
+.result-card__cracker--left { left: 1.1rem; }
+.result-card__cracker--right { right: 1.1rem; }
+
+.result-card__cracker::before,
+.result-card__cracker::after {
+  position: absolute;
+  bottom: .15rem;
+  width: .35rem;
+  height: .45rem;
+  border-radius: .12rem;
+  content: "";
+}
+
+.result-card__cracker::before {
+  left: -.7rem;
+  background: var(--green-strong);
+  box-shadow:
+    -.55rem -1rem 0 -.04rem var(--orange),
+    -.15rem -2rem 0 -.05rem var(--ink-orange),
+    .3rem -2.8rem 0 -.06rem var(--green-strong),
+    .8rem -1.65rem 0 -.04rem var(--orange);
+  transform: rotate(-28deg);
+}
+
+.result-card__cracker::after {
+  left: .95rem;
+  background: var(--ink-orange);
+  box-shadow:
+    .55rem -1rem 0 -.04rem var(--green-strong),
+    .15rem -2rem 0 -.05rem var(--orange),
+    -.3rem -2.8rem 0 -.06rem var(--ink-orange),
+    -.8rem -1.65rem 0 -.04rem var(--green-strong);
+  transform: rotate(28deg);
+}
+
+.result-card--revealing .result-card__cracker--left {
+  animation: cracker-left 520ms cubic-bezier(.2, .8, .25, 1) both;
+}
+
+.result-card--revealing .result-card__cracker--right {
+  animation: cracker-right 520ms cubic-bezier(.2, .8, .25, 1) both;
+}
+
+@keyframes cracker-left {
+  0% { opacity: 0; transform: translate(0, 0) scale(.35); }
+  16% { opacity: 1; transform: translate(-.1rem, -.2rem) scale(1.1); }
+  100% { opacity: 0; transform: translate(-.25rem, -3.25rem) rotate(-18deg) scale(1.35); }
+}
+
+@keyframes cracker-right {
+  0% { opacity: 0; transform: translate(0, 0) scale(.35); }
+  16% { opacity: 1; transform: translate(.1rem, -.2rem) scale(1.1); }
+  100% { opacity: 0; transform: translate(.25rem, -3.25rem) rotate(18deg) scale(1.35); }
+}
+
+.result-card .done-title {
+  font-size: 1.125rem;
+}
+
+.result-card .done-sub {
+  font-size: .75rem;
+}
+
+.result-card--revealing {
+  animation: result-card-reveal 560ms cubic-bezier(.22, 1, .36, 1) both;
+}
+
+@keyframes result-card-reveal {
+  from {
+    opacity: .35;
+    transform: translateY(10px) scale(.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .result-card--revealing {
+    animation: none;
+  }
+
+  .result-card--revealing .result-card__cracker {
+    animation: none;
+    opacity: 0;
+  }
+}

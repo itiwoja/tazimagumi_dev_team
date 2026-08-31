@@ -16,6 +16,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=Inter:wght@500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="./css/style.css">
+<link rel="stylesheet" href="./css/result-celebration.css">
 <!-- 読み込み順（基盤の約束）: data → state → storage → contracts → disclaimer → s3 → screens → debug → main。各scriptはdeferで順序保持 -->
 <!-- debug.js は localStorage を書き換えるため main.js（App.restore）より前で固定（Issue #113） -->
 <script src="./data/products.js" defer></script>
@@ -147,9 +148,11 @@
         <!-- .col = PC幅で左右に分かれる列の単位。スマホ／タブレットでは素のブロックなので
              縦積みのまま、表示順も従来どおり（文書順を崩さないようにグループ分けしている）。 -->
         <div class="col">
-          <div class="done-head compact-head">
+          <div class="result-card done-head compact-head" id="s2ResultCard" aria-describedby="s2TodayCopy">
+            <span class="result-card__cracker result-card__cracker--left" aria-hidden="true"></span>
+            <span class="result-card__cracker result-card__cracker--right" aria-hidden="true"></span>
             <h2 class="done-title">お疲れさまでした</h2>
-            <p class="done-sub"><b id="s2ResultType">今日からの3ステップ</b></p>
+            <p class="done-sub" aria-live="polite"><b id="s2ResultType">今日からの3ステップ</b></p>
           </div>
 
           <div class="card today-card">

@@ -19,6 +19,8 @@
 <!-- 読み込み順（基盤の約束）: data → state → storage → contracts → disclaimer → s3 → screens → debug → main。各scriptはdeferで順序保持 -->
 <!-- debug.js は localStorage を書き換えるため main.js（App.restore）より前で固定（Issue #113） -->
 <script src="./data/products.js" defer></script>
+<script src="./data/ingredients.js" defer></script>
+<script src="./data/product-ingredients.js" defer></script>
 <script src="./js/state.js" defer></script>
 <script src="./js/storage.js" defer></script>
 <script src="./js/contracts.js" defer></script>

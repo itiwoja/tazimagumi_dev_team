@@ -26,8 +26,63 @@
     completed: false,
     diagnosis: null,
     roadmap: null,
-    // 継続記録(S4)の最小データ。本実装(feature/sc04-record-ui)で拡張予定。
-    records: { todayDone: false, weekRating: null }
+    // 継続記録(S4)。doneDates はローカル暦日の重複なし履歴で、累計の唯一の元データ。
+    records: { todayDone: false, weekRating: null, doneDates: [], lastDoneAt: null }
+  };
+
+  /** Date を端末ローカルの YYYY-MM-DD キーへ変換する。 */
+  App.toLocalDateKey = function (date) {
+    var d = date instanceof Date ? date : new Date();
+    var y = d.getFullYear();
+    var m = ("0" + (d.getMonth() + 1)).slice(-2);
+    var day = ("0" + d.getDate()).slice(-2);
+    return y + "-" + m + "-" + day;
+  };
+
+  function isDateKey(value) {
+    if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+    var parts = value.split("-");
+    var date = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+    return date.getFullYear() === Number(parts[0]) &&
+      date.getMonth() === Number(parts[1]) - 1 &&
+      date.getDate() === Number(parts[2]);
+  }
+
+  /**
+   * records を表示・保存可能な最小スキーマへ正規化する。
+   * lastDoneAt は doneDates から導くため、削除済みの日付が残らない。
+   */
+  App.normalizeRecords = function (records, today) {
+    var source = records && typeof records === "object" ? records : {};
+    var todayKey = isDateKey(today) ? today : App.toLocalDateKey(new Date());
+    var seen = {};
+    var doneDates = Array.isArray(source.doneDates) ? source.doneDates.filter(function (date) {
+      if (!isDateKey(date) || date > todayKey || seen[date]) return false;
+      seen[date] = true;
+      return true;
+    }).sort() : [];
+
+    return {
+      todayDone: doneDates.indexOf(todayKey) !== -1,
+      weekRating: typeof source.weekRating === "string" ? source.weekRating : null,
+      doneDates: doneDates,
+      lastDoneAt: doneDates.length ? doneDates[doneDates.length - 1] : null
+    };
+  };
+
+  /** 今日の完了トグルと履歴を同じローカル日付キーで同期する。 */
+  App.syncTodayRecord = function (done, today) {
+    var todayKey = isDateKey(today) ? today : App.toLocalDateKey(new Date());
+    var records = App.normalizeRecords(App.state.records, todayKey);
+    var dates = records.doneDates.filter(function (date) { return date !== todayKey; });
+    if (done === true) dates.push(todayKey);
+    dates.sort();
+
+    App.state.records.todayDone = done === true;
+    App.state.records.weekRating = records.weekRating;
+    App.state.records.doneDates = dates;
+    App.state.records.lastDoneAt = dates.length ? dates[dates.length - 1] : null;
+    return App.state.records;
   };
 
   /* =====================================================================
@@ -97,11 +152,7 @@
     }
 
     if (saved.records && typeof saved.records === "object") {
-      s.records = {
-        todayDone: saved.records.todayDone === true,
-        weekRating: typeof saved.records.weekRating === "string"
-          ? saved.records.weekRating : null
-      };
+      s.records = App.normalizeRecords(saved.records);
     }
 
     return true;
@@ -177,9 +228,16 @@
   };
 
   /* ---- DOM ヘルパ ---- */
-  App.$ = function (id) { return document.getElementById(id); };
+  App.$ = function (id) {
+    return typeof document !== "undefined" && document && typeof document.getElementById === "function"
+      ? document.getElementById(id)
+      : null;
+  };
   App.qAll = function (sel, root) {
-    return Array.prototype.slice.call((root || document).querySelectorAll(sel));
+    var target = root || (typeof document !== "undefined" ? document : null);
+    return target && typeof target.querySelectorAll === "function"
+      ? Array.prototype.slice.call(target.querySelectorAll(sel))
+      : [];
   };
 
   App.answeredCount = function () {

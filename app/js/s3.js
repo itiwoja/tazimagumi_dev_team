@@ -32,8 +32,16 @@
     return "¥" + Number(price || 0).toLocaleString("ja-JP");
   }
 
+  function categoryGroupId(category, lane) {
+    var laneSuffix = lane === "sub" ? "-sub" : "";
+    return "cand-group-" + encodeURIComponent(String(category)).replace(/%/g, "_") + laneSuffix;
+  }
+
+  App.categoryGroupId = categoryGroupId;
+
   var selectedCompareIds = [];
   var selectedCompareBudget = null;
+  var focusedGroupTimer = null;
 
   App.resetS3Comparison = function () {
     selectedCompareIds = [];
@@ -233,13 +241,15 @@
     return li;
   }
 
-  function buildCandGroup(group) {
-    var fragment = document.createDocumentFragment();
+  function buildCandGroup(group, lane) {
+    var groupEl = document.createElement("section");
+    groupEl.className = "cand-group";
+    groupEl.setAttribute("id", categoryGroupId(group.category, lane));
 
     var label = document.createElement("p");
     label.className = "sec-label";
     label.textContent = group.category + "の候補";
-    fragment.appendChild(label);
+    groupEl.appendChild(label);
 
     var ul = document.createElement("ul");
     ul.className = "cand";
@@ -264,9 +274,57 @@
       });
     }
 
-    fragment.appendChild(ul);
-    return fragment;
+    groupEl.appendChild(ul);
+    return groupEl;
   }
+
+  function findCategoryGroup(category, lane) {
+    return document.getElementById(categoryGroupId(category, lane));
+  }
+
+  function appendEmptyCategoryGroup(category, lane) {
+    var groupsEl = $("candGroups");
+    if (!groupsEl || findCategoryGroup(category, lane)) return findCategoryGroup(category, lane);
+    groupsEl.appendChild(buildCandGroup({ category: category, products: [] }, lane));
+    return findCategoryGroup(category, lane);
+  }
+
+  function focusCategoryGroup(groupEl) {
+    var firstCandidate = groupEl.querySelector("[data-product-id]");
+    if (firstCandidate) {
+      firstCandidate.focus();
+      return;
+    }
+    groupEl.setAttribute("tabindex", "-1");
+    groupEl.focus({ preventScroll: true });
+  }
+
+  function highlightCategoryGroup(groupEl) {
+    if (focusedGroupTimer !== null && typeof global.clearTimeout === "function") {
+      global.clearTimeout(focusedGroupTimer);
+    }
+    groupEl.classList.remove("is-focused");
+    void groupEl.offsetWidth;
+    groupEl.classList.add("is-focused");
+    focusedGroupTimer = global.setTimeout(function () {
+      groupEl.classList.remove("is-focused");
+      focusedGroupTimer = null;
+    }, 2000);
+  }
+
+  App.gotoCategory = function (category, lane) {
+    if (typeof category !== "string" || category.trim() === "") return false;
+
+    lane = lane === "sub" ? "sub" : "main";
+    App.showScreen("s3");
+    var target = findCategoryGroup(category, lane) || appendEmptyCategoryGroup(category, lane);
+    if (!target) return false;
+
+    target.scrollIntoView({ behavior: "smooth", block: "start" });
+    focusCategoryGroup(target);
+    highlightCategoryGroup(target);
+    return true;
+  };
 
   function buildCompareDom(table) {
     var fragment = document.createDocumentFragment();
@@ -391,7 +449,7 @@
     if (groupsEl) {
       groupsEl.textContent = "";
       (recommendation.main || []).forEach(function (group) {
-        groupsEl.appendChild(buildCandGroup(group));
+        groupsEl.appendChild(buildCandGroup(group, "main"));
       });
 
       if (recommendation.isComposite && recommendation.sub && recommendation.sub.length) {
@@ -404,7 +462,7 @@
         groupsEl.appendChild(subNote);
 
         recommendation.sub.forEach(function (group) {
-          groupsEl.appendChild(buildCandGroup(group));
+          groupsEl.appendChild(buildCandGroup(group, "sub"));
         });
       }
     }

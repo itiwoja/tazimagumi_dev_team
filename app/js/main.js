@@ -325,7 +325,8 @@
     var on = dot.getAttribute("aria-pressed") === "true";
     var next = !on;
     dot.setAttribute("aria-pressed", next ? "true" : "false");
-    state.records.todayDone = next;
+    if (typeof App.syncTodayRecord === "function") App.syncTodayRecord(next);
+    else state.records.todayDone = next;
     if (next) App.toast("今日ぶん、記録できました");
     App.persist();
   });

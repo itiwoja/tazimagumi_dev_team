@@ -94,6 +94,8 @@
       if (i < answers.length) answers[i] = a;
     });
 
+    var log = buildDemoLog(new Date());
+    var doneDates = log.days.filter(function (day) { return day.done; }).map(function (day) { return day.date; });
     var lastWeek = DEMO_WEEKS[DEMO_WEEKS.length - 1];
     var seededState = {
       current: "s4",              // 「3週間使い込んだ状態」の見せ場＝継続記録から開く
@@ -102,7 +104,9 @@
       completed: true,
       records: {
         todayDone: lastWeek.pattern[6] === 1,
-        weekRating: lastWeek.rating
+        weekRating: lastWeek.rating,
+        doneDates: doneDates,
+        lastDoneAt: doneDates.length ? doneDates[doneDates.length - 1] : null
       }
     };
     if (!App.storage.save(seededState)) {
@@ -120,8 +124,9 @@
     s.completed = seededState.completed;
     s.records.todayDone = seededState.records.todayDone;
     s.records.weekRating = seededState.records.weekRating;
+    s.records.doneDates = seededState.records.doneDates.slice();
+    s.records.lastDoneAt = seededState.records.lastDoneAt;
 
-    var log = buildDemoLog(new Date());
     try {
       global.localStorage.setItem(App.LOCAL_KEYS.continuity, JSON.stringify({
         v: 1,

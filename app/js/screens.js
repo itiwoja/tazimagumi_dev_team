@@ -267,7 +267,12 @@
    */
   App.exportData = function () {
     var saved = (App.storage && App.storage.load) ? App.storage.load() : null;
-    var payload = { v: 1, exportedAt: Date.now(), state: saved || App.state };
+    var payload = {
+      v: 1,
+      exportedAt: Date.now(),
+      state: saved || App.state,
+      prefs: App.prefs || {}
+    };
     var url = null;
     try {
       var blob = new global.Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });

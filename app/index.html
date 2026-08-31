@@ -22,6 +22,7 @@
 <script src="./data/products.js" defer></script>
 <script src="./data/ingredients.js" defer></script>
 <script src="./data/product-ingredients.js" defer></script>
+<script src="./data/question-templates.js" defer></script>
 <script src="./js/state.js" defer></script>
 <script src="./js/storage.js" defer></script>
 <script src="./js/contracts.js" defer></script>
@@ -222,6 +223,7 @@
         <p class="sec-note" id="compareHint">候補から2〜3件選ぶと比較表が表示されます。</p>
         <div class="compare" role="table" aria-label="商品の比較" id="compareTable"></div>
           <p class="factnote">成分は有無の事実のみ。合わない時は使用をやめてください。</p>
+          <div class="question-helper" id="questionHelper"></div>
         </div>
 
         <div class="col col--full">
@@ -359,6 +361,17 @@
       <button class="ghost-btn sheet__close" id="sheetClose" type="button">とじる</button>
     </div>
     <button class="sheet__scrim" id="sheetScrim" aria-label="とじる"></button>
+  </div>
+
+  <!-- 店員さんに聞く質問文シート（S3の補助導線） -->
+  <div class="sheet" id="questionSheet" hidden>
+    <div class="sheet__panel question-sheet__panel" role="dialog" aria-modal="true" aria-labelledby="questionSheetTitle" aria-describedby="questionSheetNote" tabindex="-1">
+      <h3 class="sheet__t" id="questionSheetTitle">店員さんに聞くときの例文</h3>
+      <ul class="question-list" id="questionList"></ul>
+      <p class="sheet__b question-sheet__note" id="questionSheetNote">例文はあくまで叩き台です。聞きやすい言葉に変えて大丈夫です。</p>
+      <button class="ghost-btn sheet__close" id="questionClose" type="button">とじる</button>
+    </div>
+    <button class="sheet__scrim" id="questionScrim" aria-label="例文シートをとじる"></button>
   </div>
 
   <!-- プライバシーポリシーシート（Issue #84） -->

@@ -688,6 +688,45 @@
   };
 
   /**
+   * 診断タイプに合う店員さんへの質問文を、タイプ別を先頭にして選ぶ。
+   * 複合診断では primaryType のみを使い、入力は変更しない。
+   * @param {SkinType|Diagnosis} typeOrDiagnosis
+   * @param {{limit?: number, templates?: Array<{id: string, types: SkinType[]|null, text: string}>}|Array<{id: string, types: SkinType[]|null, text: string}>} [options]
+   * @returns {Array<{id: string, text: string}>}
+   */
+  App.pickQuestionTemplates = function (typeOrDiagnosis, options) {
+    var typeId = typeof typeOrDiagnosis === "string"
+      ? typeOrDiagnosis
+      : typeOrDiagnosis && typeOrDiagnosis.primaryType;
+    var templates = global.QUESTION_TEMPLATES || [];
+    var limit = 4;
+
+    if (Array.isArray(options)) {
+      templates = options;
+    } else if (options && typeof options === "object") {
+      if (Array.isArray(options.templates)) templates = options.templates;
+      if (typeof options.limit === "number" && isFinite(options.limit)) {
+        limit = Math.max(0, Math.min(4, Math.floor(options.limit)));
+      }
+    }
+
+    if (!Array.isArray(templates) || limit === 0) return [];
+
+    var typeSpecific = templates.filter(function (template) {
+      return template && Array.isArray(template.types) && template.types.indexOf(typeId) !== -1;
+    });
+    var common = templates.filter(function (template) {
+      return template && template.types === null;
+    });
+    var selected = typeSpecific.slice(0, Math.min(2, limit));
+    selected = selected.concat(common.slice(0, Math.min(2, limit - selected.length)));
+
+    return selected.map(function (template) {
+      return { id: template.id, text: template.text };
+    });
+  };
+
+  /**
    * 商品リストを、ユーザーが選んだ成分タグの有無だけで分ける。
    * 商品や入力配列は変更しないため、推薦結果の描画前フィルタにも使える。
    * @param {Product[]} products

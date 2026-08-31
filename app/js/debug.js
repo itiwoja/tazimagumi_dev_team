@@ -168,7 +168,7 @@
     Object.keys(App.LOCAL_KEYS).forEach(function (name) {
       try { global.localStorage.removeItem(App.LOCAL_KEYS[name]); } catch (e) {}
     });
-    App.prefs = { reminderTime: "" };
+    App.prefs = { reminderTime: "", hasSeenIntro: false };
   }
 
   var match = /[?&]debug=(demo|reset)(?:&|$)/.exec(global.location.search);

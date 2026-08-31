@@ -54,6 +54,7 @@
   var reminderTime = $("reminderTime");
   var reminderSaveBtn = $("reminderSaveBtn");
   var resetDiagnosisBtn = $("resetDiagnosisBtn");
+  var replayIntroBtn = $("replayIntroBtn");
   var exportDataBtn = $("exportDataBtn");
   var clearDataBtn = $("clearDataBtn");
   var clearConfirm = $("clearConfirm");
@@ -123,6 +124,52 @@
   }
   cta.addEventListener("click", ctaClick);
   backBtn.addEventListener("click", function () { App.prevQuestion(); });
+
+  /* ---- SC-00 導入画面（案A: App.SCREENS に載せない独立画面 / 設計書 SC-00 v0.1 §3.2・§5） ----
+     表示中はアプリバー・タブ・CTA を隠し、この画面だけを出す。
+     「はじめる」で保存済みの画面（state.current）へ戻す。 */
+  var introEl = $("s0");
+  var introStartBtn = $("introStart");
+  var appbarEl = document.querySelector(".appbar");
+
+  function setIntroVisible(visible) {
+    if (introEl) introEl.hidden = !visible;
+    if (appbarEl) appbarEl.hidden = visible;
+    if (dock) dock.hidden = visible;
+    if (visible) {
+      App.SCREENS.forEach(function (s) {
+        var el = $(s);
+        if (el) el.hidden = true;
+      });
+      var wrap = $("screenWrap");
+      if (wrap) wrap.scrollTop = 0;
+    }
+  }
+
+  /** 設定から「はじめの画面をもう一度見る」で呼ぶ。次のはじめるで現在画面へ戻る。 */
+  App.showIntro = function () {
+    App.prefs.hasSeenIntro = false;
+    App.syncPrefs();
+    setIntroVisible(true);
+  };
+
+  if (introStartBtn) introStartBtn.addEventListener("click", function () {
+    App.prefs.hasSeenIntro = true;
+    App.syncPrefs();
+    setIntroVisible(false);
+    App.showScreen(state.current);
+    var target = $(state.current);
+    if (target) {
+      target.setAttribute("tabindex", "-1");
+      target.focus({ preventScroll: true });
+    }
+  });
+
+  if (replayIntroBtn) replayIntroBtn.addEventListener("click", function () {
+    closeSettingsSheet();
+    App.showIntro();
+    if (introStartBtn) introStartBtn.focus();
+  });
 
   /* ---- chips（イベント委譲） ---- */
   $("qstack").addEventListener("click", function (e) {
@@ -354,5 +401,13 @@
       t.removeAttribute("aria-disabled");
     });
     App.toast("デバッグモード: 全画面を解放しました");
+  }
+
+  /* ---- SC-00 初回のみ表示（設計書 SC-00 §3.2 / §10） ----
+     hasSeenIntro が未設定(false)なら導入画面を初期表示する。
+     診断途中のリロード等、一度はじめた後は出さない（既存 restore 挙動を維持）。
+     デバッグモードではスキップする（開発効率のため）。 */
+  if (!App.isDebug && !App.prefs.hasSeenIntro) {
+    setIntroVisible(true);
   }
 })(window);

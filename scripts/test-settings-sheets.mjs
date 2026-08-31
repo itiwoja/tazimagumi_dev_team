@@ -156,7 +156,8 @@ function createHarness() {
   };
   const App = {
     state,
-    prefs: { reminderTime: "" },
+    SCREENS: ["s1", "s2", "s3", "s4"],
+    prefs: { reminderTime: "", hasSeenIntro: true },
     $(id) {
       return elements[id] || null;
     },

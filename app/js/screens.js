@@ -228,7 +228,11 @@
 
   App.saveReminderTime = function (time) {
     var nextTime = typeof time === "string" ? time.trim() : "";
-    App.prefs = { reminderTime: nextTime };
+    // hasSeenIntro を巻き戻さない（設計書 SC-00 §4: 別項目は保持）
+    App.prefs = {
+      reminderTime: nextTime,
+      hasSeenIntro: App.prefs.hasSeenIntro === true
+    };
     App.syncPrefs();
     var input = $("reminderTime");
     if (input && input.value !== nextTime) input.value = nextTime;
@@ -276,7 +280,7 @@
     [keys.answers, keys.result, keys.continuity, keys.prefs].forEach(function (key) {
       try { global.localStorage.removeItem(key); } catch (error) {}
     });
-    App.prefs = { reminderTime: "" };
+    App.prefs = { reminderTime: "", hasSeenIntro: false };
     // メモリ上の記録も初期化してから resetS1/showScreen（autosaveラップ対象）を呼ぶ。
     // 先に消さないと、直後の自動保存で records が midashinami:v1 に書き戻される（Issue #119）。
     state.records.todayDone = false;

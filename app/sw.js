@@ -1,7 +1,7 @@
 /* global self, caches, fetch */
 "use strict";
 
-var CACHE_NAME = "tazimagumi-app-v29"; // docs/idea機能の追加を反映
+var CACHE_NAME = "tazimagumi-app-v30"; // NG成分機能の追加を反映
 // index.html の読み込み順に合わせる: data → state → storage → contracts → disclaimer → s3 → screens → debug → main → sw-register
 var APP_SHELL = [
   "./",

@@ -263,7 +263,7 @@ test("S3 module分割の読込順・cache・行数ガードを満たす", () => 
     assert.ok(indexSource.indexOf(before) < indexSource.indexOf(order[index + 1]));
     assert.ok(swSource.indexOf(before) < swSource.indexOf(order[index + 1]));
   });
-  assert.match(swSource, /CACHE_NAME\s*=\s*["']tazimagumi-app-v28["']/);
+  assert.match(swSource, /CACHE_NAME\s*=\s*["']tazimagumi-app-v29["']/);
   assert.ok(swSource.includes('"./js/s3.js"'));
 });
 

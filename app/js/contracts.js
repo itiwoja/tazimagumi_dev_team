@@ -660,6 +660,80 @@
   };
 
   /**
+   * 同一カテゴリ内で成分タグが近い商品ペアを返す。
+   * 成分タグは重複を除いた集合としてJaccard係数を計算する。
+   * @param {Product[]} products
+   * @param {number|{threshold?: number}} [options] 類似とみなす閾値（既定0.8）
+   * @returns {Array<{a: Product, b: Product, shared: string[], score: number}>}
+   */
+  App.findSimilarPairs = function (products, options) {
+    var threshold = 0.8;
+    var requestedThreshold = typeof options === "number"
+      ? options
+      : options && options.threshold;
+
+    if (typeof requestedThreshold === "number" && isFinite(requestedThreshold)) {
+      threshold = requestedThreshold;
+    }
+
+    var candidates = Array.isArray(products) ? products : [];
+    var pairs = [];
+
+    function ingredientSet(product) {
+      return new Set(Array.isArray(product.ingredients) ? product.ingredients : []);
+    }
+
+    for (var aIndex = 0; aIndex < candidates.length - 1; aIndex++) {
+      var a = candidates[aIndex];
+      if (!a || typeof a !== "object") continue;
+
+      for (var bIndex = aIndex + 1; bIndex < candidates.length; bIndex++) {
+        var b = candidates[bIndex];
+        if (!b || typeof b !== "object" || a.category !== b.category) continue;
+
+        var aIngredients = ingredientSet(a);
+        var bIngredients = ingredientSet(b);
+        var shared = [];
+        aIngredients.forEach(function (ingredient) {
+          if (bIngredients.has(ingredient)) shared.push(ingredient);
+        });
+
+        var unionSize = aIngredients.size;
+        bIngredients.forEach(function (ingredient) {
+          if (!aIngredients.has(ingredient)) unionSize++;
+        });
+        var score = unionSize === 0 ? 0 : shared.length / unionSize;
+
+        if (score >= threshold) {
+          pairs.push({
+            a: a,
+            b: b,
+            shared: shared,
+            score: score,
+            aIndex: aIndex,
+            bIndex: bIndex
+          });
+        }
+      }
+    }
+
+    pairs.sort(function (left, right) {
+      if (right.score !== left.score) return right.score - left.score;
+      if (left.aIndex !== right.aIndex) return left.aIndex - right.aIndex;
+      return left.bIndex - right.bIndex;
+    });
+
+    return pairs.map(function (pair) {
+      return {
+        a: pair.a,
+        b: pair.b,
+        shared: pair.shared,
+        score: pair.score
+      };
+    });
+  };
+
+  /**
    * 選んだ商品（最大3）→ 横並び比較表。値が分かれる行は differs=true。
    * 比較軸: 価格・容量・目的（category）・成分タグ（有無）・違いの一言。
    * 成分は「有無」のみ。効能・安全性の断定は載せない（薬機法）。
@@ -706,6 +780,22 @@
     rows.push(row("違いの一言", columns.map(function (p) {
       return (p.summary_one_liner && p.summary_one_liner.trim()) || "—";
     })));
+
+    var similarPair = App.findSimilarPairs(columns)[0];
+    if (similarPair) {
+      var union = new Set();
+      (Array.isArray(similarPair.a.ingredients) ? similarPair.a.ingredients : []).forEach(function (ingredient) {
+        union.add(ingredient);
+      });
+      (Array.isArray(similarPair.b.ingredients) ? similarPair.b.ingredients : []).forEach(function (ingredient) {
+        union.add(ingredient);
+      });
+      var similarityFact = similarPair.shared.length + "個／全" + union.size + "種";
+
+      rows.push(row("共通する成分タグ", columns.map(function (product) {
+        return product === similarPair.a || product === similarPair.b ? similarityFact : "—";
+      })));
+    }
 
     return { columns: columns, rows: rows };
   };

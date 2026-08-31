@@ -7,17 +7,6 @@
 
   /**
    * @typedef {Object} Product
-   * @property {string} id
-   * @property {string} category
-   * @property {string} name
-   * @property {number} price
-   * @property {number} volume
-   * @property {("core"|"sub")} budget
-   * @property {string[]} type_tags
-   * @property {string} summary_one_liner
-   * @property {string} feel
-   * @property {string} scent
-   * @property {string[]} ingredients
    * @property {string} id           一意ID
    * @property {string} category     カテゴリ（例: "化粧水"）
    * @property {string} name         商品名

@@ -5,6 +5,9 @@
    ===================================================================== */
 :root{
   color-scheme:light dark;
+  /* タブレット／PC で本文が間延びしないよう、中身の最大幅を1か所で決める。
+     この幅に収まらない狭い画面では自動的に画面幅いっぱいになる。 */
+  --content-max:640px;
   --bg:#fff7ee;
   --surface:#fff;
   --text:#2b2622;
@@ -69,7 +72,10 @@
 *{box-sizing:border-box}
 html{overflow-x:clip;-webkit-text-size-adjust:100%;background:var(--bg)}
 body{
-  margin:0;min-width:320px;overflow-x:clip;
+  /* アプリ本体がビューポート全体を占め、スクロールは .screen-wrap の内側だけで起きる。
+     以前は 430px 以下だけこの挙動だったが、全画面幅へ適用した。 */
+  /* svh 非対応ブラウザ向けに vh を先に置く（後勝ちで svh が優先される） */
+  margin:0;min-width:320px;height:100vh;height:100svh;overflow:hidden;
   font-family:"Noto Sans JP","Hiragino Sans",system-ui,sans-serif;
   color:var(--text);line-height:1.6;background:var(--bg);
 }
@@ -78,30 +84,25 @@ b{font-weight:700}
 
 :where(button,a,[tabindex]):focus-visible{outline:3px solid rgba(240,130,46,.55);outline-offset:3px}
 
-/* ===================== Stage ===================== */
-.stage{max-width:980px;margin:0 auto;padding:28px 16px 48px}
-.stage__head{max-width:620px;margin:0 auto 22px}
-.stage__eyebrow{margin:0 0 6px;font-size:12px;font-weight:700;color:var(--ink-orange)}
-.stage__title{margin:0 0 8px;font-size:clamp(22px,4vw,32px);font-weight:900;line-height:1.3}
-.clip-text{color:var(--orange-cta)}
-.stage__lead{margin:0;color:var(--muted);font-size:13px}
-.stage__foot{margin-top:22px}
-.stage__foot p{margin:0;color:var(--muted);font-size:12px}
-
-/* ===================== Phone shell ===================== */
-.phone{
-  position:relative;width:min(392px,100%);margin:0 auto;
-  height:min(820px,86vh);min-height:560px;
-  display:flex;flex-direction:column;background:var(--surface);
-  border:1px solid rgba(214,189,167,.9);border-radius:28px;overflow:hidden;
-  box-shadow:var(--shadow);
+/* ===================== App shell =====================
+   端末枠（旧 .phone）と紹介ヘッダー（旧 .stage__head）は廃止。
+   どの画面幅でもアプリ本体だけがビューポート全体を占める。
+   タブレット／PC の広い画面では、背景と境界線は全幅のまま
+   「中身だけ」を --content-max に収めて中央寄せする
+   （padding-inline の max() 計算。入れ子の枠を作らないため）。 */
+.app{
+  position:relative;width:100%;height:100vh;height:100svh;
+  display:flex;flex-direction:column;background:var(--surface);overflow:hidden;
 }
-.phone__notch{display:none}
+.noscript-note{margin:0;padding:12px 16px;background:var(--soft);border-bottom:1px solid var(--line);font-size:13px}
+
+/* 全幅の帯の中で、中身だけを中央の読みやすい幅に収める共通の余白計算 */
+.appbar,.screen,.dock{--gutter:16px;padding-inline:max(var(--gutter),calc((100% - var(--content-max)) / 2))}
 
 /* ---- app bar ---- */
-.appbar{position:relative;z-index:5;padding:16px 16px 14px;border-bottom:1px solid var(--line);background:var(--surface-translucent)}
+.appbar{position:relative;z-index:5;padding-block:16px 14px;border-bottom:1px solid var(--line);background:var(--surface-translucent)}
 .appbar__brand{display:flex;align-items:center;gap:8px;margin-bottom:12px}
-.appbar__name{font-weight:900;font-size:16px}
+.appbar__name{margin:0;font-weight:900;font-size:16px}
 .appbar__step{margin-left:auto;font-size:11px;font-weight:700;color:var(--muted);
   border:1px solid var(--line);padding:3px 10px;border-radius:999px;background:var(--soft)}
 
@@ -126,11 +127,19 @@ b{font-weight:700}
 
 /* ===================== Screen viewport ===================== */
 .screen-wrap{flex:1;min-height:0;overflow-y:auto;overflow-x:clip}
-.screen{padding:18px 16px 104px}
+.screen{padding-block:18px 104px}
 .screen[hidden]{display:none}
 
 .sec-label{margin:18px 2px 10px;font-size:14px;font-weight:700}
 .sec-label:first-child{margin-top:4px}
+
+/* 列ラッパー。PC幅（≥1024px）で .screen が2カラムになったときの振り分け単位。
+   スマホ／タブレットでは素のブロックなので、見た目も表示順も従来どおりの縦積み。 */
+.col{min-width:0}
+/* ラッパーを挟んだことで2列目の見出しが :first-child になり上マージンが詰まる。
+   縦積み時は従来の間隔へ戻す（PC幅では下の @media で 4px に戻す）。 */
+.col + .col > .sec-label:first-child{margin-top:18px}
+
 .sec-note{font-size:11px;font-weight:400;color:var(--muted)}
 .diff-key{text-decoration:underline}
 
@@ -196,6 +205,10 @@ b{font-weight:700}
 
 .cand{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-direction:column;gap:10px}
 .cand__item{position:relative}
+.cand__item.is-selected{border-color:var(--orange);box-shadow:0 0 0 2px rgba(240,130,46,.16)}
+.cand__select{display:block;width:100%;min-height:44px;padding:0;border:0;background:transparent;color:inherit;
+  font:inherit;text-align:left;cursor:pointer}
+.cand__select:focus-visible{outline:3px solid rgba(240,130,46,.55);outline-offset:3px}
 .medal{display:inline-block;margin-bottom:10px;font-size:11px;font-weight:700;
   border:1px solid var(--medal-border);border-radius:999px;background:var(--soft);color:var(--ink-orange);padding:2px 9px}
 .cand__top{display:flex;gap:12px;align-items:center}
@@ -203,6 +216,7 @@ b{font-weight:700}
 .cand__name{margin:0 0 2px;font-size:15px;font-weight:700;line-height:1.35}
 .cand__price{margin:0;font-size:14px;font-weight:700}
 .cand__vol{color:var(--muted);font-weight:400;font-size:12px}
+.cand__note{margin:4px 0 0;font-size:12.5px;color:var(--muted);line-height:1.5}
 .tags{display:flex;flex-wrap:wrap;gap:6px;margin:11px 0 12px}
 .tag{display:inline-flex;align-items:center;height:24px;padding:0 10px;border-radius:999px;
   font:700 11.5px/1 inherit;border:1px solid var(--line);color:var(--text);background:var(--surface-2)}
@@ -210,7 +224,7 @@ b{font-weight:700}
 .tag--free{border-style:dashed}
 .tag--more{color:var(--muted)}
 
-.ghost-btn{width:100%;min-height:42px;border:1px solid var(--line-strong);border-radius:var(--r-btn);
+.ghost-btn{width:100%;min-height:44px;border:1px solid var(--line-strong);border-radius:var(--r-btn);
   background:var(--surface);color:var(--text);font:700 14px/1 inherit;cursor:pointer}
 .ghost-btn:hover{background:var(--soft)}
 
@@ -266,7 +280,7 @@ b{font-weight:700}
 
 /* ===================== Dock CTA ===================== */
 .dock{position:absolute;left:0;right:0;bottom:0;z-index:5;
-  padding:12px 16px calc(14px + env(safe-area-inset-bottom));
+  padding-block:12px calc(14px + env(safe-area-inset-bottom));
   background:var(--surface-translucent);border-top:1px solid var(--line);
   display:flex;gap:10px;align-items:center}
 .cta{flex:1 1 auto;height:50px;border:1px solid var(--orange-cta);border-radius:var(--r-btn);cursor:pointer;
@@ -294,14 +308,14 @@ b{font-weight:700}
 .sheet{position:fixed;inset:0;z-index:40;display:grid;place-items:end center}
 .sheet[hidden]{display:none}
 .sheet__scrim{position:absolute;inset:0;border:0;background:var(--scrim);cursor:pointer}
-.sheet__panel{position:relative;z-index:1;width:min(392px,100%);background:var(--surface);
+.sheet__panel{position:relative;z-index:1;width:min(var(--content-max),100%);background:var(--surface);
   border:1px solid var(--line);border-radius:22px 22px 0 0;box-shadow:var(--shadow);
   padding:20px 18px calc(20px + env(safe-area-inset-bottom))}
 .sheet__t{margin:0 0 8px;font-size:18px;font-weight:900}
 .sheet__b{margin:0 0 16px;font-size:14px;line-height:1.7;color:var(--text)}
 .sheet__close{max-width:none}
 .sheet__head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:14px}
-.sheet__icon{flex:0 0 auto;width:40px;height:40px;border:1px solid var(--ink);background:var(--surface);color:var(--ink);font:700 18px/1 inherit;cursor:pointer}
+.sheet__icon{flex:0 0 auto;width:44px;height:44px;border:1px solid var(--ink);background:var(--surface);color:var(--ink);font:700 18px/1 inherit;cursor:pointer}
 .sheet__icon:hover{background:var(--soft)}
 
 /* ---- settings sheet ---- */
@@ -320,15 +334,13 @@ b{font-weight:700}
 .settings-sheet__confirm{margin-bottom:10px;border:1px solid var(--line);padding:10px;background:var(--soft)}
 .settings-sheet__confirm-text{margin:0 0 10px;font-size:12.5px;line-height:1.5}
 .settings-sheet__confirm-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.settings-sheet__confirm-btn{min-height:40px}
+.settings-sheet__confirm-btn{min-height:44px}
 .settings-sheet__close-row{display:flex;justify-content:flex-end}
 
 /* ===================== responsive ===================== */
+/* スマホ幅の密度調整。全画面化そのものは基底スタイルへ移したので、
+   ここではフォント・余白の詰めと省略表示だけを扱う。 */
 @media (max-width:430px){
-  body{height:100svh;overflow:hidden}
-  .stage{width:100%;height:100svh;padding:0;overflow:hidden}
-  .stage__head,.stage__foot{display:none}
-  .phone{width:100%;height:100svh;min-height:0;border:0}
   .appbar{padding:8px 12px 6px}
   .appbar__brand{margin-bottom:6px}
   .appbar__name{font-size:14px}
@@ -352,7 +364,7 @@ b{font-weight:700}
   .qtitle{margin-bottom:4px;font-size:16px;line-height:1.3}
   .qhint{margin-bottom:8px;font-size:11px}
   .chips{gap:5px}
-  .chip{min-height:40px;padding:7px 9px}
+  .chip{min-height:44px;padding:7px 9px}
   .chip__label{font-size:13px;line-height:1.25}
   .chip__hint{display:none}
   .chip::after{width:14px;height:14px}
@@ -369,14 +381,15 @@ b{font-weight:700}
   .road__desc,.road__row,.pill{display:none}
   .safety{margin:8px 2px 0;padding:7px 8px;font-size:10.5px;line-height:1.4}
   .budget{gap:6px}
-  .budget__btn{min-height:34px;font-size:11px}
+  .budget__btn{min-height:44px;font-size:11px}
   .budget__count{margin:5px 2px 2px;font-size:12px}
   .cand{margin-top:3px;gap:6px}
   .medal{margin-bottom:5px;font-size:10px;padding:1px 6px}
   .cand__name{font-size:13px}
   .cand__price{font-size:12px}
   .cand__vol{font-size:10px}
-  .tags,.ghost-btn{display:none}
+  .tags{gap:4px;margin:6px 0 8px}
+  .tag{height:20px;padding:0 8px;font-size:10.5px}
   .compare__row{grid-template-columns:64px 1fr 1fr}
   .compare__lab,.compare__cell{padding:6px;font-size:11px}
   .compare__lab{font-size:10.5px}
@@ -394,23 +407,25 @@ b{font-weight:700}
   .week__sub{font-size:10px}
   .dots{gap:2px}
   .dot{width:14px;height:14px}
-  .dot--today{width:26px;height:26px}
+  .dot--today{width:44px;height:44px}
   .dotlab{font-size:10px}
   .rating{gap:6px}
-  .rate{min-height:38px;font-size:11px;padding:5px 2px}
+  .rate{min-height:44px;font-size:11px;padding:5px 2px}
   .reminder{margin-top:7px;font-size:10.5px}
   .dock{position:absolute;padding:8px 10px calc(8px + env(safe-area-inset-bottom));gap:8px}
-  .cta,.settings-btn,.cta-back{height:40px}
+  .cta,.settings-btn,.cta-back{height:44px}
   .cta{font-size:13px}
   .settings-btn{min-width:54px;padding:0 10px}
-  .cta-back{width:42px}
+  .cta-back{width:44px}
   .settings-sheet__panel{max-height:86svh;padding:14px 12px calc(14px + env(safe-area-inset-bottom))}
   .sheet__head{margin-bottom:10px}
-  .sheet__icon{width:36px;height:36px}
+  .sheet__icon{width:44px;height:44px}
   .settings-sheet__block{padding:10px}
   .settings-sheet__label{font-size:13px}
   .settings-sheet__note,.settings-sheet__lead,.settings-sheet__confirm-text{font-size:11px}
-  .settings-sheet__time,.settings-sheet__action,.settings-sheet__save{min-height:40px}
+  .settings-sheet__time,.settings-sheet__action,.settings-sheet__save{min-height:44px}
+  /* 見出しの詰め方に合わせて、列ラッパー由来の補正もスマホ幅の値へ揃える */
+  .col + .col > .sec-label:first-child{margin-top:8px}
 }
 @media (max-width:360px){
   .compare__row{grid-template-columns:58px 1fr 1fr}
@@ -421,6 +436,48 @@ b{font-weight:700}
   .cta-back{width:40px}
   .cta{font-size:12px}
   .settings-sheet__confirm-actions{grid-template-columns:1fr}
+}
+
+/* ===================== PC（2カラム） =====================
+   横に余裕がある画面では、空いた左右を使って縦スクロールを減らす。
+   .screen 直下の .col を左右に振り分けるだけなので、各画面の中身の
+   マークアップはスマホ用と共通のまま。 */
+@media (min-width:1024px){
+  /* 2カラムを置ける幅まで中身の最大幅を広げる */
+  :root{--content-max:1080px}
+
+  /* タブは全幅まで間延びさせず、中央に寄せる */
+  .tabs{max-width:760px;margin-inline:auto}
+
+  /* 画面本体を2カラムへ。[hidden] の画面は :not() で除外して display:none を守る */
+  .screen:not([hidden]){
+    display:grid;align-content:start;align-items:start;
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:32px;
+  }
+  /* 全幅で置きたいもの（薬機法ディスクレーマー等）は両列にまたがる */
+  .col--full{grid-column:1 / -1}
+  /* 横並びになったので、2列目の見出しも1列目と同じ高さで始める */
+  .col + .col > .sec-label:first-child{margin-top:4px}
+
+  /* S1: 導入カードを左、質問カードを右に */
+  #s1:not([hidden]){grid-template-columns:minmax(240px,320px) minmax(0,1fr)}
+  #s1 .s1-head{margin-bottom:0}
+
+  /* S2: 左に「今日やること」＋注意書き、右にステップ（2×2で縦を詰める）。
+     注意書きは DOM 上は最後のままにして（スマホでの読み順を守るため）、
+     grid-template-areas で左列の下に置き直し、左の余白を埋めてスクロールを消す。 */
+  #s2:not([hidden]){
+    grid-template-columns:minmax(260px,380px) minmax(0,1fr);
+    grid-template-areas:"intro steps" "note steps";
+  }
+  #s2 > .col:first-child{grid-area:intro}
+  #s2 > .col:nth-child(2){grid-area:steps}
+  #s2 > .col--full{grid-area:note}
+  #s2 .road{display:grid;grid-template-columns:repeat(2,1fr);align-content:start}
+
+  /* 下部ボタン: 全幅に間延びさせず、設定は左端・CTAは右端に置く */
+  .settings-btn{margin-right:auto}
+  .cta{flex:0 0 auto;min-width:320px}
 }
 
 /* ===================== reduced motion ===================== */

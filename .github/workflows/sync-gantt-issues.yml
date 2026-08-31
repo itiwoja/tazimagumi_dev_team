@@ -2,7 +2,8 @@ name: Sync Gantt from GitHub Issues
 
 # Issueの状態・コメント・担当・タイトル・ラベル・マイルストーン変更を、ガントチャートの自動生成ブロックへ反映する。
 # developは保護ブランチ（enforce_admins）で直接pushできないため、同期差分を一時PRとして作成し、
-# そのまま自動マージする（人手のレビュー・マージは不要）。差分が無ければPRもマージも発生しない。
+# マージ予約（--auto）してPR Check成功後に自動マージする（人手のレビュー・マージは不要）。
+# 差分が無ければPRもマージも発生しない。
 
 on:
   issues:
@@ -70,12 +71,13 @@ jobs:
             ## 注意
             - 日程・ガントID・Issue番号の対応は `scripts/gantt-issue-map.json` が正です。
             - Issue状態はdevelopへの統合済み・リリース準備完了を意味しません。
-            - `develop` は保護ブランチのため直接pushできず、このPRは自動生成後そのまま自動マージされます（人手のレビュー・マージは不要）。
+            - `develop` は保護ブランチのため直接pushできず、このPRは自動生成後にマージ予約され、PR Check 成功後に自動マージされます（人手のレビュー・マージは不要）。
 
       - name: Auto-merge sync PR
         # 差分があってPRが作成/更新された時だけマージする（差分なし=operation 'none'、
         # 差分が消えてクローズされた場合=operation 'closed' はマージ対象外）。
-        # developはレビュー必須0件・必須ステータスチェック無しなので即時squashマージできる。
+        # developはレビュー必須0件だが PR Check が必須ステータスチェックなので、即時マージは
+        # 「チェック保留中」で失敗する。--auto でマージ予約し、PR Check 成功後に自動で入る。
         if: steps.cpr.outputs.pull-request-operation == 'created' || steps.cpr.outputs.pull-request-operation == 'updated'
         env:
           # GITHUB_TOKENではマージ後のイベントが連鎖しない/権限が足りないため、PR作成と同じPATを使う。
@@ -83,4 +85,4 @@ jobs:
         run: |
           gh pr merge "${{ steps.cpr.outputs.pull-request-number }}" \
             --repo "${{ github.repository }}" \
-            --squash --delete-branch
+            --auto --squash --delete-branch

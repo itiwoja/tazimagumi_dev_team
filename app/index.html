@@ -5,13 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>男の身だしなみアプリ｜基盤アプリ（MVP）</title>
 <meta name="description" content="身だしなみ初心者向けアプリ MVP の基盤（初回チェック→ロードマップ→商品比較→継続記録）。バニラJS・ビルド不要。">
- feature/csp-meta-tag
-<meta name="theme-color" content="#ffffff">
 <!-- CSP（Issue #86）: 静的サイトでも防御方針を明示。外部読み込みは Google Fonts のみ許可し、他は self に限定 -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self'; connect-src 'self'; manifest-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'">
 <meta name="theme-color" media="(prefers-color-scheme: light)" content="#fff7ee">
 <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#15110d">
- develop
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="icon" href="./icons/icon-192.png" sizes="192x192" type="image/png">
 <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
@@ -20,36 +17,35 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=Inter:wght@500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="./css/style.css">
 <link rel="stylesheet" href="./css/result-celebration.css">
-<!-- 読み込み順（基盤の約束）: data → state → storage → contracts → disclaimer → screens → debug → main。各scriptはdeferで順序保持 -->
+<!-- 読み込み順（基盤の約束）: data → state → storage → contracts → disclaimer → s3 → screens → debug → main。各scriptはdeferで順序保持 -->
 <!-- debug.js は localStorage を書き換えるため main.js（App.restore）より前で固定（Issue #113） -->
 <script src="./data/products.js" defer></script>
+<script src="./data/ingredients.js" defer></script>
+<script src="./data/product-ingredients.js" defer></script>
 <script src="./js/state.js" defer></script>
 <script src="./js/storage.js" defer></script>
 <script src="./js/contracts.js" defer></script>
 <script src="./js/disclaimer.js" defer></script>
+<script src="./js/s3.js" defer></script>
 <script src="./js/screens.js" defer></script>
 <script src="./js/debug.js" defer></script>
 <script src="./js/main.js" defer></script>
 </head>
 <body>
 
-<div class="stage">
-  <noscript>
-    <p>このアプリを使うにはブラウザのJavaScriptを有効にしてください。</p>
-  </noscript>
-  <header class="stage__head">
-    <p class="stage__eyebrow">田島組 卒業制作 ｜ MVP 基盤アプリ（ワイヤーフレーム）</p>
-    <h1 class="stage__title">男の身だしなみアプリ <span class="clip-text">基盤</span></h1>
-    <p class="stage__lead">4画面フロー（初回チェック→ロードマップ→商品比較→継続記録）の最小ワイヤーフレーム。デザインは後で載せます。</p>
-  </header>
+<noscript>
+  <p class="noscript-note">このアプリを使うにはブラウザのJavaScriptを有効にしてください。</p>
+</noscript>
 
-  <!-- ===== Phone shell ===== -->
-  <div class="phone" role="group" aria-label="身だしなみアプリ">
+<!-- ===== App shell ===== -->
+  <!-- 画面いっぱいにアプリ本体だけを表示する（端末枠・紹介ヘッダーは廃止）。
+       .app は position:relative の配置基準（.dock / .toast が absolute で乗る）。 -->
+  <div class="app" role="group" aria-label="身だしなみアプリ">
 
     <!-- App bar: brand + step tabs + progress -->
     <div class="appbar">
       <div class="appbar__brand">
-        <span class="appbar__name">みだしなみ</span>
+        <h1 class="appbar__name">みだしなみ</h1>
         <span class="appbar__step" id="stepLabel" aria-live="polite">はじめる</span>
       </div>
 
@@ -149,86 +145,76 @@
 
       <!-- ================= S2 ロードマップ（F-02 / REQ-02） ================= -->
       <section class="screen" id="s2" aria-label="ロードマップ" hidden>
-        <div class="result-card done-head compact-head" id="s2ResultCard" aria-describedby="s2TodayCopy">
-          <span class="result-card__cracker result-card__cracker--left" aria-hidden="true"></span>
-          <span class="result-card__cracker result-card__cracker--right" aria-hidden="true"></span>
-          <h2 class="done-title">お疲れさまでした</h2>
-          <p class="done-sub" aria-live="polite"><b id="s2ResultType">今日からの3ステップ</b></p>
+        <!-- .col = PC幅で左右に分かれる列の単位。スマホ／タブレットでは素のブロックなので
+             縦積みのまま、表示順も従来どおり（文書順を崩さないようにグループ分けしている）。 -->
+        <div class="col">
+          <div class="result-card done-head compact-head" id="s2ResultCard" aria-describedby="s2TodayCopy">
+            <span class="result-card__cracker result-card__cracker--left" aria-hidden="true"></span>
+            <span class="result-card__cracker result-card__cracker--right" aria-hidden="true"></span>
+            <h2 class="done-title">お疲れさまでした</h2>
+            <p class="done-sub" aria-live="polite"><b id="s2ResultType">今日からの3ステップ</b></p>
+          </div>
+
+          <div class="card today-card">
+            <p class="today-card__k">今日やること</p>
+            <p class="today-card__t" id="s2TodayCopy">洗顔のあと、化粧水を1本。<b>今日はここまで。</b></p>
+          </div>
         </div>
 
-        <div class="card today-card">
-          <p class="today-card__k">今日やること</p>
-          <p class="today-card__t" id="s2TodayCopy">洗顔のあと、化粧水を1本。<b>今日はここまで。</b></p>
+        <div class="col">
+          <p class="sec-label" id="s2RoadmapLabel">3ステップ</p>
+
+          <ol class="road road--compact" id="roadmapList" aria-live="polite">
+            <li class="card road__item">
+              <span class="step-badge" aria-hidden="true">1</span>
+              <div class="road__body">
+                <h3 class="road__t">買う</h3>
+                <p class="road__flow">洗顔 → 化粧水 → 乳液</p>
+              </div>
+            </li>
+          </ol>
         </div>
 
-        <p class="sec-label" id="s2RoadmapLabel">3ステップ</p>
+        <div class="col col--full">
+          <p class="safety">肌に合わない時は使用をやめ、気になる時は皮膚科へ。</p>
 
-        <ol class="road road--compact" id="roadmapList" aria-live="polite">
-          <li class="card road__item">
-            <span class="step-badge" aria-hidden="true">1</span>
-            <div class="road__body">
-              <h3 class="road__t">買う</h3>
-              <p class="road__flow">洗顔 → 化粧水 → 乳液</p>
-            </div>
-          </li>
-        </ol>
-
-        <p class="safety">肌に合わない時は使用をやめ、気になる時は皮膚科へ。</p>
-
-        <!-- SC-99 ディスクレーマー共通部品（Issue #40 / disclaimer.js が注入） -->
-        <div class="disclaimer" data-disclaimer></div>
+          <!-- SC-99 ディスクレーマー共通部品（Issue #40 / disclaimer.js が注入） -->
+          <div class="disclaimer" data-disclaimer></div>
+        </div>
       </section>
 
       <!-- ================= S3 商品候補・比較（F-03/04/05 / REQ-03/04/05） ================= -->
-      <!-- ※ 候補/比較の本実装は feature/sc03-product-compare-ui + feature/recommend-logic。予算件数のみ data 連動済み -->
+      <!-- ※ 候補一覧・比較表は App.renderS3（s3.js）が data/products.js + App.recommend/App.buildCompareTable から動的に描画する（Issue #61） -->
       <section class="screen" id="s3" aria-label="商品候補と比較" hidden>
-        <p class="sec-label">化粧水の候補</p>
+        <div class="col">
+          <p class="sec-label" id="s3CandHeading">商品の候補</p>
 
-        <div class="budget" role="group" aria-label="予算帯">
-          <button class="budget__btn is-on" data-budget="core" aria-pressed="true">〜5,000円でそろえる</button>
-          <button class="budget__btn" data-budget="sub" aria-pressed="false">〜1,500円でまず1本</button>
+          <div class="budget" role="group" aria-label="予算帯">
+            <button class="budget__btn is-on" data-budget="core" aria-pressed="true">〜5,000円でそろえる</button>
+            <button class="budget__btn" data-budget="sub" aria-pressed="false">〜1,500円でまず1本</button>
+          </div>
+          <p class="budget__count" id="budgetCount">候補 <b id="budgetNum">0</b> 件</p>
+
+          <div id="candGroups"></div>
         </div>
-        <p class="budget__count" id="budgetCount">候補 <b id="budgetNum">0</b> 件</p>
 
-        <ul class="cand">
-          <li class="card cand__item">
-            <span class="medal">候補</span>
-            <div class="cand__top">
-              <div class="cand__info">
-                <h3 class="cand__name">さっぱり化粧水 ベーシック</h3>
-                <p class="cand__price"><span class="num">¥1,320</span> <span class="cand__vol">／ 200mL</span></p>
-              </div>
-            </div>
-          </li>
-        </ul>
-
-        <p class="sec-label">2つをくらべる</p>
-        <div class="compare" role="table" aria-label="商品の比較">
-          <div class="compare__row compare__row--head" role="row">
-            <span class="compare__lab" role="columnheader">項目</span>
-            <span class="compare__cell" role="columnheader">さっぱり<br>ベーシック</span>
-            <span class="compare__cell" role="columnheader">うるおい<br>しっとり</span>
-          </div>
-          <div class="compare__row is-diff" role="row">
-            <span class="compare__lab" role="rowheader">価格</span>
-            <span class="compare__cell"><b class="num price">¥1,320</b></span>
-            <span class="compare__cell"><b class="num price">¥1,480</b></span>
-          </div>
-          <div class="compare__row" role="row">
-            <span class="compare__lab" role="rowheader">香り</span>
-            <span class="compare__cell">無香料</span>
-            <span class="compare__cell">無香料</span>
-          </div>
+        <div class="col">
+        <p class="sec-label" id="compareHeading">選んだ商品をくらべる</p>
+        <p class="sec-note" id="compareHint">候補から2〜3件選ぶと比較表が表示されます。</p>
+        <div class="compare" role="table" aria-label="商品の比較" id="compareTable"></div>
+          <p class="factnote">成分は有無の事実のみ。合わない時は使用をやめてください。</p>
         </div>
-        <p class="factnote">成分は有無の事実のみ。合わない時は使用をやめてください。</p>
 
-        <!-- SC-99 ディスクレーマー共通部品（Issue #40 / disclaimer.js が注入） -->
-        <div class="disclaimer" data-disclaimer></div>
+        <div class="col col--full">
+          <!-- SC-99 ディスクレーマー共通部品（Issue #40 / disclaimer.js が注入） -->
+          <div class="disclaimer" data-disclaimer></div>
+        </div>
       </section>
 
       <!-- ================= S4 継続記録（F-06 / REQ-06） ================= -->
       <!-- ※ 記録の保存・週次評価の本実装は feature/sc04-record-ui。ローカル保存方針は dev/認証・データ保存方針書 -->
       <section class="screen" id="s4" aria-label="継続記録" hidden>
+        <div class="col">
         <p class="sec-label">今日はこれだけ</p>
         <div class="routine">
           <div class="card routine__card">
@@ -250,7 +236,9 @@
             <!-- JavaScriptで動的生成 -->
           </div>
         </div>
+        </div>
 
+        <div class="col">
         <p class="sec-label">今週の調子は？</p>
         <div class="rating" role="group" aria-label="今週の自己評価">
           <button class="rate" aria-pressed="false">いい感じ</button>
@@ -261,6 +249,7 @@
         <div id="historyContainer"></div>
 
         <p class="reminder" id="reminderStatus">リマインドは1日1回まで</p>
+        </div>
       </section>
 
     </main>
@@ -355,10 +344,6 @@
     <button class="sheet__scrim" id="privacyScrim" aria-label="とじる"></button>
   </div>
 
-  <footer class="stage__foot">
-    <p>基盤アプリ（HTML/CSS/バニラJS・ビルド不要・外部API非依存）。最小ワイヤーフレーム。各機能は feature ブランチで追加します。</p>
-  </footer>
-</div>
 
 <script src="./js/sw-register.js" defer></script>
 </body>

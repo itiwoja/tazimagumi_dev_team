@@ -193,7 +193,7 @@
     }
   });
 
-  /* ---- [F-03] 予算トグル（件数はデータ連動） ---- */
+  /* ---- [F-03] 予算トグル（候補・比較表もデータ連動） ---- */
   qAll(".budget__btn").forEach(function (b) {
     b.addEventListener("click", function () {
       qAll(".budget__btn").forEach(function (x) {
@@ -201,10 +201,24 @@
       });
       b.classList.add("is-on"); b.setAttribute("aria-pressed", "true");
       var key = b.getAttribute("data-budget");
-      App.updateBudgetCount(key);
+      if (typeof App.renderS3 === "function") {
+        App.renderS3();
+      } else {
+        App.updateBudgetCount(key);
+      }
       if (key === "sub") App.toast("まず1本だけ。これで十分はじめられます");
     });
   });
+
+  /* ---- [F-04] 比較対象の選択 ---- */
+  var candGroups = $("candGroups");
+  if (candGroups) {
+    candGroups.addEventListener("click", function (e) {
+      var select = e.target.closest("[data-product-id]");
+      if (!select || typeof App.toggleCompareProduct !== "function") return;
+      App.toggleCompareProduct(select.getAttribute("data-product-id"));
+    });
+  }
 
   /* ---- [F-06] 今日のドット（state.records に保存） ---- */
   var dot = $("todayDot");

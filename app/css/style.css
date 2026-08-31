@@ -205,6 +205,10 @@ b{font-weight:700}
 
 .cand{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-direction:column;gap:10px}
 .cand__item{position:relative}
+.cand__item.is-selected{border-color:var(--orange);box-shadow:0 0 0 2px rgba(240,130,46,.16)}
+.cand__select{display:block;width:100%;min-height:44px;padding:0;border:0;background:transparent;color:inherit;
+  font:inherit;text-align:left;cursor:pointer}
+.cand__select:focus-visible{outline:3px solid rgba(240,130,46,.55);outline-offset:3px}
 .medal{display:inline-block;margin-bottom:10px;font-size:11px;font-weight:700;
   border:1px solid var(--medal-border);border-radius:999px;background:var(--soft);color:var(--ink-orange);padding:2px 9px}
 .cand__top{display:flex;gap:12px;align-items:center}
@@ -212,6 +216,7 @@ b{font-weight:700}
 .cand__name{margin:0 0 2px;font-size:15px;font-weight:700;line-height:1.35}
 .cand__price{margin:0;font-size:14px;font-weight:700}
 .cand__vol{color:var(--muted);font-weight:400;font-size:12px}
+.cand__note{margin:4px 0 0;font-size:12.5px;color:var(--muted);line-height:1.5}
 .tags{display:flex;flex-wrap:wrap;gap:6px;margin:11px 0 12px}
 .tag{display:inline-flex;align-items:center;height:24px;padding:0 10px;border-radius:999px;
   font:700 11.5px/1 inherit;border:1px solid var(--line);color:var(--text);background:var(--surface-2)}
@@ -383,7 +388,8 @@ b{font-weight:700}
   .cand__name{font-size:13px}
   .cand__price{font-size:12px}
   .cand__vol{font-size:10px}
-  .tags{display:none}
+  .tags{gap:4px;margin:6px 0 8px}
+  .tag{height:20px;padding:0 8px;font-size:10.5px}
   .compare__row{grid-template-columns:64px 1fr 1fr}
   .compare__lab,.compare__cell{padding:6px;font-size:11px}
   .compare__lab{font-size:10.5px}

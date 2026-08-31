@@ -242,6 +242,13 @@ b{font-weight:700}
 .compare__row.is-diff{position:relative}
 .compare__row.is-diff::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--green-strong)}
 .factnote{margin:11px 2px 0;font-size:12.5px;color:var(--muted);line-height:1.6}
+.question-helper{margin-top:14px}
+.question-helper__open{max-width:none}
+.question-list{list-style:none;margin:0 0 12px;padding:0;display:grid;gap:10px}
+.question-list__item{padding:12px;border:1px solid var(--line-soft);background:var(--soft)}
+.question-list__text{margin:0;font-size:14px;line-height:1.7;user-select:text;-webkit-user-select:text}
+.question-list__copy{margin-top:10px}
+.question-sheet__note{margin-bottom:16px}
 
 /* SC-99 ディスクレーマー共通部品（薬機法・結果/商品画面の最下部に常時表示） */
 .disclaimer{margin:16px 2px 2px;padding:11px 12px;border:1px solid var(--line-soft);background:var(--soft)}
@@ -336,6 +343,7 @@ b{font-weight:700}
 .settings-sheet__confirm-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .settings-sheet__confirm-btn{min-height:44px}
 .settings-sheet__close-row{display:flex;justify-content:flex-end}
+.question-sheet__panel{max-height:min(82vh,720px);overflow:auto}
 
 /* ===================== responsive ===================== */
 /* スマホ幅の密度調整。全画面化そのものは基底スタイルへ移したので、
@@ -418,6 +426,7 @@ b{font-weight:700}
   .settings-btn{min-width:54px;padding:0 10px}
   .cta-back{width:44px}
   .settings-sheet__panel{max-height:86svh;padding:14px 12px calc(14px + env(safe-area-inset-bottom))}
+  .question-sheet__panel{max-height:86svh;padding:14px 12px calc(14px + env(safe-area-inset-bottom))}
   .sheet__head{margin-bottom:10px}
   .sheet__icon{width:44px;height:44px}
   .settings-sheet__block{padding:10px}

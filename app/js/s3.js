@@ -253,6 +253,87 @@
     if (hint) hint.textContent = text;
   }
 
+  var questionOpener = null;
+
+  function closeQuestionSheet() {
+    var sheet = $("questionSheet");
+    if (sheet) sheet.hidden = true;
+    if (questionOpener && typeof questionOpener.focus === "function") questionOpener.focus();
+    questionOpener = null;
+  }
+
+  function copyQuestionText(text, copyButton) {
+    var clipboard = global.navigator && global.navigator.clipboard;
+    if (!clipboard || typeof clipboard.writeText !== "function") return;
+
+    function showFallback() {
+      if (copyButton) {
+        copyButton.disabled = true;
+        copyButton.hidden = true;
+      }
+      App.toast("コピーできませんでした。例文を選択してコピーしてください。");
+    }
+
+    try {
+      Promise.resolve(clipboard.writeText(text)).then(function () {
+        App.toast("コピーしました");
+      }).catch(showFallback);
+    } catch (error) {
+      showFallback();
+    }
+  }
+
+  function buildQuestionItem(template) {
+    var item = document.createElement("li");
+    item.className = "question-list__item";
+
+    var text = document.createElement("p");
+    text.className = "question-list__text";
+    text.textContent = template.text;
+    item.appendChild(text);
+
+    var clipboard = global.navigator && global.navigator.clipboard;
+    if (clipboard && typeof clipboard.writeText === "function") {
+      var copy = document.createElement("button");
+      copy.type = "button";
+      copy.className = "ghost-btn question-list__copy";
+      copy.textContent = "コピー";
+      copy.addEventListener("click", function () { copyQuestionText(template.text, copy); });
+      item.appendChild(copy);
+    }
+
+    return item;
+  }
+
+  function openQuestionSheet(diagnosis, opener) {
+    var sheet = $("questionSheet");
+    var list = $("questionList");
+    if (!sheet || !list || typeof App.pickQuestionTemplates !== "function") return;
+
+    questionOpener = opener || null;
+    list.textContent = "";
+    App.pickQuestionTemplates(diagnosis).forEach(function (template) {
+      list.appendChild(buildQuestionItem(template));
+    });
+    sheet.hidden = false;
+
+    var close = $("questionClose");
+    if (close && typeof close.focus === "function") close.focus();
+  }
+
+  function renderQuestionHelper(diagnosis) {
+    var helper = $("questionHelper");
+    if (!helper || typeof App.pickQuestionTemplates !== "function") return;
+
+    helper.textContent = "";
+    var open = document.createElement("button");
+    open.type = "button";
+    open.className = "ghost-btn question-helper__open";
+    open.textContent = "店員さんに聞くときの例文を見る";
+    open.addEventListener("click", function () { openQuestionSheet(diagnosis, open); });
+    helper.appendChild(open);
+  }
+
   function renderCompareSelection(recommendation) {
     var compareEl = $("compareTable");
     if (!compareEl) return;
@@ -324,7 +405,39 @@
     }
 
     renderCompareSelection(recommendation);
+    renderQuestionHelper(diagnosis);
   };
+
+  var questionClose = $("questionClose");
+  var questionScrim = $("questionScrim");
+  if (questionClose) questionClose.addEventListener("click", closeQuestionSheet);
+  if (questionScrim) questionScrim.addEventListener("click", closeQuestionSheet);
+  if (document.addEventListener) {
+    document.addEventListener("keydown", function (event) {
+      var sheet = $("questionSheet");
+      if (event.key === "Tab" && sheet && !sheet.hidden) {
+        var panel = sheet.querySelector('[role="dialog"]');
+        if (panel) {
+          var focusable = Array.prototype.slice.call(panel.querySelectorAll(
+            'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+          ));
+          if (!focusable.length) {
+            event.preventDefault();
+            panel.focus();
+          } else if (event.shiftKey && document.activeElement === focusable[0]) {
+            event.preventDefault();
+            focusable[focusable.length - 1].focus();
+          } else if (!event.shiftKey && document.activeElement === focusable[focusable.length - 1]) {
+            event.preventDefault();
+            focusable[0].focus();
+          }
+        }
+      }
+      if (event.key === "Escape") {
+        if (sheet && !sheet.hidden) closeQuestionSheet();
+      }
+    });
+  }
 
   function restoreCandidateFocus(productId) {
     var buttons = qAll("[data-product-id]", $("candGroups"));

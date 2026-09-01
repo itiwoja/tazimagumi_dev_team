@@ -1,52 +1,77 @@
-name: Deploy to GitHub Pages
+name: Deploy to Cloudflare Pages
 
-# develop へのマージをトリガーに、app/ を GitHub Pages へ自動公開する（Issue #80）。
-# 公開ルートは app/（ビルド不要のバニラ JS）。相対パス運用のためサブパス /<repo>/ で動く。
+# main へのマージをトリガーに、app/ を Cloudflare Pages へ自動公開する（Issue #80）。
+# 公開対象は app/ の中身（ビルド不要のバニラ JS）で、Cloudflare Pages のプロジェクト直下に配置する。
 #
-# 【トリガーが develop である理由】Pages の `github-pages` 環境はデプロイ許可ブランチが
-#   develop に設定されており、main からのデプロイは環境保護ルールで拒否される
-#   （2026-07-28 に main で実際に失敗）。環境設定を変える代わりにトリガー側を develop へ
-#   合わせる方針を採用した。このため develop へのマージは即座に公開へ反映される
-#   ＝ develop は常に通しデモ可能に保つこと（docs/dev/週次統合ルール_v1.0.md）。
+# 【main を本番ブランチにする理由】develop で統合・通しデモ・CI確認を行い、main へのリリースPRを公開トリガーにする。
+#   Cloudflare Pages 側の production branch も main に設定すること。
+#   このため main へのマージは即座に公開へ反映される。develop は公開前の統合・通しデモ用に保つ。
 #
-# 【人間が一度だけ行う設定】リポジトリ Settings → Pages → Build and deployment →
-#   Source を「GitHub Actions」に切り替える（管理者操作。これが無いと deploy-pages が失敗する）。
-#   加えて Settings → Environments → github-pages のデプロイ許可ブランチに develop が
-#   含まれている必要がある。
+# 【人間が一度だけ行う設定】Cloudflare Pages で Direct Upload のプロジェクトを作成し、初回作成時に
+#   production branch を main にする。既存のDirect UploadプロジェクトはDashboardからproduction branch
+#   controlsを変更できないため、Cloudflare APIのUpdate Project endpointでmainへ更新する。GitHub の Settings → Secrets and variables → Actions に
+#   CLOUDFLARE_API_TOKEN（Pages Edit 権限）と CLOUDFLARE_ACCOUNT_ID を Secret として登録し、
+#   CLOUDFLARE_PAGES_PROJECT_NAME を Repository variable として登録する。
 
 on:
   push:
-    branches: [develop]
+    branches: [main]
   workflow_dispatch:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
+  deployments: write
 
 # 公開は同時に1本だけ。走行中に新しい push が来たら古い方をキャンセル。
 concurrency:
-  group: pages
+  group: cloudflare-pages
   cancel-in-progress: true
 
 jobs:
   deploy:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+    timeout-minutes: 15
+    name: Deploy to Cloudflare Pages
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Configure Pages
-        uses: actions/configure-pages@v5
+      - name: Validate Cloudflare Pages project setting
+        env:
+          PROJECT_NAME: ${{ vars.CLOUDFLARE_PAGES_PROJECT_NAME }}
+          ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        shell: bash
+        run: |
+          if [ -z "$PROJECT_NAME" ]; then
+            echo "::error::Repository variable CLOUDFLARE_PAGES_PROJECT_NAME is not configured."
+            exit 1
+          fi
+          if [ -z "$ACCOUNT_ID" ] || [ -z "$API_TOKEN" ]; then
+            echo "::error::CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN GitHub secrets are required."
+            exit 1
+          fi
 
-      - name: Upload artifact (app/)
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: app
-
-      - name: Deploy to GitHub Pages
+      - name: Deploy to Cloudflare Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: cloudflare/wrangler-action@ebbaa1584979971c8614a24965b4405ff95890e0 # v4.0.0
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy app --project-name=${{ vars.CLOUDFLARE_PAGES_PROJECT_NAME }}
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish deployment URL
+        if: success()
+        env:
+          DEPLOYMENT_URL: ${{ steps.deployment.outputs.deployment-url }}
+        shell: bash
+        run: |
+          if [ -n "$DEPLOYMENT_URL" ]; then
+            echo "Cloudflare Pages URL: $DEPLOYMENT_URL"
+            {
+              echo "### Cloudflare Pages deployment"
+              echo "$DEPLOYMENT_URL"
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi

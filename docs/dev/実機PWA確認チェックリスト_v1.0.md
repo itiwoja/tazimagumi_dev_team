@@ -1,7 +1,7 @@
 # 実機PWA確認チェックリスト v1.0
 
 **プロジェクト：** 田島組 卒業制作（男の身だしなみアプリ）
-**対象：** GitHub Issue #108／`app/` を GitHub Pages で公開した版
+**対象：** GitHub Issue #108／`app/` を Cloudflare Pages で公開した版
 **ステータス：** 実機確認用（未実施）
 **作成日：** 2026-08-25
 
@@ -11,7 +11,7 @@
 
 ### 1.1 判定ルール
 
-- 対象URLは、デプロイ後の **HTTPSのGitHub Pages URL** とする。ローカルの`file://`、開発サーバー、リポジトリ閲覧画面は対象外。
+- 対象URLは、デプロイ後の **HTTPSのCloudflare Pages URL** とする。ローカルの`file://`、開発サーバー、リポジトリ閲覧画面は対象外。
 - 1回目はオンラインで読み込み、Service Worker（SW）の登録・キャッシュが完了したことを確認してからオフライン試験を行う。
 - 結果欄は実機を操作した人だけが記入する。`Pass`は期待結果を確認できた場合、`Fail`は期待と異なる場合、`Blocked`は端末・権限・公開状態などの理由で操作できなかった場合とする。
 - ブラウザの保存データ、ホーム画面登録、機内モードなどを変更するため、所有者の許可を得たテスト端末だけを使う。実利用者の個人データを入力しない。
@@ -19,7 +19,7 @@
 
 ### 1.2 対象外・限界
 
-- この文書では、実機の結果、GitHub Pagesの現在のデプロイ状態、ブラウザの実装差を事前に断定しない。
+- この文書では、実機の結果、Cloudflare Pagesの現在のデプロイ状態、ブラウザの実装差を事前に断定しない。
 - 通知のスケジュール／配信は未実装で、通知発火をこのチェックの合格条件に含めない。ただしリマインド保存時、Notification APIが存在し権限が`default`なら`Notification.requestPermission()`が呼ばれる可能性がある（`app/index.html:291-302`、`app/js/screens.js:213-225`）。端末所有者の明示同意なしに許可プロンプトを発生させず、IOS-11／AND-11で表示有無と選択を記録する。プロンプトや許可状態を配信成功の証拠にしない。
 - Service Workerが提供するキャッシュは同一オリジンのGETが対象で、Google Fontsの外部CSSはAPP_SHELLに含まれない。オフラインではフォントが代替フォントに切り替わることを許容し、文字が読めない・レイアウトが壊れる場合は失敗として記録する。
 - 画面上の用語シートは現在のS2に`.term`／`data-term`トリガーが存在しないため、用語シートを開く実機確認は現行版では完了できない。これは欠陥を隠すための合格扱いにせず、§10の人手引き継ぎへ送る。
@@ -30,19 +30,19 @@
 
 | ID | 根拠ファイル（行） | 静的に確認できる事実 | 実機で確かめる限界・注意 |
 |---|---|---|---|
-| S-01 | `app/manifest.webmanifest:1-23` | `start_url`と`scope`は`./`、`display`は`standalone`、向きは`portrait`。アイコンは`./icons/icon-192.png`と`./icons/icon-512.png`。 | 相対URLが実際のPagesサブパスで解決し、インストール後にstandalone表示になるかは端末ごとに確認する。 |
-| S-02 | `app/index.html:12-28,367` | manifest、CSS、各JS、SW登録スクリプトをすべて`./`相対パスで読み込む。 | 公開URLのサブパスで404にならないか、初回表示時のコンソールエラーがないかを確認する。 |
-| S-03 | `app/js/sw-register.js:4-13` | HTTP/HTTPS時のload後に`navigator.serviceWorker.register("./sw.js")`を呼ぶ。公開ルート直下の`sw.js`なので、明示scopeなしではそのディレクトリ配下が候補になる。 | ブラウザが登録を受け入れたか、登録scopeが公開ルートになったかは実機または開発者ツールで確認する。 |
+| S-01 | `app/manifest.webmanifest:1-23` | `start_url`と`scope`は`./`、`display`は`standalone`、向きは`portrait`。アイコンは`./icons/icon-192.png`と`./icons/icon-512.png`。 | 相対URLがCloudflare Pagesの公開ルートで解決し、インストール後にstandalone表示になるかは端末ごとに確認する。 |
+| S-02 | `app/index.html:12-28,367` | manifest、CSS、各JS、SW登録スクリプトをすべて`./`相対パスで読み込む。 | Cloudflare Pagesの公開URLで404にならないか、初回表示時のコンソールエラーがないかを確認する。 |
+| S-03 | `app/js/sw-register.js:4-13` | HTTP/HTTPS時のload後に`navigator.serviceWorker.register("./sw.js")`を呼ぶ。公開ルート直下の`sw.js`なので、明示scopeなしではそのディレクトリ配下が候補になる。 | ブラウザが登録を受け入れたか、登録scopeがCloudflare Pagesの公開ルートになったかは実機または開発者ツールで確認する。 |
 | S-04 | `app/sw.js:4-22` | CACHE_NAMEは`tazimagumi-app-v22`、APP_SHELLは`./`、`index.html`、CSS、データ／JS、manifest、3種のアイコンを相対指定する。 | `cache.addAll()`が全件成功したか、公開物の各URLが実際に200で返るかは公開サイトで確認する。1件でも欠けるとinstall失敗になり得る。 |
 | S-05 | `app/sw.js:25-73` | install時に`skipWaiting()`、activate時に旧キャッシュ削除と`clients.claim()`、navigationはネットワーク失敗時に`./index.html`へフォールバック、その他同一オリジンGETはcache-first＋動的保存。 | 初回オンライン後に強制終了・機内モードで再表示できるか、更新時に古い画面が残らないかは実機で確認する。 |
-| S-06 | `.github/workflows/deploy-pages.yml:1-53` | `develop`へのpushまたは手動実行で、`path: app`をPages artifactとして`deploy-pages`へ渡す。公開サイトのルートはリポジトリのサブパス直下であり、通常`/app/`をURLへ追加しない。 | Pagesの設定、環境許可、対象コミット、デプロイ完了はGitHub上で人が確認する。 |
+| S-06 | `.github/workflows/deploy-pages.yml:1-76` | `main`へのpushまたは`main` refでの手動実行で、`app/`をCloudflare PagesへDirect Uploadする。公開サイトのルートはCloudflare Pagesプロジェクト直下で、`/app/`をURLへ追加しない。 | Cloudflare Pagesプロジェクト、production branch、Secrets/Variables、対象コミット、デプロイ完了は人が確認する。 |
 | S-07 | `app/js/storage.js:15-77` | 主状態は`midashinami:v1`としてlocalStorageへJSON保存。読み書き不可・破損・版違いは例外を表へ出さず初期状態へ戻す。 | 実機でリロード・ブラウザ再起動後に値が残るか、プライベートモード等で壊れずに動くかを確認する。 |
 | S-08 | `app/js/state.js:41-52,110-140`、`app/js/screens.js:213-271,312-331` | 状態保存はデバウンスと`pagehide`／`visibilitychange`で行う。設定は`midashinami:prefs:v1`、継続ログは`continuity_log`等のlocalStorageキーを使用し、設定から書き出し・全削除ができる。 | 端末の強制終了やタブ破棄のタイミング、保存容量・プライベートモードの挙動は静的監査では判定できない。 |
 | S-09 | `app/css/style.css:73-100,277-317,347-420` | `100svh`と内側`.screen-wrap`の縦スクロール、dockとsheet panelの`env(safe-area-inset-bottom)`、設定sheetの`max-height`／`overflow:auto`、主要ボタンの44px以上を定義する。 | ホームインジケータや狭い画面で実際に隠れないか、スクロールが本当に内側だけでできるかを実機で確認する。 |
 | S-10 | `app/index.html:287-363`、`app/js/main.js:49-168,230-259` | 設定sheet、用語sheet、privacy sheetがhiddenなDOMとして存在する。設定は時刻欄へfocusし、閉じるボタン／scrim／Escape／Tab循環を配線。用語sheetは辞書「化粧水」を持つが、現行S2にはトリガーがない。 | 設定／privacyの開閉・スクロール・復帰focusは実機で確認する。用語sheetはトリガー追加後に再実施する。 |
-| S-11 | `docs/dev/機能テストチェックリスト_p5b.md:268-337`、`docs/dev/テスト仕様書_v1.0.md:4-7` | 既存資料はlocalStorageの保存・復元・削除、設定sheet、画面遷移、アクセシビリティを手動確認する。 | 本書は既存の画面・ロジック確認を置き換えず、Pagesサブパス、PWA install／standalone、SWオフライン、safe-area、7日観察を補う。重複する保存確認は同じ匿名データで突合する。 |
+| S-11 | `docs/dev/機能テストチェックリスト_p5b.md:268-337`、`docs/dev/テスト仕様書_v1.0.md:4-7` | 既存資料はlocalStorageの保存・復元・削除、設定sheet、画面遷移、アクセシビリティを手動確認する。 | 本書は既存の画面・ロジック確認を置き換えず、Cloudflare Pages公開ルート、PWA install／standalone、SWオフライン、safe-area、7日観察を補う。重複する保存確認は同じ匿名データで突合する。 |
 
-APP_SHELLの相対アセット（`app/sw.js:7-20`）は次の16件。公開サイトではすべて`https://<owner>.github.io/<repository>/`を基準に解決する。
+APP_SHELLの相対アセット（`app/sw.js:7-20`）は次の16件。公開サイトではすべて`https://<project-name>.pages.dev/`（または設定済みカスタムドメイン）を基準に解決する。
 
 ```text
 ./
@@ -63,32 +63,32 @@ APP_SHELLの相対アセット（`app/sw.js:7-20`）は次の16件。公開サ�
 ./icons/apple-touch-icon.png
 ```
 
-### 2.1 公開URLとサブパスの確認値
+### 2.1 公開URLとルートの確認値
 
 デプロイ先の実値を空欄へ記録してから試験する。
 
 ```text
-Pages URL: https://<owner>.github.io/<repository>/
+Cloudflare Pages URL: https://<project-name>.pages.dev/
 対象コミット／デプロイ run: ______________________________________
 確認日時（JST）: _________________________________________________
 ```
 
-相対パスの期待解決先は次のとおり。`<repository>`直下で読み込めることを確認し、`/<repository>/app/`を正しいURLとして扱わない。
+相対パスの期待解決先は次のとおり。Cloudflare Pagesプロジェクトの公開ルート直下で読み込めることを確認し、`/app/`を正しいURLとして扱わない。
 
 | URL | 期待 |
 |---|---|
-| `https://<owner>.github.io/<repository>/` | `index.html`が表示される |
-| `.../<repository>/manifest.webmanifest` | manifestが取得できる |
-| `.../<repository>/sw.js` | SWスクリプトが取得できる |
-| `.../<repository>/css/style.css` | CSSが取得できる |
-| `.../<repository>/js/sw-register.js` | 登録スクリプトが取得できる |
-| `.../<repository>/app/` | 通常の公開URLではない。404または別物なら、URLの誤りとして記録する |
+| `https://<project-name>.pages.dev/` | `index.html`が表示される |
+| `.../manifest.webmanifest` | manifestが取得できる |
+| `.../sw.js` | SWスクリプトが取得できる |
+| `.../css/style.css` | CSSが取得できる |
+| `.../js/sw-register.js` | 登録スクリプトが取得できる |
+| `.../app/` | 通常の公開URLではない。404または別物なら、URLの誤りとして記録する |
 
 ## 3. 事前準備と端末メタデータ
 
 ### 3.1 事前準備
 
-- [ ] Pagesのデプロイが完了し、対象コミットが想定版である。
+- [ ] Cloudflare Pagesのデプロイが完了し、対象コミットが想定版である。
 - [ ] HTTPSの公開URLを取得した。HTTPや`file://`で実施していない。
 - [ ] ブラウザのプライベート／シークレットモードではない（別途、任意の保存不可確認を行う場合を除く）。
 - [ ] 端末の日付・時刻、ネットワーク状態、画面拡大率を記録した。
@@ -106,7 +106,7 @@ Pages URL: https://<owner>.github.io/<repository>/
 | OSバージョン | __________________ | __________________ |
 | ブラウザ名／バージョン | __________________ | __________________ |
 | インストール元（Safari／Chrome等） | __________________ | __________________ |
-| Pages URL／対象コミット | __________________ | __________________ |
+| Cloudflare Pages URL／対象コミット | __________________ | __________________ |
 | 実施日時（JST）／実施者 | __________________ | __________________ |
 | 通信（Wi-Fi／モバイル） | __________________ | __________________ |
 | 画面倍率・文字サイズ変更 | __________________ | __________________ |
@@ -116,13 +116,13 @@ Pages URL: https://<owner>.github.io/<repository>/
 
 | ID | 操作 | 期待結果 | 結果 | 証跡（スクリーンショット／URL／コンソール等） |
 |---|---|---|---|---|
-| C-01 | HTTPSのPages URL（`/<repository>/`）を開く。`/<repository>/app/`では開かない。 | S1の初回チェックが表示され、CSSと画像が読み込まれる。画面がプレーンHTMLにならない。 | [ ] Pass [ ] Fail [ ] Blocked | __________________ |
-| C-02 | アドレスに直接`/<repository>/`を入力して再読み込みする。 | サブパスを保ったままS1が表示される。ルート（`/`）へ飛ばない。 | [ ] Pass [ ] Fail [ ] Blocked | __________________ |
-| C-03 | manifestの取得を確認する（対応ブラウザのPWA情報または開発者ツール）。 | `start_url`とscopeが公開サブパスを指し、アイコンが解決される。 | [ ] Pass [ ] Fail [ ] Blocked | __________________ |
-| C-04 | 初回表示後、オンラインで1回リロードし、少し待ってからSW登録状態を確認する。 | SW登録がエラーにならず、scopeが`/<repository>/`配下である。 | [ ] Pass [ ] Fail [ ] Blocked | __________________ |
-| C-05 | APP_SHELLに列挙されたURL（index、CSS、各JS、manifest、3アイコン）が公開URL配下で読み込めることを確認する。 | 欠落URLがなく、install失敗を示すエラーがない。 | [ ] Pass [ ] Fail [ ] Blocked | __________________ |
+| C-01 | HTTPSのCloudflare Pages URL（`/`）を開く。`/app/`では開かない。 | S1の初回チェックが表示され、CSSと画像が読み込まれる。画面がプレーンHTMLにならない。 | [ ] Pass [ ] Fail [ ] Blocked | __________________ |
+| C-02 | Cloudflare Pagesの公開URLを直接入力して再読み込みする。 | 公開ルートのままS1が表示される。想定外の別パスへ飛ばない。 | [ ] Pass [ ] Fail [ ] Blocked | __________________ |
+| C-03 | manifestの取得を確認する（対応ブラウザのPWA情報または開発者ツール）。 | `start_url`とscopeが公開ルートを指し、アイコンが解決される。 | [ ] Pass [ ] Fail [ ] Blocked | __________________ |
+| C-04 | 初回表示後、オンラインで1回リロードし、少し待ってからSW登録状態を確認する。 | SW登録がエラーにならず、scopeがCloudflare Pagesの公開ルート配下である。 | [ ] Pass [ ] Fail [ ] Blocked | __________________ |
+| C-05 | APP_SHELLに列挙されたURL（index、CSS、各JS、manifest、3アイコン）が公開ルート配下で読み込めることを確認する。 | 欠落URLがなく、install失敗を示すエラーがない。 | [ ] Pass [ ] Fail [ ] Blocked | __________________ |
 | C-06 | オンラインでS1を表示したまま機内モードまたは通信OFFにし、ページを再読み込みする。 | キャッシュ済みのS1が表示される。通信失敗だけで白画面・JS停止にならない。 | [ ] Pass [ ] Fail [ ] Blocked | __________________ |
-| C-07 | 通信OFFのままS1を一度閉じ、ホーム画面またはブラウザ履歴から公開URLを再度開く。 | キャッシュが残る範囲でアプリシェルが表示される。失敗時はキャッシュ準備・端末・URLを記録する。 | [ ] Pass [ ] Fail [ ] Blocked | __________________ |
+| C-07 | 通信OFFのままS1を一度閉じ、ホーム画面またはブラウザ履歴からCloudflare Pagesの公開URLを再度開く。 | キャッシュが残る範囲でアプリシェルが表示される。失敗時はキャッシュ準備・端末・URLを記録する。 | [ ] Pass [ ] Fail [ ] Blocked | __________________ |
 | C-08 | 通信を戻し、通常の再読み込みを行う。 | オンラインへ復帰し、画面が壊れず表示される。更新後の版を確認できる。 | [ ] Pass [ ] Fail [ ] Blocked | __________________ |
 
 ## 5. iOS（Safari／ホーム画面）手順
@@ -133,9 +133,9 @@ Pages URL: https://<owner>.github.io/<repository>/
 
 | ID | 操作 | 期待結果 | 結果 | 証跡（スクリーンショット／URL／コンソール等） |
 |---|---|---|---|---|
-| IOS-01 | Safariで`https://<owner>.github.io/<repository>/`を直接開き、S1が表示されるまで待つ。 | アドレスがPagesサブパスのまま、CSS・アイコンを含むS1が表示される。 | [ ] Pass [ ] Fail [ ] Blocked | __________________ |
+| IOS-01 | Safariで`https://<project-name>.pages.dev/`（または設定済みカスタムドメイン）を直接開き、S1が表示されるまで待つ。 | Cloudflare Pagesの公開ルートで、CSS・アイコンを含むS1が表示される。 | [ ] Pass [ ] Fail [ ] Blocked | __________________ |
 | IOS-02 | Safariの共有メニューから「ホーム画面に追加」を選び、表示名とアイコンを確認して追加する。 | manifestの`short_name`相当の名称とアイコンが表示され、ホーム画面に1つの起動アイコンが追加される。 | [ ] Pass [ ] Fail [ ] Blocked | __________________ |
-| IOS-03 | ホーム画面の追加アイコンから起動する。Safariのタブで開いた場合と区別できる表示を記録する。 | standalone相当のアプリ表示で起動し、S1が表示される。`/<repository>/app/`へ移動しない。 | [ ] Pass [ ] Fail [ ] Blocked | __________________ |
+| IOS-03 | ホーム画面の追加アイコンから起動する。Safariのタブで開いた場合と区別できる表示を記録する。 | standalone相当のアプリ表示で起動し、S1が表示される。`/app/`へ移動しない。 | [ ] Pass [ ] Fail [ ] Blocked | __________________ |
 | IOS-04 | standalone起動後にS1→S2→S3→S4の順に移動する。S1は5問を匿名回答する。 | 画面遷移、CTA、商品画面、記録画面が止まらず、ページ全体が横にずれない。 | [ ] Pass [ ] Fail [ ] Blocked | __________________ |
 | IOS-05 | standaloneを終了し、ホーム画面から再起動する。 | 前回の状態が仕様どおり復元され、完了済みならタブロックが解除されたままになる。 | [ ] Pass [ ] Fail [ ] Blocked | __________________ |
 
@@ -172,9 +172,9 @@ Pages URL: https://<owner>.github.io/<repository>/
 
 | ID | 操作 | 期待結果 | 結果 | 証跡（スクリーンショット／URL／コンソール等） |
 |---|---|---|---|---|
-| AND-01 | Chromeで`https://<owner>.github.io/<repository>/`を直接開き、S1が表示されるまで待つ。 | アドレスがPagesサブパスのまま、CSS・アイコンを含むS1が表示される。 | [ ] Pass [ ] Fail [ ] Blocked | __________________ |
+| AND-01 | Chromeで`https://<project-name>.pages.dev/`（または設定済みカスタムドメイン）を直接開き、S1が表示されるまで待つ。 | Cloudflare Pagesの公開ルートで、CSS・アイコンを含むS1が表示される。 | [ ] Pass [ ] Fail [ ] Blocked | __________________ |
 | AND-02 | Chromeのインストールバナー、メニューの「アプリをインストール」または「ホーム画面に追加」を使う。 | manifestの名称とアイコンが確認でき、ホーム画面に起動アイコンが追加される。 | [ ] Pass [ ] Fail [ ] Blocked | __________________ |
-| AND-03 | 追加アイコンから起動し、Chromeタブ起動と区別できる表示を記録する。 | standalone相当の表示でS1が開き、サブパスやCSSが崩れない。 | [ ] Pass [ ] Fail [ ] Blocked | __________________ |
+| AND-03 | 追加アイコンから起動し、Chromeタブ起動と区別できる表示を記録する。 | standalone相当の表示でS1が開き、公開ルートやCSSが崩れない。 | [ ] Pass [ ] Fail [ ] Blocked | __________________ |
 | AND-04 | standalone起動後にS1→S2→S3→S4の順に移動する。S1は5問を匿名回答する。 | 画面遷移、CTA、商品画面、記録画面が止まらず、横スクロールしない。 | [ ] Pass [ ] Fail [ ] Blocked | __________________ |
 | AND-05 | standaloneを終了し、ホーム画面から再起動する。 | 前回の状態が仕様どおり復元され、完了済みならタブロックが解除されたままになる。 | [ ] Pass [ ] Fail [ ] Blocked | __________________ |
 
@@ -247,7 +247,7 @@ Pages URL: https://<owner>.github.io/<repository>/
 - `CACHE_NAME`の更新や新しい公開版への切替時に、旧キャッシュが残って見た目・スクリプトの組み合わせがずれるリスク。
 - 初回オンライン読み込み前にオフライン起動した場合、APP_SHELLがまだ存在せず表示できないリスク。
 - Google Fontsがオフラインで取得できず代替フォントになるリスク（代替表示の可読性を確認する）。
-- OSのホーム画面登録が削除された、別ブラウザで開いた、または別のPagesサブパスを開いたことを、保存消失やPWA失敗と混同するリスク。
+- OSのホーム画面登録が削除された、別ブラウザで開いた、または別のCloudflare PagesプロジェクトURLを開いたことを、保存消失やPWA失敗と混同するリスク。
 - アプリが動いていても、通知許可・通知発火が実装済みとは限らない。通知の結果をこのチェックのPass根拠にしない。
 
 ## 9. 失敗・Blocked記録テンプレート
@@ -260,7 +260,7 @@ FailまたはBlockedが1件でもあれば、次のテンプレートを複製�
 プラットフォーム／端末モデル：
 OS／ブラウザとバージョン：
 起動方法（ブラウザ／standalone）：
-Pages URL（サブパスを含む）：
+Cloudflare Pages URL（プロジェクトルート）：
 対象コミット／Pages run：
 通信状態（オンライン／機内モード／Wi-Fi等）：
 事前のSW登録・キャッシュ確認：
@@ -296,7 +296,7 @@ Pages URL（サブパスを含む）：
 
 次の条件をすべて満たしたときだけ「Issue #108の実機確認完了」と報告する。用語シートのトリガーが未実装の場合は、そのBlockedと理由を明記し、完了範囲を「PWA基盤・設定／privacy sheet確認済み」などに限定する。
 
-- [ ] 公開URLが`/<repository>/`で確認でき、`/<repository>/app/`を使っていない。
+- [ ] Cloudflare Pagesの公開URL（プロジェクトルート）で確認でき、`/app/`を使っていない。
 - [ ] iOS対象端末とAndroid対象端末の両方について、インストール・standalone表示・オンライン復帰を実機で確認した。
 - [ ] 初回オンライン後のオフライン再起動、保存・再読み込み、削除導線を確認した。
 - [ ] safe-area、内部スクロール、設定sheet、privacy sheetを端末で確認した。
@@ -309,3 +309,5 @@ Pages URL（サブパスを含む）：
 | 日付 | 版 | 変更点 |
 |---|---|---|
 | 2026-08-25 | v1.0 | Issue #108向け初版。manifest／SW／Pagesサブパス／localStorage／safe-area／設定・用語sheetの静的根拠とiOS・Android実機手順を追加。 |
+| 2026-08-31 | v1.1 | 公開先をCloudflare Pagesへ変更。プロジェクトルートURL、Direct Upload、Cloudflare Pagesのデプロイ確認へ更新。 |
+| 2026-08-31 | v1.2 | Cloudflare Pagesの本番公開ブランチを `main` に設定し、`develop`での確認後にmainへリリースする手順へ更新。 |

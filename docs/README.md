@@ -63,7 +63,7 @@
 
 | パス | 内容 |
 |------|------|
-| `schedule/ガントチャート_v2.2.md` | **【最新】ガントチャート（Markdown）**。GitHub IssuesのIssue状態・タイトル・担当・緊急度・マイルストーン・更新/完了日を自動同期し、PR統合準備とは分けて、依存・M-MVP公開までの目標を定義 |
+| `schedule/ガントチャート_v2.2.md` | **【最新】ガントチャート（Markdown）**。GitHub IssuesのIssue状態・タイトル・担当・緊急度・マイルストーン・更新/完了日を自動同期し、PR統合準備とは分けて、依存・Cloudflare PagesでのM-MVP公開までの目標を定義 |
 | `../scripts/gantt-issue-map.json` / `../scripts/sync-gantt-issues.mjs` | IssueとガントID・日程の対応、および同期スクリプト。`node scripts/sync-gantt-issues.mjs` で手動同期できる |
 
 ### research/ — 調査・ヒアリング

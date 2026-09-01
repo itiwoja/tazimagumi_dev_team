@@ -1,7 +1,7 @@
 /* global self, caches, fetch */
 "use strict";
 
-var CACHE_NAME = "tazimagumi-app-v31"; // 質問テンプレート機能の追加を反映
+var CACHE_NAME = "tazimagumi-app-v32"; // 初回案内の hidden 表示修正を反映
 // index.html の読み込み順に合わせる: data → state → storage → contracts → disclaimer → s3 → screens → debug → main → sw-register
 var APP_SHELL = [
   "./",

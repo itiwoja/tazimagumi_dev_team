@@ -53,7 +53,10 @@
   var settingsOpenBtn = $("settingsBtn");
   var reminderTime = $("reminderTime");
   var reminderSaveBtn = $("reminderSaveBtn");
+  var avoidChips = $("avoidChips");
+  var avoidIngredientCount = $("avoidIngredientCount");
   var resetDiagnosisBtn = $("resetDiagnosisBtn");
+  var replayIntroBtn = $("replayIntroBtn");
   var exportDataBtn = $("exportDataBtn");
   var clearDataBtn = $("clearDataBtn");
   var clearConfirm = $("clearConfirm");
@@ -64,6 +67,56 @@
 
   function syncReminderField() {
     if (reminderTime) reminderTime.value = App.prefs.reminderTime || "";
+  }
+
+  // 成分マスタのうち、配合の事実タグとして扱えるものだけを設定に出す。
+  // 「無香料」「低刺激」などの表示・配慮タグは回避対象にしない。
+  var AVOID_INGREDIENT_IDS = [
+    "ceramide", "hyaluronic-acid", "glycerin", "aminosurfactant", "clay",
+    "shaving-balm-base", "uva-uvb", "shea-butter", "moisturizing-agent"
+  ];
+
+  function normalizedAvoidedIngredients(value) {
+    if (typeof App.normalizeAvoidedIngredients === "function") {
+      return App.normalizeAvoidedIngredients(value);
+    }
+    return Array.isArray(value) ? value.filter(function (name) {
+      return typeof name === "string" && name.trim() !== "";
+    }) : [];
+  }
+
+  function availableAvoidIngredients() {
+    return (Array.isArray(global.INGREDIENTS) ? global.INGREDIENTS : []).filter(function (ingredient) {
+      return ingredient && AVOID_INGREDIENT_IDS.indexOf(ingredient.id) !== -1;
+    });
+  }
+
+  function renderAvoidIngredientChips() {
+    if (!avoidChips) return;
+    var selected = normalizedAvoidedIngredients(App.prefs && App.prefs.avoidedIngredients);
+    avoidChips.textContent = "";
+
+    availableAvoidIngredients().forEach(function (ingredient) {
+      var chip = document.createElement("button");
+      var isSelected = selected.indexOf(ingredient.name) !== -1;
+      chip.type = "button";
+      chip.className = "avoid-chip";
+      chip.setAttribute("aria-pressed", isSelected ? "true" : "false");
+      chip.textContent = ingredient.name;
+      chip.addEventListener("click", function () {
+        var next = normalizedAvoidedIngredients(App.prefs && App.prefs.avoidedIngredients);
+        var index = next.indexOf(ingredient.name);
+        if (index === -1) next.push(ingredient.name);
+        else next.splice(index, 1);
+        App.prefs.avoidedIngredients = normalizedAvoidedIngredients(next);
+        App.syncPrefs();
+        renderAvoidIngredientChips();
+        if (state.completed && typeof App.renderS3 === "function") App.renderS3();
+      });
+      avoidChips.appendChild(chip);
+    });
+
+    if (avoidIngredientCount) avoidIngredientCount.textContent = selected.length + "個を選択中";
   }
 
   function closeClearConfirm() {
@@ -123,6 +176,52 @@
   }
   cta.addEventListener("click", ctaClick);
   backBtn.addEventListener("click", function () { App.prevQuestion(); });
+
+  /* ---- SC-00 導入画面（案A: App.SCREENS に載せない独立画面 / 設計書 SC-00 v0.1 §3.2・§5） ----
+     表示中はアプリバー・タブ・CTA を隠し、この画面だけを出す。
+     「はじめる」で保存済みの画面（state.current）へ戻す。 */
+  var introEl = $("s0");
+  var introStartBtn = $("introStart");
+  var appbarEl = document.querySelector(".appbar");
+
+  function setIntroVisible(visible) {
+    if (introEl) introEl.hidden = !visible;
+    if (appbarEl) appbarEl.hidden = visible;
+    if (dock) dock.hidden = visible;
+    if (visible) {
+      App.SCREENS.forEach(function (s) {
+        var el = $(s);
+        if (el) el.hidden = true;
+      });
+      var wrap = $("screenWrap");
+      if (wrap) wrap.scrollTop = 0;
+    }
+  }
+
+  /** 設定から「はじめの画面をもう一度見る」で呼ぶ。次のはじめるで現在画面へ戻る。 */
+  App.showIntro = function () {
+    App.prefs.hasSeenIntro = false;
+    App.syncPrefs();
+    setIntroVisible(true);
+  };
+
+  if (introStartBtn) introStartBtn.addEventListener("click", function () {
+    App.prefs.hasSeenIntro = true;
+    App.syncPrefs();
+    setIntroVisible(false);
+    App.showScreen(state.current);
+    var target = $(state.current);
+    if (target) {
+      target.setAttribute("tabindex", "-1");
+      target.focus({ preventScroll: true });
+    }
+  });
+
+  if (replayIntroBtn) replayIntroBtn.addEventListener("click", function () {
+    closeSettingsSheet();
+    App.showIntro();
+    if (introStartBtn) introStartBtn.focus();
+  });
 
   /* ---- chips（イベント委譲） ---- */
   $("qstack").addEventListener("click", function (e) {
@@ -193,7 +292,7 @@
     }
   });
 
-  /* ---- [F-03] 予算トグル（件数はデータ連動） ---- */
+  /* ---- [F-03] 予算トグル（候補・比較表もデータ連動） ---- */
   qAll(".budget__btn").forEach(function (b) {
     b.addEventListener("click", function () {
       qAll(".budget__btn").forEach(function (x) {
@@ -201,10 +300,24 @@
       });
       b.classList.add("is-on"); b.setAttribute("aria-pressed", "true");
       var key = b.getAttribute("data-budget");
-      App.updateBudgetCount(key);
+      if (typeof App.renderS3 === "function") {
+        App.renderS3();
+      } else {
+        App.updateBudgetCount(key);
+      }
       if (key === "sub") App.toast("まず1本だけ。これで十分はじめられます");
     });
   });
+
+  /* ---- [F-04] 比較対象の選択 ---- */
+  var candGroups = $("candGroups");
+  if (candGroups) {
+    candGroups.addEventListener("click", function (e) {
+      var select = e.target.closest("[data-product-id]");
+      if (!select || typeof App.toggleCompareProduct !== "function") return;
+      App.toggleCompareProduct(select.getAttribute("data-product-id"));
+    });
+  }
 
   /* ---- [F-06] 今日のドット（state.records に保存） ---- */
   var dot = $("todayDot");
@@ -212,20 +325,13 @@
     var on = dot.getAttribute("aria-pressed") === "true";
     var next = !on;
     dot.setAttribute("aria-pressed", next ? "true" : "false");
-    state.records.todayDone = next;
+    if (typeof App.syncTodayRecord === "function") App.syncTodayRecord(next);
+    else state.records.todayDone = next;
     if (next) App.toast("今日ぶん、記録できました");
     App.persist();
   });
 
-  /* ---- [F-06] 今週の自己評価（単一選択・state.records に保存） ---- */
-  qAll(".rate").forEach(function (r) {
-    r.addEventListener("click", function () {
-      qAll(".rate").forEach(function (x) { x.setAttribute("aria-pressed", "false"); });
-      r.setAttribute("aria-pressed", "true");
-      state.records.weekRating = r.textContent.trim();
-      App.persist();
-    });
-  });
+
 
   if (settingsOpenBtn) settingsOpenBtn.addEventListener("click", openSettingsSheet);
   if (settingsClose) settingsClose.addEventListener("click", closeSettingsSheet);
@@ -255,6 +361,7 @@
     if (!settingsArmedClear) return;
     closeSettingsSheet();
     App.clearLocalData();
+    renderAvoidIngredientChips();
   });
   document.addEventListener("keydown", handleSettingsKeydown);
 
@@ -308,6 +415,7 @@
 
   /* ---- init ---- */
   syncReminderField();
+  renderAvoidIngredientChips();
 
   var restored = App.restore();
 
@@ -348,5 +456,13 @@
       t.removeAttribute("aria-disabled");
     });
     App.toast("デバッグモード: 全画面を解放しました");
+  }
+
+  /* ---- SC-00 初回のみ表示（設計書 SC-00 §3.2 / §10） ----
+     hasSeenIntro が未設定(false)なら導入画面を初期表示する。
+     診断途中のリロード等、一度はじめた後は出さない（既存 restore 挙動を維持）。
+     デバッグモードではスキップする（開発効率のため）。 */
+  if (!App.isDebug && !App.prefs.hasSeenIntro) {
+    setIntroVisible(true);
   }
 })(window);

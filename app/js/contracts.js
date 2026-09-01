@@ -14,8 +14,8 @@
    ■ 実装状況（2026-07 時点）
    - App.diagnose      : 実装済み（本ファイル下部）。screens.js の App.renderRoadmap 経由で画面結線済み（Issue #34/#36/#60）。
    - App.buildRoadmap  : 実装済み（本ファイル下部。Issue #35）。
-   - App.recommend     : 実装済み（本ファイル下部。商品 typeTags = Issue #54）
-   - App.buildCompareTable : 未実装スタブ（Issue #38）
+   - App.recommend     : 実装済み（本ファイル下部。商品 typeTags = Issue #54）。s3.js の App.renderS3 経由で画面結線済み（Issue #61）。
+   - App.buildCompareTable : 実装済み（本ファイル下部。Issue #38）。s3.js の App.renderS3 から呼び出し済み。
    - 既知の乖離: 現行UIは最小5問だが diagnose の pointTable は診断ロジック設計書の23問index前提。
      5問UIへの結線は完了済み（Issue #34/#36/#60）。23問化の統合は別 feature ブランチ（Issue #59）で対応予定。
 
@@ -98,6 +98,7 @@
    * @property {string}  title  見出し（例: "まず1本：化粧水"）
    * @property {string}  body   やさしい説明文（断定表現は使わない）
    * @property {string} [term] 用語シートのキー（あれば「○○ってなに？」を出す）
+   * @property {"main"|"sub"} [lane] 複合診断時の商品候補レーン
    */
 
   /**
@@ -112,6 +113,29 @@
     type4: { name: "ひげ剃り後の荒れを防ぎたい",     axis: "shave",    set: "アフターシェーブセット" },
     type5: { name: "くすみ・エイジングが気になる",   axis: "aging",    set: "年齢肌ケアセット" },
     type6: { name: "とにかく始めたい（入門）",       axis: "beginner", set: "入門オールインワン1本" }
+  };
+
+  /**
+   * ロードマップで使う概念語と商品カテゴリの対応。
+   * 部分一致では解決せず、S2のstep.termと完全一致する概念だけを扱う。
+   */
+  App.CONCEPT_TO_CATEGORY = {
+    "化粧水": "化粧水",
+    "乳液": "乳液",
+    "オールインワン": "オールインワン",
+    "アフターシェーブ": "アフターシェーブ"
+  };
+
+  /**
+   * ロードマップの1ステップから、対応する商品カテゴリを解決する。
+   * @param {RoadmapStep} step
+   * @returns {string|null} products.js のcategory値。未対応ならnull。
+   */
+  App.resolveStepCategory = function (step) {
+    var term = step && typeof step.term === "string" ? step.term.trim() : "";
+    return Object.prototype.hasOwnProperty.call(App.CONCEPT_TO_CATEGORY, term)
+      ? App.CONCEPT_TO_CATEGORY[term]
+      : null;
   };
 
   /* =====================================================================
@@ -521,19 +545,22 @@
         order: 1,
         title: "今日そろえる概念を決める",
         body: "まずは商品名ではなく、「" + main.concept + "」のような概念で必要な手順を整理します。具体的な候補は次の画面で確認します。",
-        term: main.term
+        term: main.term,
+        lane: "main"
       },
       {
         order: 2,
         title: main.tonightTitle,
         body: main.tonightBody,
-        term: main.term
+        term: main.term,
+        lane: "main"
       },
       {
         order: 3,
         title: main.morningTitle,
         body: main.morningBody,
-        term: main.term
+        term: main.term,
+        lane: "main"
       }
     ];
 
@@ -544,7 +571,8 @@
         order: 4,
         title: "もう一つの傾向も少しだけ意識する",
         body: "第二タイプとして「" + subMeta.name + "」の傾向も見られます。最初から手順を増やしすぎず、メインの流れに慣れてから「" + sub.concept + "」の要素を1つずつ足す形が選択肢になります。",
-        term: sub.term
+        term: sub.term,
+        lane: "sub"
       });
     } else {
       steps.push({
@@ -660,13 +688,210 @@
   };
 
   /**
+   * 診断タイプに合う店員さんへの質問文を、タイプ別を先頭にして選ぶ。
+   * 複合診断では primaryType のみを使い、入力は変更しない。
+   * @param {SkinType|Diagnosis} typeOrDiagnosis
+   * @param {{limit?: number, templates?: Array<{id: string, types: SkinType[]|null, text: string}>}|Array<{id: string, types: SkinType[]|null, text: string}>} [options]
+   * @returns {Array<{id: string, text: string}>}
+   */
+  App.pickQuestionTemplates = function (typeOrDiagnosis, options) {
+    var typeId = typeof typeOrDiagnosis === "string"
+      ? typeOrDiagnosis
+      : typeOrDiagnosis && typeOrDiagnosis.primaryType;
+    var templates = global.QUESTION_TEMPLATES || [];
+    var limit = 4;
+
+    if (Array.isArray(options)) {
+      templates = options;
+    } else if (options && typeof options === "object") {
+      if (Array.isArray(options.templates)) templates = options.templates;
+      if (typeof options.limit === "number" && isFinite(options.limit)) {
+        limit = Math.max(0, Math.min(4, Math.floor(options.limit)));
+      }
+    }
+
+    if (!Array.isArray(templates) || limit === 0) return [];
+
+    var typeSpecific = templates.filter(function (template) {
+      return template && Array.isArray(template.types) && template.types.indexOf(typeId) !== -1;
+    });
+    var common = templates.filter(function (template) {
+      return template && template.types === null;
+    });
+    var selected = typeSpecific.slice(0, Math.min(2, limit));
+    selected = selected.concat(common.slice(0, Math.min(2, limit - selected.length)));
+
+    return selected.map(function (template) {
+      return { id: template.id, text: template.text };
+    });
+  };
+
+  /**
+   * 商品リストを、ユーザーが選んだ成分タグの有無だけで分ける。
+   * 商品や入力配列は変更しないため、推薦結果の描画前フィルタにも使える。
+   * @param {Product[]} products
+   * @param {string[]} avoidedIngredients
+   * @returns {{visible: Product[], excluded: Product[]}}
+   */
+  App.filterByAvoidedIngredients = function (products, avoidedIngredients) {
+    var avoided = Array.isArray(avoidedIngredients)
+      ? avoidedIngredients.reduce(function (names, name) {
+        var normalized = typeof name === "string" ? name.trim() : "";
+        if (normalized && names.indexOf(normalized) === -1) names.push(normalized);
+        return names;
+      }, [])
+      : [];
+    var result = { visible: [], excluded: [] };
+
+    (Array.isArray(products) ? products : []).forEach(function (product) {
+      var ingredients = product && Array.isArray(product.ingredients) ? product.ingredients : [];
+      var containsAvoidedIngredient = avoided.some(function (name) {
+        return ingredients.indexOf(name) !== -1;
+      });
+      result[containsAvoidedIngredient ? "excluded" : "visible"].push(product);
+    });
+
+    return result;
+  };
+
+  /**
+   * 同一カテゴリ内で成分タグが近い商品ペアを返す。
+   * 成分タグは重複を除いた集合としてJaccard係数を計算する。
+   * @param {Product[]} products
+   * @param {number|{threshold?: number}} [options] 類似とみなす閾値（既定0.8）
+   * @returns {Array<{a: Product, b: Product, shared: string[], score: number}>}
+   */
+  App.findSimilarPairs = function (products, options) {
+    var threshold = 0.8;
+    var requestedThreshold = typeof options === "number"
+      ? options
+      : options && options.threshold;
+
+    if (typeof requestedThreshold === "number" && isFinite(requestedThreshold)) {
+      threshold = requestedThreshold;
+    }
+
+    var candidates = Array.isArray(products) ? products : [];
+    var pairs = [];
+
+    function ingredientSet(product) {
+      return new Set(Array.isArray(product.ingredients) ? product.ingredients : []);
+    }
+
+    for (var aIndex = 0; aIndex < candidates.length - 1; aIndex++) {
+      var a = candidates[aIndex];
+      if (!a || typeof a !== "object") continue;
+
+      for (var bIndex = aIndex + 1; bIndex < candidates.length; bIndex++) {
+        var b = candidates[bIndex];
+        if (!b || typeof b !== "object" || a.category !== b.category) continue;
+
+        var aIngredients = ingredientSet(a);
+        var bIngredients = ingredientSet(b);
+        var shared = [];
+        aIngredients.forEach(function (ingredient) {
+          if (bIngredients.has(ingredient)) shared.push(ingredient);
+        });
+
+        var unionSize = aIngredients.size;
+        bIngredients.forEach(function (ingredient) {
+          if (!aIngredients.has(ingredient)) unionSize++;
+        });
+        var score = unionSize === 0 ? 0 : shared.length / unionSize;
+
+        if (score >= threshold) {
+          pairs.push({
+            a: a,
+            b: b,
+            shared: shared,
+            score: score,
+            aIndex: aIndex,
+            bIndex: bIndex
+          });
+        }
+      }
+    }
+
+    pairs.sort(function (left, right) {
+      if (right.score !== left.score) return right.score - left.score;
+      if (left.aIndex !== right.aIndex) return left.aIndex - right.aIndex;
+      return left.bIndex - right.bIndex;
+    });
+
+    return pairs.map(function (pair) {
+      return {
+        a: pair.a,
+        b: pair.b,
+        shared: pair.shared,
+        score: pair.score
+      };
+    });
+  };
+
+  /**
    * 選んだ商品（最大3）→ 横並び比較表。値が分かれる行は differs=true。
+   * 比較軸: 価格・容量・目的（category）・成分タグ（有無）・違いの一言。
    * 成分は「有無」のみ。効能・安全性の断定は載せない（薬機法）。
    * 担当: ゆうと / Issue #38 [p4d] SC-03 商品比較UI
+   * 参照: docs/design/推薦ロジック仕様書_v1.0.md §4
    * @param {Product[]} products
    * @returns {CompareTable}
    */
-  App.buildCompareTable = notImplemented(
-    "App.buildCompareTable", "ゆうと", "#38", "docs/design/推薦ロジック仕様書_v1.0.md §4"
-  );
+  App.buildCompareTable = function (products) {
+    var columns = Array.isArray(products) ? products.slice(0, 3) : [];
+
+    function differs(values) {
+      return values.some(function (value) { return value !== values[0]; });
+    }
+
+    function row(label, values) {
+      return { label: label, values: values, differs: differs(values) };
+    }
+
+    var rows = [
+      row("価格", columns.map(function (p) {
+        return "¥" + Number(p.price || 0).toLocaleString("ja-JP");
+      })),
+      row("容量", columns.map(function (p) {
+        return (typeof p.volume === "number" ? p.volume : "-") + "mL";
+      })),
+      row("目的", columns.map(function (p) {
+        return p.category || "-";
+      }))
+    ];
+
+    var ingredientNames = [];
+    columns.forEach(function (p) {
+      (Array.isArray(p.ingredients) ? p.ingredients : []).forEach(function (name) {
+        if (ingredientNames.indexOf(name) === -1) ingredientNames.push(name);
+      });
+    });
+    ingredientNames.forEach(function (name) {
+      rows.push(row("成分: " + name, columns.map(function (p) {
+        return Array.isArray(p.ingredients) && p.ingredients.indexOf(name) !== -1 ? "あり" : "なし";
+      })));
+    });
+
+    rows.push(row("違いの一言", columns.map(function (p) {
+      return (p.summary_one_liner && p.summary_one_liner.trim()) || "—";
+    })));
+
+    var similarPair = App.findSimilarPairs(columns)[0];
+    if (similarPair) {
+      var union = new Set();
+      (Array.isArray(similarPair.a.ingredients) ? similarPair.a.ingredients : []).forEach(function (ingredient) {
+        union.add(ingredient);
+      });
+      (Array.isArray(similarPair.b.ingredients) ? similarPair.b.ingredients : []).forEach(function (ingredient) {
+        union.add(ingredient);
+      });
+      var similarityFact = similarPair.shared.length + "個／全" + union.size + "種";
+
+      rows.push(row("共通する成分タグ", columns.map(function (product) {
+        return product === similarPair.a || product === similarPair.b ? similarityFact : "—";
+      })));
+    }
+
+    return { columns: columns, rows: rows };
+  };
 })(window);

@@ -1,17 +1,20 @@
 /* global self, caches, fetch */
 "use strict";
 
-var CACHE_NAME = "tazimagumi-app-v18"; // 競合マーカー混入の修復（Issue #86 / #107）
-// index.html の読み込み順に合わせる: data → state → storage → contracts → disclaimer → screens → debug → main → sw-register
+var CACHE_NAME = "tazimagumi-app-v31"; // 質問テンプレート機能の追加を反映
+// index.html の読み込み順に合わせる: data → state → storage → contracts → disclaimer → s3 → screens → debug → main → sw-register
 var APP_SHELL = [
   "./",
   "./index.html",
   "./css/style.css",
+  "./css/result-celebration.css",
   "./data/products.js",
+  "./data/question-templates.js",
   "./js/state.js",
   "./js/storage.js",
   "./js/contracts.js",
   "./js/disclaimer.js",
+  "./js/s3.js",
   "./js/screens.js",
   "./js/debug.js",
   "./js/main.js",

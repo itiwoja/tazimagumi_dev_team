@@ -1,7 +1,7 @@
 /* global self, caches, fetch */
 "use strict";
 
-var CACHE_NAME = "tazimagumi-app-v35"; // 肌・髭・髪の初回表示トラックを反映
+var CACHE_NAME = "tazimagumi-app-v35"; // 初回チェック入口の強調表示を反映
 // index.html の読み込み順に合わせる: data → state → storage → contracts → disclaimer → s3 → screens → debug → main → sw-register
 var APP_SHELL = [
   "./",

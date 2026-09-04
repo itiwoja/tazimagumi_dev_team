@@ -225,6 +225,11 @@
 
   /* ---- chips（イベント委譲） ---- */
   $("qstack").addEventListener("click", function (e) {
+    var focus = e.target.closest("[data-focus]");
+    if (focus) {
+      App.selectFocus(focus.getAttribute("data-focus"));
+      return;
+    }
     var chip = e.target.closest("[data-pick]");
     if (chip) App.pick(chip);
   });
@@ -379,7 +384,7 @@
       return r;
     };
   }
-  ["pick", "nextQuestion", "prevQuestion", "complete", "showScreen", "resetS1"]
+  ["pick", "selectFocus", "nextQuestion", "prevQuestion", "complete", "showScreen", "resetS1"]
     .forEach(withAutosave);
 
   // リロード/離脱時に取りこぼしなく即時保存
@@ -390,7 +395,7 @@
 
   /* ---- 保存済み回答をチップ選択状態へ反映 ---- */
   function restoreChips() {
-    qAll(".qcard", $("qstack")).forEach(function (card) {
+    qAll(".qcard[data-q]", $("qstack")).forEach(function (card) {
       var qi = Number(card.getAttribute("data-q"));
       var answer = state.answers[qi];
       if (answer == null) return;
@@ -426,7 +431,7 @@
       // 古いセーブデータ等の理由で診断結果が欠けている場合は再生成
       if (!state.diagnosis || !state.roadmap) {
         try {
-          state.diagnosis = App.diagnose(state.answers);
+          state.diagnosis = App.diagnose(state.answers, { focusCategory: state.focusCategory });
           state.roadmap = App.buildRoadmap(state.diagnosis);
         } catch (e) {
           console.error("診断データの再生成に失敗しました:", e);

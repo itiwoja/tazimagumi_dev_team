@@ -22,6 +22,9 @@
   App.state = {
     current: "s1",
     qIndex: 0,
+    // 初回チェックの入口で選んだカテゴリ（skin / shave / hair）。
+    // 旧保存データには存在しないため、未設定は肌カテゴリに決め打ちせず null とする。
+    focusCategory: null,
     answers: new Array(App.S1_TOTAL).fill(null),
     completed: false,
     diagnosis: null,
@@ -134,6 +137,11 @@
     if (typeof saved.qIndex === "number" &&
         saved.qIndex >= 0 && saved.qIndex < App.S1_TOTAL) {
       s.qIndex = saved.qIndex;
+    }
+
+    if (typeof saved.focusCategory === "string" &&
+        ["skin", "shave", "hair"].indexOf(saved.focusCategory) !== -1) {
+      s.focusCategory = saved.focusCategory;
     }
 
     s.completed = saved.completed === true;

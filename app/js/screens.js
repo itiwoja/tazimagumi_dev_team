@@ -23,14 +23,75 @@
   }
 
   function remainCopy() {
+    if (!state.focusCategory) return "まず、気になるところを選んでください";
     var remain = App.S1_TOTAL - App.answeredCount();
     return remain > 0
       ? "あと " + remain + " 問・むずかしい言葉は出てきません"
       : "ぜんぶ選べました。プランを見てみましょう";
   }
 
+  function focusCategoryName(category) {
+    return { skin: "肌", shave: "髭剃り", hair: "髪" }[category] || "";
+  }
+
+  /**
+   * 選択したカテゴリに合わせて、Q1〜Q5の見出しと選択肢を描画する。
+   * 判定用の points は contracts.js の App.FOCUS_QUESTION_SETS と共有する。
+   */
+  App.renderFocusQuestions = function () {
+    var set = App.FOCUS_QUESTION_SETS && App.FOCUS_QUESTION_SETS[state.focusCategory];
+    var stack = $("qstack");
+    if (!set || !stack) return;
+
+    qAll(".qcard[data-q]", stack).forEach(function (card) {
+      var index = Number(card.getAttribute("data-q"));
+      var question = set[index];
+      if (!question) return;
+
+      var title = card.querySelector(".qtitle");
+      var hint = card.querySelector(".qhint");
+      var group = card.querySelector(".chips");
+      if (title) title.textContent = question.title;
+      if (hint) hint.textContent = question.hint;
+      if (!group) return;
+      group.setAttribute("aria-label", question.ariaLabel);
+      group.textContent = "";
+
+      question.choices.forEach(function (choice) {
+        var chip = document.createElement("button");
+        chip.type = "button";
+        chip.className = choice.neutral ? "chip chip--neutral" : "chip";
+        chip.setAttribute("aria-checked", state.answers[index] === choice.label ? "true" : "false");
+        chip.setAttribute("data-pick", "");
+
+        var body = document.createElement("span");
+        body.className = "chip__body";
+        var label = document.createElement("span");
+        label.className = "chip__label";
+        label.textContent = choice.label;
+        body.appendChild(label);
+        chip.appendChild(body);
+        group.appendChild(chip);
+      });
+    });
+  };
+
   App.renderQuestion = function () {
-    qAll(".qcard", $("qstack")).forEach(function (c) {
+    var stack = $("qstack");
+    var focusCard = $("focusCard");
+    if (!state.focusCategory) {
+      qAll(".qcard[data-q]", stack).forEach(function (c) { c.hidden = true; });
+      if (focusCard) focusCard.hidden = false;
+      var initialRemain = $("s1Remain");
+      if (initialRemain) initialRemain.textContent = remainCopy();
+      App.setBackVisible(false);
+      App.syncCTA();
+      return;
+    }
+
+    if (focusCard) focusCard.hidden = true;
+    App.renderFocusQuestions();
+    qAll(".qcard[data-q]", stack).forEach(function (c) {
       c.hidden = Number(c.getAttribute("data-q")) !== state.qIndex;
     });
     var remainEl = $("s1Remain");
@@ -42,6 +103,11 @@
   App.syncCTA = function () {
     var c = $("cta");
     if (state.current !== "s1") return;
+    if (!state.focusCategory) {
+      c.textContent = "カテゴリを選ぶ";
+      c.disabled = true;
+      return;
+    }
     var answered = state.answers[state.qIndex] !== null;
     var isLast = state.qIndex === App.S1_TOTAL - 1;
     c.textContent = isLast ? "プランを見る" : "次へ";
@@ -60,6 +126,7 @@
   };
 
   App.nextQuestion = function () {
+    if (!state.focusCategory) return;
     if (state.answers[state.qIndex] === null) return;
     if (state.qIndex < App.S1_TOTAL - 1) {
       var half = Math.ceil(App.S1_TOTAL / 2);
@@ -73,13 +140,38 @@
     }
   };
 
+  App.selectFocus = function (category) {
+    if (!App.FOCUS_QUESTION_SETS || !App.FOCUS_QUESTION_SETS[category]) return;
+
+    state.focusCategory = category;
+    state.qIndex = 0;
+    state.answers = new Array(App.S1_TOTAL).fill(null);
+    state.completed = false;
+    state.diagnosis = null;
+    state.roadmap = null;
+    if (typeof App.resetS3Comparison === "function") App.resetS3Comparison();
+    App.renderQuestion();
+    App.toast(focusCategoryName(category) + "のチェックを始めます");
+  };
+
   App.prevQuestion = function () {
-    if (state.qIndex > 0) { state.qIndex--; App.renderQuestion(); }
+    if (!state.focusCategory) return;
+    if (state.qIndex > 0) {
+      state.qIndex--;
+      App.renderQuestion();
+    } else {
+      state.focusCategory = null;
+      state.qIndex = 0;
+      state.answers = new Array(App.S1_TOTAL).fill(null);
+      state.diagnosis = null;
+      state.roadmap = null;
+      App.renderQuestion();
+    }
   };
 
   /* =================== [F-02] S2 ロードマップ動的描画 =================== */
   App.renderRoadmap = function () {
-    var diagnosis = App.diagnose(state.answers);
+    var diagnosis = App.diagnose(state.answers, { focusCategory: state.focusCategory });
     var steps = App.buildRoadmap(diagnosis);
     var meta = App.TYPE_META[diagnosis.primaryType];
     var typeLabel = $("s2ResultType");
@@ -170,7 +262,7 @@
       
       // 診断とロードマップ生成を実行して状態に保存
       try {
-        state.diagnosis = App.diagnose(state.answers);
+        state.diagnosis = App.diagnose(state.answers, { focusCategory: state.focusCategory });
         state.roadmap = App.buildRoadmap(state.diagnosis);
       } catch (error) {
         console.error("診断またはロードマップ生成に失敗しました:", error);
@@ -225,6 +317,7 @@
   };
 
   App.resetS1 = function () {
+    state.focusCategory = null;
     state.qIndex = 0;
     state.answers = new Array(App.S1_TOTAL).fill(null);
     state.completed = false;
@@ -426,7 +519,9 @@
     state.records.lastDoneAt = normalizedRecords.lastDoneAt;
 
     // 1. ルーティン提示
-    var diagnosis = state.completed ? App.diagnose(state.answers) : null;
+    var diagnosis = state.completed
+      ? App.diagnose(state.answers, { focusCategory: state.focusCategory })
+      : null;
     var primaryType = (diagnosis && diagnosis.primaryType) || "type6";
     var routines = ROUTINE_MAP[primaryType] || ROUTINE_MAP.type6;
 

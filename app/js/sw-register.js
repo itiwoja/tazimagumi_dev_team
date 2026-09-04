@@ -9,7 +9,7 @@
   if (!canUseServiceWorker) return;
 
   window.addEventListener("load", function () {
-    navigator.serviceWorker.register("./sw.js?v=33", { updateViaCache: "none" }).catch(function (error) {
+    navigator.serviceWorker.register("./sw.js?v=34", { updateViaCache: "none" }).catch(function (error) {
       console.info("Service Worker registration skipped:", error);
     });
   });

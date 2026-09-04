@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=Inter:wght@500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./css/style.css?v=34">
+<link rel="stylesheet" href="./css/style.css?v=35">
 <link rel="stylesheet" href="./css/result-celebration.css">
 <!-- 読み込み順（基盤の約束）: data → state → storage → contracts → disclaimer → s3 → screens → debug → main。各scriptはdeferで順序保持 -->
 <!-- debug.js は localStorage を書き換えるため main.js（App.restore）より前で固定（Issue #113） -->
@@ -101,18 +101,18 @@
 
         <!-- カテゴリを選ぶと、そのカテゴリに合う5問へ切り替わる。 -->
         <div class="qstack" id="qstack">
-          <article class="qcard focus-card" id="focusCard">
+          <article class="qcard focus-card qcard--core" id="focusCard">
             <p class="qkicker">はじめに</p>
             <h2 class="qtitle">どこからチェックする？</h2>
             <p class="qhint">気になるところを1つ選ぶと、質問が始まります</p>
-            <div class="chips" role="group" aria-label="チェックするカテゴリ">
-              <button class="chip" type="button" data-focus="skin">
+            <div class="chips chips--core" role="group" aria-label="チェックするカテゴリ">
+              <button class="chip chip--core" type="button" data-focus="skin">
                 <span class="chip__body"><span class="chip__label">肌</span><span class="chip__hint">皮脂・乾燥・肌荒れ</span></span>
               </button>
-              <button class="chip" type="button" data-focus="shave">
+              <button class="chip chip--core" type="button" data-focus="shave">
                 <span class="chip__body"><span class="chip__label">髭剃り</span><span class="chip__hint">ヒリヒリ・赤み・剃り跡</span></span>
               </button>
-              <button class="chip" type="button" data-focus="hair">
+              <button class="chip chip--core" type="button" data-focus="hair">
                 <span class="chip__body"><span class="chip__label">髪</span><span class="chip__hint">フケ・皮脂・パサつき・薄さ</span></span>
               </button>
             </div>
@@ -409,6 +409,6 @@
   </div>
 
 
-<script src="./js/sw-register.js?v=34" defer></script>
+<script src="./js/sw-register.js?v=35" defer></script>
 </body>
 </html>

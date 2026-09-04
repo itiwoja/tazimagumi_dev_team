@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=Inter:wght@500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./css/style.css?v=33">
+<link rel="stylesheet" href="./css/style.css?v=34">
 <link rel="stylesheet" href="./css/result-celebration.css">
 <!-- 読み込み順（基盤の約束）: data → state → storage → contracts → disclaimer → s3 → screens → debug → main。各scriptはdeferで順序保持 -->
 <!-- debug.js は localStorage を書き換えるため main.js（App.restore）より前で固定（Issue #113） -->
@@ -92,16 +92,34 @@
       </section>
 
       <!-- ================= S1 初回チェック（F-01 / REQ-01） ================= -->
-      <!-- ※ 最小版の5問。本実装は診断ロジック設計書 v1.1 の23問へ拡張（feature/sc01-check-ui / feature/diagnosis-logic） -->
+      <!-- ※ カテゴリ選択後にカテゴリ別の5問へ切り替える最小版。 -->
       <section class="screen is-active" id="s1" aria-label="初回チェック">
         <div class="s1-head">
           <p class="s1-value">3分で、あなたに合う<b>始め方</b>が見つかります</p>
-          <p class="s1-remain" id="s1Remain">全5問・選ぶだけでOK</p>
+          <p class="s1-remain" id="s1Remain">まず、気になるところを選んでください</p>
         </div>
 
-        <!-- 質問カードは data-q="0..4"。表示制御は screens.js (renderQuestion) が行う -->
+        <!-- カテゴリを選ぶと、そのカテゴリに合う5問へ切り替わる。 -->
         <div class="qstack" id="qstack">
-          <article class="qcard is-active" data-q="0">
+          <article class="qcard focus-card" id="focusCard">
+            <p class="qkicker">はじめに</p>
+            <h2 class="qtitle">どこからチェックする？</h2>
+            <p class="qhint">気になるところを1つ選ぶと、質問が始まります</p>
+            <div class="chips" role="group" aria-label="チェックするカテゴリ">
+              <button class="chip" type="button" data-focus="skin">
+                <span class="chip__body"><span class="chip__label">肌</span><span class="chip__hint">皮脂・乾燥・肌荒れ</span></span>
+              </button>
+              <button class="chip" type="button" data-focus="shave">
+                <span class="chip__body"><span class="chip__label">髭剃り</span><span class="chip__hint">ヒリヒリ・赤み・剃り跡</span></span>
+              </button>
+              <button class="chip" type="button" data-focus="hair">
+                <span class="chip__body"><span class="chip__label">髪</span><span class="chip__hint">フケ・皮脂・パサつき・薄さ</span></span>
+              </button>
+            </div>
+          </article>
+
+          <!-- 質問カードは data-q="0..4"。表示制御と選択肢の差し替えは screens.js が行う。 -->
+          <article class="qcard is-active" data-q="0" hidden>
             <p class="qkicker">Q1</p>
             <h2 class="qtitle">鏡を見て、肌で気になるのは？</h2>
             <p class="qhint">近いものを1つ選んでください</p>
@@ -391,6 +409,6 @@
   </div>
 
 
-<script src="./js/sw-register.js?v=33" defer></script>
+<script src="./js/sw-register.js?v=34" defer></script>
 </body>
 </html>

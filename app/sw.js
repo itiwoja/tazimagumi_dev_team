@@ -1,7 +1,7 @@
 /* global self, caches, fetch */
 "use strict";
 
-var CACHE_NAME = "tazimagumi-app-v33"; // 初回案内CSSの旧キャッシュ対策を反映
+var CACHE_NAME = "tazimagumi-app-v34"; // カテゴリ別初回チェックを反映
 // index.html の読み込み順に合わせる: data → state → storage → contracts → disclaimer → s3 → screens → debug → main → sw-register
 var APP_SHELL = [
   "./",

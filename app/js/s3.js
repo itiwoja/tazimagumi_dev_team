@@ -496,7 +496,7 @@
   App.renderS3 = function () {
     if (!state.completed) return;
 
-    var diagnosis = state.diagnosis || App.diagnose(state.answers);
+    var diagnosis = state.diagnosis || App.diagnose(state.answers, { focusCategory: state.focusCategory });
     var budget = currentS3Budget();
     var meta = App.TYPE_META[diagnosis.primaryType];
     var avoided = avoidedIngredients();
@@ -597,7 +597,7 @@
     var active = document.activeElement;
     var shouldRestoreFocus = active && typeof active.getAttribute === "function" &&
       active.getAttribute("data-product-id") === productId;
-    var diagnosis = state.diagnosis || App.diagnose(state.answers);
+    var diagnosis = state.diagnosis || App.diagnose(state.answers, { focusCategory: state.focusCategory });
     var budget = currentS3Budget();
     var recommendation = filterRecommendationByAvoidedIngredients(
       uniqueRecommendation(App.recommend(diagnosis, budget)), budget, avoidedIngredients(), diagnosis

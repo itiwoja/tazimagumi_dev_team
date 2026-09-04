@@ -138,6 +138,146 @@
       : null;
   };
 
+  /**
+   * 初回チェックのカテゴリ別質問セット。
+   *
+   * Q1〜Q3 は入口で選んだカテゴリに応じて差し替え、Q4〜Q5 は全カテゴリ共通。
+   * points は App.diagnose が使う6軸への加点で、表示ラベルと判定ロジックを
+   * 同じ定義から生成できるようにしている。
+   */
+  var commonFocusQuestions = [
+    {
+      title: "最初にかけられる予算は？",
+      hint: "最初の買い方を選びます",
+      ariaLabel: "予算",
+      choices: [
+        { label: "〜1,500円", points: [{ axis: "beginner", point: 10 }] },
+        { label: "〜5,000円", points: [] },
+        { label: "まだ決めてない", points: [{ axis: "beginner", point: 5 }], neutral: true }
+      ]
+    },
+    {
+      title: "続けるなら、どれが無理ない？",
+      hint: "最後の質問です",
+      ariaLabel: "続けやすさ",
+      choices: [
+        { label: "朝だけ", points: [{ axis: "beginner", point: 10 }] },
+        { label: "夜だけ", points: [{ axis: "beginner", point: 10 }] },
+        { label: "朝も夜もいける", points: [] },
+        { label: "自信がない", points: [{ axis: "beginner", point: 15 }], neutral: true }
+      ]
+    }
+  ];
+
+  App.FOCUS_QUESTION_SETS = {
+    skin: [
+      {
+        title: "肌で一番気になるのは？",
+        hint: "近いものを1つ選んでください",
+        ariaLabel: "肌の悩み",
+        choices: [
+          { label: "皮脂・テカリ", points: [{ axis: "oily", point: 30 }] },
+          { label: "乾燥・カサつき", points: [{ axis: "dry", point: 30 }] },
+          { label: "ニキビ・赤み", points: [{ axis: "inflam", point: 30 }] },
+          { label: "特にない", points: [], neutral: true }
+        ]
+      },
+      {
+        title: "洗顔後の肌に近いのは？",
+        hint: "しばらくたった時の状態を選んでください",
+        ariaLabel: "洗顔後の肌",
+        choices: [
+          { label: "すぐベタつく", points: [{ axis: "oily", point: 20 }] },
+          { label: "つっぱる・かさつく", points: [{ axis: "dry", point: 20 }] },
+          { label: "ヒリつく・赤み", points: [{ axis: "inflam", point: 20 }] },
+          { label: "特に気にならない", points: [], neutral: true }
+        ]
+      },
+      {
+        title: "肌の変化で近いのは？",
+        hint: "季節や時期で気になることを選んでください",
+        ariaLabel: "肌の変化",
+        choices: [
+          { label: "夏にテカる", points: [{ axis: "oily", point: 10 }] },
+          { label: "冬にかさつく", points: [{ axis: "dry", point: 15 }] },
+          { label: "季節の変わり目に荒れる", points: [{ axis: "inflam", point: 20 }] },
+          { label: "あまり変わらない", points: [{ axis: "beginner", point: 5 }], neutral: true }
+        ]
+      }
+    ].concat(commonFocusQuestions),
+    shave: [
+      {
+        title: "髭剃りで一番気になるのは？",
+        hint: "近いものを1つ選んでください",
+        ariaLabel: "髭剃りの悩み",
+        choices: [
+          { label: "ヒリヒリ・痛み", points: [{ axis: "shave", point: 30 }, { axis: "inflam", point: 15 }] },
+          { label: "赤み・ブツブツ", points: [{ axis: "shave", point: 30 }, { axis: "inflam", point: 15 }] },
+          { label: "剃った後に乾燥する", points: [{ axis: "shave", point: 20 }, { axis: "dry", point: 10 }] },
+          { label: "特に問題ない", points: [], neutral: true }
+        ]
+      },
+      {
+        title: "髭を剃る頻度は？",
+        hint: "普段のペースを選んでください",
+        ariaLabel: "髭剃りの頻度",
+        choices: [
+          { label: "毎日", points: [{ axis: "shave", point: 30 }] },
+          { label: "週3〜5回", points: [{ axis: "shave", point: 20 }] },
+          { label: "週1〜2回", points: [{ axis: "shave", point: 10 }] },
+          { label: "あまり剃らない", points: [], neutral: true }
+        ]
+      },
+      {
+        title: "主に使うものは？",
+        hint: "一番よく使うものを選んでください",
+        ariaLabel: "髭剃りの道具",
+        choices: [
+          { label: "T字カミソリ", points: [{ axis: "shave", point: 10 }] },
+          { label: "電気シェーバー", points: [{ axis: "shave", point: 5 }] },
+          { label: "I字カミソリ", points: [{ axis: "shave", point: 15 }] },
+          { label: "脱毛・ほぼ剃らない", points: [], neutral: true }
+        ]
+      }
+    ].concat(commonFocusQuestions),
+    hair: [
+      {
+        title: "髪で一番気になるのは？",
+        hint: "近いものを1つ選んでください",
+        ariaLabel: "髪の悩み",
+        choices: [
+          { label: "フケ・かゆみ", points: [{ axis: "inflam", point: 30 }] },
+          { label: "皮脂・ベタつき", points: [{ axis: "oily", point: 30 }] },
+          { label: "パサつき・広がり", points: [{ axis: "dry", point: 30 }] },
+          { label: "薄さが気になる", points: [{ axis: "aging", point: 30 }] },
+          { label: "特にない", points: [], neutral: true }
+        ]
+      },
+      {
+        title: "頭皮の状態で近いのは？",
+        hint: "頭皮について、近いものを選んでください",
+        ariaLabel: "頭皮の状態",
+        choices: [
+          { label: "ベタつく", points: [{ axis: "oily", point: 20 }] },
+          { label: "乾燥する", points: [{ axis: "dry", point: 20 }] },
+          { label: "赤み・かゆみがある", points: [{ axis: "inflam", point: 20 }] },
+          { label: "特に気にならない", points: [], neutral: true }
+        ]
+      },
+      {
+        title: "髪の扱いやすさは？",
+        hint: "普段の髪の状態に近いものを選んでください",
+        ariaLabel: "髪の扱いやすさ",
+        choices: [
+          { label: "細い・ボリュームが出にくい", points: [{ axis: "aging", point: 10 }] },
+          { label: "パサつく・広がる", points: [{ axis: "dry", point: 10 }] },
+          { label: "普通", points: [] },
+          { label: "まだわからない", points: [{ axis: "beginner", point: 10 }], neutral: true }
+        ]
+      }
+    ].concat(commonFocusQuestions)
+  };
+
   /* =====================================================================
      【実装スタブ】 自分の担当関数の中身だけ書き換える
      （未実装のまま呼ばれたら、誰が・どのIssueかを示して throw する）
@@ -156,9 +296,10 @@
    * 初回チェックの回答 → 診断結果。診断ロジック設計書 §4 の判定アルゴリズム。
    * 担当: ひろと / Issue #33 [p4b] 診断ロジック（純粋関数）
    * @param {Answers} answers
+   * @param {{focusCategory?: ("skin"|"shave"|"hair")}} [context]
    * @returns {Diagnosis}
    */
-  App.diagnose = function(answers) {
+  App.diagnose = function(answers, context) {
     var scores = {
       oily: 0,
       dry: 0,
@@ -178,6 +319,9 @@
     };
     var priorityOrder = ["shave", "inflam", "oily", "dry", "aging", "beginner"];
     var q9Axes = [];
+    var focusQuestions = context && App.FOCUS_QUESTION_SETS[context.focusCategory]
+      ? App.FOCUS_QUESTION_SETS[context.focusCategory]
+      : null;
 
     function normalize(value) {
       return String(value).replace(/\s+/g, "").trim();
@@ -408,7 +552,12 @@
           var label = normalize(rawLabel);
           var items;
 
-          if (index === 8) {
+          if (focusQuestions && focusQuestions[index]) {
+            items = [];
+            focusQuestions[index].choices.forEach(function(choice) {
+              if (normalize(choice.label) === label) items = choice.points || [];
+            });
+          } else if (index === 8) {
             items = buildQ9Items(label);
             q9Axes = q9Axes.concat(items.map(function(item) { return item.axis; }));
           } else if (pointTable[index] && pointTable[index][label]) {

@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=Inter:wght@500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./css/style.css?v=33">
+<link rel="stylesheet" href="./css/style.css?v=35">
 <link rel="stylesheet" href="./css/result-celebration.css">
 <!-- 読み込み順（基盤の約束）: data → state → storage → contracts → disclaimer → s3 → screens → debug → main。各scriptはdeferで順序保持 -->
 <!-- debug.js は localStorage を書き換えるため main.js（App.restore）より前で固定（Issue #113） -->
@@ -101,39 +101,75 @@
 
         <!-- 質問カードは data-q="0..4"。表示制御は screens.js (renderQuestion) が行う -->
         <div class="qstack" id="qstack">
-          <article class="qcard is-active" data-q="0">
-            <p class="qkicker">Q1</p>
+          <article class="qcard qcard--core qcard--skin is-active" data-q="0">
+            <div class="qcore-track" role="group" aria-label="最初にチェックする3つ">
+              <span class="qcore-track__item is-active" aria-current="step"><span class="qcore-track__index num">1</span><span>肌</span></span>
+              <span class="qcore-track__item"><span class="qcore-track__index num">2</span><span>髭</span></span>
+              <span class="qcore-track__item"><span class="qcore-track__index num">3</span><span>髪</span></span>
+            </div>
+            <div class="qcore-head">
+              <span class="qcore-icon" aria-hidden="true">肌</span>
+              <div class="qcore-heading">
+                <p class="qcore-kicker">Q1・最初に決める3つ</p>
+                <p class="qcore-name">肌の状態</p>
+              </div>
+              <span class="qcore-step"><span class="num">1</span> / 3</span>
+            </div>
             <h2 class="qtitle">鏡を見て、肌で気になるのは？</h2>
             <p class="qhint">近いものを1つ選んでください</p>
-            <div class="chips" role="group" aria-label="肌の状態">
-              <button class="chip" aria-checked="false" data-pick><span class="chip__body"><span class="chip__label">テカリ・ベタつき</span></span></button>
-              <button class="chip" aria-checked="false" data-pick><span class="chip__body"><span class="chip__label">乾燥・つっぱり</span></span></button>
-              <button class="chip" aria-checked="false" data-pick><span class="chip__body"><span class="chip__label">ニキビ・赤み</span></span></button>
-              <button class="chip chip--neutral" aria-checked="false" data-pick data-neutral><span class="chip__body"><span class="chip__label">まだわからない</span></span></button>
+            <div class="chips chips--core" role="group" aria-label="肌の状態">
+              <button class="chip chip--core" aria-checked="false" data-pick><span class="chip__body"><span class="chip__label">テカリ・ベタつき</span></span></button>
+              <button class="chip chip--core" aria-checked="false" data-pick><span class="chip__body"><span class="chip__label">乾燥・つっぱり</span></span></button>
+              <button class="chip chip--core" aria-checked="false" data-pick><span class="chip__body"><span class="chip__label">ニキビ・赤み</span></span></button>
+              <button class="chip chip--core chip--neutral" aria-checked="false" data-pick data-neutral><span class="chip__body"><span class="chip__label">まだわからない</span></span></button>
             </div>
           </article>
 
-          <article class="qcard" data-q="1" hidden>
-            <p class="qkicker">Q2</p>
+          <article class="qcard qcard--core qcard--shave" data-q="1" hidden>
+            <div class="qcore-track" role="group" aria-label="最初にチェックする3つ">
+              <span class="qcore-track__item"><span class="qcore-track__index num">1</span><span>肌</span></span>
+              <span class="qcore-track__item is-active" aria-current="step"><span class="qcore-track__index num">2</span><span>髭</span></span>
+              <span class="qcore-track__item"><span class="qcore-track__index num">3</span><span>髪</span></span>
+            </div>
+            <div class="qcore-head">
+              <span class="qcore-icon" aria-hidden="true">髭</span>
+              <div class="qcore-heading">
+                <p class="qcore-kicker">Q2・最初に決める3つ</p>
+                <p class="qcore-name">髭剃り後の肌</p>
+              </div>
+              <span class="qcore-step"><span class="num">2</span> / 3</span>
+            </div>
             <h2 class="qtitle">髭剃りのあと、肌は？</h2>
             <p class="qhint">近いものを1つ選んでください</p>
-            <div class="chips" role="group" aria-label="髭剃り後">
-              <button class="chip" aria-checked="false" data-pick><span class="chip__body"><span class="chip__label">ヒリヒリ・赤くなる</span></span></button>
-              <button class="chip" aria-checked="false" data-pick><span class="chip__body"><span class="chip__label">とくに問題ない</span></span></button>
-              <button class="chip" aria-checked="false" data-pick><span class="chip__body"><span class="chip__label">あまり剃らない</span></span></button>
-              <button class="chip chip--neutral" aria-checked="false" data-pick data-neutral><span class="chip__body"><span class="chip__label">まだわからない</span></span></button>
+            <div class="chips chips--core" role="group" aria-label="髭剃り後">
+              <button class="chip chip--core" aria-checked="false" data-pick><span class="chip__body"><span class="chip__label">ヒリヒリ・赤くなる</span></span></button>
+              <button class="chip chip--core" aria-checked="false" data-pick><span class="chip__body"><span class="chip__label">とくに問題ない</span></span></button>
+              <button class="chip chip--core" aria-checked="false" data-pick><span class="chip__body"><span class="chip__label">あまり剃らない</span></span></button>
+              <button class="chip chip--core chip--neutral" aria-checked="false" data-pick data-neutral><span class="chip__body"><span class="chip__label">まだわからない</span></span></button>
             </div>
           </article>
 
-          <article class="qcard" data-q="2" hidden>
-            <p class="qkicker">Q3</p>
+          <article class="qcard qcard--core qcard--hair" data-q="2" hidden>
+            <div class="qcore-track" role="group" aria-label="最初にチェックする3つ">
+              <span class="qcore-track__item"><span class="qcore-track__index num">1</span><span>肌</span></span>
+              <span class="qcore-track__item"><span class="qcore-track__index num">2</span><span>髭</span></span>
+              <span class="qcore-track__item is-active" aria-current="step"><span class="qcore-track__index num">3</span><span>髪</span></span>
+            </div>
+            <div class="qcore-head">
+              <span class="qcore-icon" aria-hidden="true">髪</span>
+              <div class="qcore-heading">
+                <p class="qcore-kicker">Q3・最初に決める3つ</p>
+                <p class="qcore-name">髪の状態</p>
+              </div>
+              <span class="qcore-step"><span class="num">3</span> / 3</span>
+            </div>
             <h2 class="qtitle">髪のことで近いのは？</h2>
             <p class="qhint">近いものを1つ選んでください</p>
-            <div class="chips" role="group" aria-label="髪の悩み">
-              <button class="chip" aria-checked="false" data-pick><span class="chip__body"><span class="chip__label">ペタッとする</span></span></button>
-              <button class="chip" aria-checked="false" data-pick><span class="chip__body"><span class="chip__label">パサつく・広がる</span></span></button>
-              <button class="chip" aria-checked="false" data-pick><span class="chip__body"><span class="chip__label">とくにない</span></span></button>
-              <button class="chip chip--neutral" aria-checked="false" data-pick data-neutral><span class="chip__body"><span class="chip__label">まだわからない</span></span></button>
+            <div class="chips chips--core" role="group" aria-label="髪の悩み">
+              <button class="chip chip--core" aria-checked="false" data-pick><span class="chip__body"><span class="chip__label">ペタッとする</span></span></button>
+              <button class="chip chip--core" aria-checked="false" data-pick><span class="chip__body"><span class="chip__label">パサつく・広がる</span></span></button>
+              <button class="chip chip--core" aria-checked="false" data-pick><span class="chip__body"><span class="chip__label">とくにない</span></span></button>
+              <button class="chip chip--core chip--neutral" aria-checked="false" data-pick data-neutral><span class="chip__body"><span class="chip__label">まだわからない</span></span></button>
             </div>
           </article>
 
@@ -391,6 +427,6 @@
   </div>
 
 
-<script src="./js/sw-register.js?v=33" defer></script>
+<script src="./js/sw-register.js?v=35" defer></script>
 </body>
 </html>
